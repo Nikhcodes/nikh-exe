@@ -1,0 +1,4 @@
+scripts/
+tests/
+node_modules/
+.env.local

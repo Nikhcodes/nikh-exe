@@ -6,9 +6,11 @@
 <title>NIKH.EXE | Under Construction Forever</title>
 <meta name="description" content="Nikhiel Lingard's personal corner of the internet: music, projects, and late-night things.">
 <link href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=Courier+Prime:wght@400;700&family=Newsreader:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/reveal.css">
 <style>
 :root{--ink:#0d1018;--navy:#14213a;--char:#22252d;--burg:#6b1f2e;--red:#b8343f;--amber:#e0a458;--cream:#f1e7d3;--paper:#e6d9bd;--disp:'Bowlby One',Impact,sans-serif;--mono:'Courier Prime',ui-monospace,monospace;--serif:'Newsreader',Georgia,serif}
 *{box-sizing:border-box;margin:0}
+[hidden]{display:none!important}
 html{background:var(--ink)}
 body{font-family:var(--serif);font-size:1.08rem;line-height:1.6;color:var(--cream);background:var(--ink);overflow-x:hidden;min-height:100vh;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
 a{color:var(--amber)}
@@ -114,15 +116,27 @@ h2{font-size:1.6rem;margin-bottom:12px}
 .gf textarea{min-height:110px;resize:vertical}
 .gf .btn{justify-self:start;margin:4px 0}
 #gm{min-height:1.6em;overflow-wrap:anywhere}
-#gl{width:100%;max-width:620px;margin:0 auto;text-align:left;overflow-wrap:anywhere}
+.guestbook-page.board-page{max-width:1040px}
+.board-wrap{border:2px solid var(--burg);background:var(--char) radial-gradient(rgba(224,164,88,.13) 1px,transparent 1.5px) 0 0/18px 18px;padding:30px clamp(14px,3vw,30px) 26px;box-shadow:6px 6px 0 rgba(0,0,0,.25)}
+.board-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 16px;font-family:var(--mono);font-size:.8rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--amber);margin:-14px 0 20px}
+#gl{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:26px 22px;align-items:start;text-align:left;overflow-wrap:anywhere}
 #gl:empty{display:none}
-#gl:not(:has(.gb)){text-align:center;font-family:var(--mono);font-size:.9rem}
+.board-empty{grid-column:1/-1;text-align:center;font-family:var(--mono);font-size:.9rem;padding:20px 0}
 .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
-.gb{width:100%;background:var(--cream);color:#241b14;padding:14px 18px;margin:0 0 16px;border-left:8px solid var(--amber);box-shadow:4px 4px 0 rgba(0,0,0,.5);overflow-wrap:anywhere}
-.gb b{font-family:var(--disp);font-weight:400;margin-right:10px}
-.gb time{font-family:var(--mono);font-size:.78rem;color:var(--burg)}
-.gb p{margin-top:8px;white-space:pre-wrap;overflow-wrap:anywhere}
-@media(max-width:520px){.gf{padding:14px}.gb{padding:12px 14px}.guestbook-page h1{font-size:clamp(2.2rem,11vw,4rem)}}
+.gb{--rot:0deg;position:relative;background:var(--note,var(--cream));color:#241b14;padding:20px 16px 14px;box-shadow:3px 4px 0 rgba(0,0,0,.45);transform:rotate(var(--rot));transition:transform .2s;overflow-wrap:anywhere;min-height:120px}
+.gb::before{content:"";position:absolute;top:-7px;left:50%;width:14px;height:14px;margin-left:-7px;border-radius:50%;background:var(--red);box-shadow:inset -2px -2px 0 rgba(0,0,0,.3),1px 2px 2px rgba(0,0,0,.4)}
+.gb:hover{transform:rotate(0)}
+.gb.n1{--note:#f3dca8}.gb.n2{--note:#ecc9c4}.gb.n3{--note:#cfdae6}.gb.n4{--note:#d9e3c6}
+.gb.r1{--rot:-1.6deg}.gb.r2{--rot:1.2deg}.gb.r3{--rot:-.6deg}.gb.r4{--rot:.8deg}
+.gb.featured{grid-column:span 2;border-top:6px solid var(--burg)}
+.gb.featured::before{display:none}
+.gb .pin-tape{position:absolute;top:-12px;left:14px;background:var(--burg);color:var(--cream);font-family:var(--mono);font-weight:700;font-size:.7rem;padding:2px 10px;transform:rotate(-3deg)}
+.gb b{font-family:var(--disp);font-weight:400;display:block;line-height:1.1}
+.gb time{font-family:var(--mono);font-size:.74rem;color:var(--burg)}
+.gb p{margin-top:8px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:1rem;line-height:1.5}
+.gb.featured p{font-size:1.15rem;font-style:italic}
+.board-more{display:block;margin:26px auto 0}
+@media(max-width:520px){.gf{padding:14px}.gb.featured{grid-column:auto}.guestbook-page h1{font-size:clamp(2.2rem,11vw,4rem)}#gl{grid-template-columns:1fr}}
 /* JOURNAL */
 .jn{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:26px;margin-top:6px}
 .entry{background:var(--cream);color:#241b14;padding:22px;box-shadow:6px 6px 0 rgba(0,0,0,.5);border-top:10px solid var(--burg)}
@@ -159,17 +173,51 @@ h2{font-size:1.6rem;margin-bottom:12px}
 .ct .contact-option small{display:block;margin-top:5px;font-family:var(--mono);font-size:.8rem}
 .ct .contact-links{margin-top:12px}
 .ct .contact-links li{overflow-wrap:anywhere}
-footer{padding:20px 22px calc(30px + env(safe-area-inset-bottom));font-family:var(--mono);font-size:.8rem;border-top:3px double var(--burg);color:#999}
-#egg{position:fixed;bottom:16px;right:16px;background:var(--amber);color:var(--ink);padding:10px 14px;font-family:var(--mono);font-weight:700;transform:rotate(-3deg);display:none;z-index:40}
+/* HERO PHOTOS */
+.card .hero-img{display:block;width:100%;height:auto;aspect-ratio:4/3;object-fit:cover;object-position:center 30%;border:2px solid #241b14;margin-bottom:12px;background:#241b14}
+/* JUNK DRAWER (Surprise me) */
+.drawer[hidden]{display:none}
+.drawer .dr-out:empty{display:none}
+.drawer .dr-out{margin-bottom:12px}
+.drawer figure{margin:0;background:var(--cream);padding:8px 8px 6px;transform:rotate(-1deg);box-shadow:3px 3px 0 rgba(0,0,0,.45)}
+.drawer figure img{display:block;width:100%;height:auto;max-height:300px;object-fit:contain;background:#241b14}
+.drawer figcaption{font-family:var(--mono);font-size:.82rem;font-weight:700;color:#241b14;padding-top:6px;text-align:center}
+.drawer .dr-note{background:var(--cream);color:#241b14;padding:12px 14px;transform:rotate(1deg);box-shadow:3px 3px 0 rgba(0,0,0,.45);white-space:pre-wrap;font-style:italic}
+.drawer .btn{margin:0}
+/* SCRAPBOOK */
+.sb{columns:3 260px;column-gap:30px;margin-top:40px;padding-top:12px}
+.sbe{break-inside:avoid;display:inline-block;width:100%;vertical-align:top;position:relative;background:#fbf6e8;padding:14px 14px 18px;margin:0 0 34px;box-shadow:5px 5px 0 rgba(36,27,20,.3);border:1px solid rgba(36,27,20,.25)}
+.sbe::before{content:"";position:absolute;top:-11px;left:50%;width:84px;height:22px;margin-left:-42px;background:rgba(224,164,88,.75);transform:rotate(-2deg)}
+.sbe:nth-child(3n+2){transform:rotate(1deg)}.sbe:nth-child(3n){transform:rotate(-.8deg)}
+.sbe:nth-child(3n+2)::before{background:rgba(107,31,46,.45);transform:rotate(3deg)}
+.sbe img{display:block;width:100%;height:auto;background:#241b14}
+.sbe .thumbs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px}
+.sbe .thumbs img{aspect-ratio:1;object-fit:cover}
+.sbe time{display:block;font-family:var(--mono);font-size:.78rem;font-weight:700;color:var(--burg);margin-top:12px}
+.sbe h2{font-size:1.3rem;margin:4px 0 6px}
+.sbe p{white-space:pre-wrap;margin:0}
+.sb-empty{font-family:var(--mono);margin-top:30px}
+footer{padding:20px 22px calc(30px + env(safe-area-inset-bottom));font-family:var(--mono);font-size:.8rem;border-top:3px double var(--burg);color:#999;display:flex;flex-wrap:wrap;align-items:center;gap:8px 24px}
+.prompt{display:flex;align-items:center;gap:6px;flex:1 1 260px;min-width:0}
+.prompt label{color:var(--amber);font-weight:700;white-space:nowrap}
+.prompt input{flex:1;min-width:0;max-width:240px;background:transparent;border:0;border-bottom:1px dashed #555;color:var(--cream);font:inherit;padding:4px 2px;caret-color:var(--amber);border-radius:0}
+.prompt input:focus{outline:none;border-bottom-color:var(--amber)}
+.prompt:focus-within label{text-decoration:underline}
+#cmd-out{flex-basis:100%;color:var(--cream);min-height:0;margin:0}
+#cmd-out:empty{display:none}
+#found{color:var(--amber)}
 @media(max-width:820px){.home,.pj{grid-template-columns:1fr}.pj:nth-of-type(even){direction:ltr}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
-<header><a class="logo" href="#/">NIKH.EXE</a><nav aria-label="Main" id="nav"></nav></header>
+<header><a class="logo" href="#/" data-egg-target="logo">NIKH.EXE</a><nav aria-label="Main" id="nav"></nav></header>
 <main id="view"></main>
-<footer>Built after hours in Suriname.</footer>
-<div id="egg" role="status" aria-live="polite"></div>
+<footer><span data-egg-target="footer">Built after hours in Suriname.</span>
+<form class="prompt" id="prompt" autocomplete="off"><label for="cmd">C:\NIKH&gt;</label><input id="cmd" name="cmd" maxlength="60" autocapitalize="off" spellcheck="false" enterkeyhint="go"></form>
+<span id="found" aria-live="polite"></span><p id="cmd-out" role="status" aria-live="polite"></p></footer>
+<script src="assets/reveal.js"></script>
+<script src="assets/eggs.js"></script>
 <script>
 /* ===== EDIT YOUR CONTENT HERE ===== */
 const ME={
@@ -216,19 +264,20 @@ const LINKS=[
  ["Gemini","https://gemini.google.com","The other favorite, no questions asked."]
 ];
 const HEROES=[
- ["MF DOOM","Music","Favorite ever."],
- ["Paolo Maldini","Football","Idol growing up."],
- ["Connor Kenway","Video Games","Character I remember from growing up."],
- ["Michael Myers","Horror","Fav Horror Character."]
+ ["MF DOOM","Music","Favorite ever.","assets/heroes/doom.webp","The metal DOOM mask with a halo",520,520],
+ ["Paolo Maldini","Football","Idol growing up.","assets/heroes/maldini.webp","Paolo Maldini pointing, in an AC Milan shirt",520,468],
+ ["Connor Kenway","Video Games","Character I remember from growing up.","assets/heroes/connor.webp","Connor Kenway mid-fight with a tomahawk",520,520],
+ ["Michael Myers","Horror","Fav Horror Character.","assets/heroes/myers.webp","The pale Michael Myers mask in the dark",284,520]
 ];
 /* ===== END CONTENT ===== */
 const $=s=>document.querySelector(s),v=$('#view');
 const pages={
  home(){return `<div class="wrap home"><aside class="side">
- <div class="box"><h3>${ME.name}</h3><div class="avatar" aria-hidden="true">N</div><p class="status">“${ME.status}”</p></div>
- <div class="box"><h3>Now listening</h3><p class="mono">${ME.nowListening}</p></div>
- <div class="box"><h3>Currently into</h3><div class="stick">${ME.into.map(i=>`<span>${i}</span>`).join('')}</div></div></aside>
- <section class="hero"><span class="tape">WELCOME, STRANGER</span><h1>Hey, I'm Nikh.</h1><p class="big">${ME.blurb}</p>
+ <div class="box"><h3>${ME.name}</h3><div class="avatar" aria-hidden="true" data-egg-target="avatar">N</div><p class="status" id="st">“${ME.status}”</p></div>
+ <div class="box"><h3>Now listening</h3><p class="mono" id="nl">${ME.nowListening}</p></div>
+ <div class="box"><h3>Currently into</h3><div class="stick">${ME.into.map(i=>`<span>${i}</span>`).join('')}</div></div>
+ <div class="box drawer" id="drawer" ${SITE.counts.surprise?'':'hidden'}><h3>The junk drawer</h3><div class="dr-out" id="dr-out" aria-live="polite"></div><button class="btn ghost" id="dr">Surprise me</button></div></aside>
+ <section class="hero"><span class="tape" data-egg-target="welcome-tape">WELCOME, STRANGER</span><h1>Hey, I'm Nikh.</h1><p class="big">${ME.blurb}</p>
  <a class="btn" href="#/projects">See what I build</a><a class="btn ghost" href="#/music">Flip through the crate</a>
  <div class="picks"><div class="box"><h3>Tonight's pick</h3><div id="pick">Press shuffle</div><button class="btn ghost" id="sh">Shuffle</button></div>
  <div class="box updates"><h3>Updates</h3><ul>${ME.updates.map(u=>`<li><b>${u[0]}</b> ${u[1]}</li>`).join('')}</ul></div></div></section></div>`},
@@ -241,15 +290,17 @@ const pages={
  links(){return `<div class="wrap"><span class="tape">THE BOOKMARKS</span><h1>Links</h1><p style="max-width:55ch;margin-top:10px">Where I spend my internet time, and the people I keep thinking about.</p>
  <h2 style="margin-top:30px">Tabs that are always open</h2>
  <div class="bk">${LINKS.map(l=>`<a href="${l[1]}" target="_blank" rel="noopener"><b>${l[0]} ↗</b><small>${l[2]}</small></a>`).join('')}</div>
- <h2>Heroes</h2><div class="heroes">${HEROES.map(h=>`<div class="card"><small>${h[1]}</small><b>${h[0]}</b><small>${h[2]}</small></div>`).join('')}</div>
+ <h2>Heroes</h2><div class="heroes">${HEROES.map(h=>`<div class="card">${h[3]?`<img class="hero-img" src="${h[3]}" alt="${h[4]}" width="${h[5]}" height="${h[6]}" loading="lazy" decoding="async">`:''}<small>${h[1]}</small><b>${h[0]}</b><small>${h[2]}</small></div>`).join('')}</div>
  <h2 style="margin-top:40px">Grab my button</h2><p class="mono" style="margin-bottom:10px">88x31, because some traditions deserve to live.</p>
- <a class="btn88" href="#/">NIKH.EXE</a></div>`},
- guestbook(){return `<div class="wrap"><section class="guestbook-page"><span class="tape">SIGN HERE</span><h1>Guestbook</h1><p class="guestbook-intro">Leave a message, recommend something, or prove that a real human made it this far. I approve entries by hand before they appear here.</p>
+ <a class="btn88" href="#/" data-egg-target="button88">NIKH.EXE</a></div>`},
+ guestbook(){return `<div class="wrap"><section class="guestbook-page board-page"><span class="tape">SIGN HERE</span><h1>Guestbook</h1><p class="guestbook-intro">Pin a note to the board. Leave a message, recommend something, or prove that a real human made it this far. I approve notes by hand before they go up.</p>
  <form class="gf" id="gf"><label for="gn">Name</label><input id="gn" name="nm" maxlength="40" required autocomplete="nickname" placeholder="What should I call you?">
  <label for="gmsg">Message (500 characters max)</label><textarea id="gmsg" name="msg" maxlength="500" required placeholder="Say something nice. Or weird. Ideally both."></textarea>
  <div class="hp" aria-hidden="true"><label>Leave this empty<input name="website" tabindex="-1" autocomplete="off"></label></div>
- <button class="btn" type="submit">Sign the guestbook ↗</button><p class="mono" id="gm" role="status" aria-live="polite"></p></form>
- <div id="gl" aria-live="polite">Loading entries...</div></section></div>`},
+ <button class="btn" type="submit">Pin it to the board ↗</button><p class="mono" id="gm" role="status" aria-live="polite"></p></form>
+ <div class="board-wrap"><div class="board-head"><span>The board</span><span id="gcount"></span></div><div id="gl" aria-live="polite"><p class="board-empty">Loading notes...</p></div><button class="btn ghost board-more" id="gmore" hidden>Load older notes</button></div></section></div>`},
+ scrapbook(){return `<div class="paper"><div class="wrap"><span class="tape">THE SHOEBOX</span><h1>Scrapbook</h1><p style="max-width:52ch;margin-top:10px">Photos, small memories and other things worth keeping. Added whenever something deserves a spot.</p>
+ <div class="sb" id="sb" aria-live="polite"><p class="sb-empty">Opening the shoebox...</p></div></div></div>`},
  journal(){const tags=[...new Set(JOURNAL.flatMap(j=>j.tags))];return `<div class="wrap"><span class="tape">THE ZINE</span><h1>Journal</h1><p style="max-width:55ch;margin-top:10px">Things I'm learning, things I think, and the occasional rant. Newest first.</p>
  <div class="crates" role="group" aria-label="Filter by tag"><button data-t="" aria-pressed="true">all</button>${tags.map(t=>`<button data-t="${t}" aria-pressed="false">${t}</button>`).join('')}</div>
  <div class="jn" id="jn"></div></div>`},
@@ -288,38 +339,55 @@ const pages={
  <p class="mono" style="font-size:.85rem">BUILT IN SURINAME. REPLIES SENT WHEN HUMANLY POSSIBLE.</p>
  </div></div>`}
 };
-const nav=[["home","Home"],["about","About"],["projects","Projects"],["journal","Journal"],["links","Links"],["guestbook","Guestbook"],["music","Music"],["contact","Contact"]];
+const nav=[["home","Home"],["about","About"],["projects","Projects"],["journal","Journal"],["scrapbook","Scrapbook"],["links","Links"],["guestbook","Guestbook"],["music","Music"],["contact","Contact"]];
+/* Live content from the admin panel (filled in when /api/public answers; the site works without it). */
+const SITE={counts:{surprise:0,scrapbook:0},settings:{}};
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const navVisible=(n,k)=>n[0]!='scrapbook'||SITE.counts.scrapbook>0||k=='scrapbook';
 function render(){
  const r=(location.hash.replace('#/','')||'home');
  const k=pages[r]?r:'home';
  v.innerHTML=pages[k]();
  document.title=(k=='home'?"NIKH.EXE | Under Construction Forever":nav.find(n=>n[0]==k)[1]+" · NIKH.EXE");
  window.scrollTo(0,0);
- $('#nav').innerHTML=nav.map(n=>`<a href="#/${n[0]=='home'?'':n[0]}" ${n[0]==k?'aria-current="page"':''}>${n[1]}</a>`).join('');
- if(k=='home'){$('#sh').onclick=()=>{$('#pick').textContent=ME.picks[Math.floor(Math.random()*ME.picks.length)]}}
+ $('#nav').innerHTML=nav.filter(n=>navVisible(n,k)).map(n=>`<a href="#/${n[0]=='home'?'':n[0]}" ${n[0]==k?'aria-current="page"':''}>${n[1]}</a>`).join('');
+ if(k=='home'){$('#sh').onclick=()=>{$('#pick').textContent=ME.picks[Math.floor(Math.random()*ME.picks.length)]};applySettings();$('#dr').onclick=openDrawer}
+ if(k=='scrapbook')loadScrapbook();
  if(k=='guestbook'){
-  const L=$('#gl'),M=$('#gm');
-  fetch('/api/guestbook').then(r=>{if(!r.ok)throw 0;return r.json()}).then(d=>{
-   L.textContent='';
-   if(!d.entries.length){L.textContent='No signatures yet. Be the first.';return}
-   d.entries.forEach(e=>{
-    const a=document.createElement('article');a.className='gb';
-    const b=document.createElement('b');b.textContent=e.name;
-    const t=document.createElement('time');t.textContent=new Date(e.created_at).toLocaleDateString();
-    const p=document.createElement('p');p.textContent=e.message;
-    a.append(b,t,p);L.append(a)
-   })
-  }).catch(()=>{
-   L.textContent='The guestbook is offline here. It only works once the site is deployed with its backend.';
+  const L=$('#gl'),M=$('#gm'),more=$('#gmore');
+  let oldest=null,shown=0;
+  /* Note color and tilt come from the note itself, so they stay the same on every visit. */
+  const note=(e,featured)=>{
+   let h=0;for(const c of (e.k||e.name))h=(h*31+c.charCodeAt(0))>>>0;
+   const a=document.createElement('article');a.className=`gb n${h%5} r${(h>>3)%5}`+(featured?' featured':'');
+   if(featured){const tp=document.createElement('span');tp.className='pin-tape';tp.textContent='PINNED BY NIKH';a.append(tp)}
+   const b=document.createElement('b');b.textContent=e.name;
+   const t=document.createElement('time');t.dateTime=e.created_at;t.textContent=new Date(e.created_at).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});
+   const p=document.createElement('p');p.textContent=e.message;
+   a.append(b,t,p);return a
+  };
+  const page=()=>fetch('/api/guestbook'+(oldest?'?before='+encodeURIComponent(oldest):'')).then(r=>{if(!r.ok)throw 0;return r.json()}).then(d=>{
+   if(!oldest)L.textContent='';
+   (d.featured||[]).forEach(e=>L.append(note(e,true)));
+   d.entries.forEach(e=>L.append(note(e,false)));
+   shown+=(d.featured||[]).length+d.entries.length;
+   if(d.entries.length)oldest=d.entries[d.entries.length-1].created_at;
+   if(!shown){const p=document.createElement('p');p.className='board-empty';p.textContent='The board is empty. Pin the first note.';L.append(p)}
+   $('#gcount').textContent=shown?shown+(d.more?'+':'')+(shown==1?' note':' notes'):'';
+   more.hidden=!d.more
+  });
+  page().catch(()=>{
+   L.innerHTML='<p class="board-empty"></p>';L.firstChild.textContent='The guestbook is offline here. It only works once the site is deployed with its backend.';
    $('#gf').hidden=true
   });
+  more.onclick=()=>{more.disabled=true;page().catch(()=>{}).finally(()=>{more.disabled=false})};
   $('#gf').onsubmit=async ev=>{
    ev.preventDefault();
    const f=ev.target;M.textContent='Sending...';
    try{
     const r=await fetch('/api/guestbook',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nm:f.elements.nm.value,msg:f.elements.msg.value,website:f.elements.website.value})});
     const d=await r.json().catch(()=>({}));
-    if(r.ok){f.reset();M.textContent='Thanks! Your message shows up once I approve it.'}
+    if(r.ok){f.reset();M.textContent='Pinned to the waiting tray. It goes up on the board once I approve it.'}
     else M.textContent=d.error||'Something went wrong.'
    }catch(e){M.textContent='Could not reach the guestbook.'}
   }
@@ -349,18 +417,50 @@ function render(){
 }
 addEventListener('hashchange',render);
 render();
-/* easter egg: type "jam" anywhere */
-let buf='';
-addEventListener('keydown',e=>{
- if(/INPUT|TEXTAREA/.test(e.target.tagName))return;
- buf=(buf+e.key).slice(-3).toLowerCase();
- if(buf=='jam'){
-  const g=$('#egg');
-  g.textContent='Secret level unlocked. No prize, just vibes.';
-  g.style.display='block';
-  setTimeout(()=>g.style.display='none',3500)
- }
+/* Admin-editable bits: status line, now listening, junk drawer, scrapbook */
+function applySettings(){
+ if(SITE.settings.status&&$('#st'))$('#st').textContent=`“${SITE.settings.status}”`;
+ if(SITE.settings.now_listening&&$('#nl'))$('#nl').textContent=SITE.settings.now_listening;
+ if($('#drawer'))$('#drawer').hidden=!SITE.counts.surprise
+}
+document.addEventListener('nikh:config',ev=>{
+ if(!ev.detail)return;
+ SITE.counts=ev.detail.counts;SITE.settings=ev.detail.settings;
+ const k=(location.hash.replace('#/','')||'home');
+ $('#nav').innerHTML=nav.filter(n=>navVisible(n,k)).map(n=>`<a href="#/${n[0]=='home'?'':n[0]}" ${n[0]==k?'aria-current="page"':''}>${n[1]}</a>`).join('');
+ applySettings()
 });
+function img(i,cls){return `<img${cls?` class="${cls}"`:''} src="${esc(i.url)}" alt="${esc(i.alt)}" width="${+i.w||''}" height="${+i.h||''}" loading="lazy" decoding="async">`}
+let seen=[];
+try{seen=JSON.parse(sessionStorage.getItem('nikh-drawer'))||[]}catch{}
+async function openDrawer(){
+ const out=$('#dr-out'),btn=$('#dr');btn.disabled=true;
+ try{
+  const r=await fetch('/api/public?r=surprise&x='+seen.slice(-10).join(','));
+  if(!r.ok)throw 0;
+  const {item}=await r.json();
+  if(!item){out.innerHTML='<p class="mono">The drawer is empty right now.</p>';return}
+  seen.push(item.id);try{sessionStorage.setItem('nikh-drawer',JSON.stringify(seen.slice(-20)))}catch{}
+  out.innerHTML=item.kind=='image'
+   ?`<figure>${img(item)}${item.caption?`<figcaption>${esc(item.caption)}</figcaption>`:''}</figure>`
+   :`<p class="dr-note">${esc(item.body)}</p>${item.caption?`<p class="mono" style="font-size:.8rem;margin-top:8px">${esc(item.caption)}</p>`:''}`;
+  const im=out.querySelector('img');if(im)im.onerror=()=>{out.innerHTML='<p class="mono">That one fell behind the drawer. Try again.</p>'};
+  btn.textContent='Another one'
+ }catch(e){out.innerHTML='<p class="mono">The drawer is stuck. Try again later.</p>'}
+ finally{btn.disabled=false}
+}
+async function loadScrapbook(){
+ const box=$('#sb');
+ try{
+  const r=await fetch('/api/public?r=scrapbook');if(!r.ok)throw 0;
+  const {entries}=await r.json();
+  if(!entries.length){box.innerHTML='<p class="sb-empty">Nothing in the shoebox yet. Check back soon.</p>';return}
+  box.innerHTML=entries.map(e=>`<article class="sbe">${e.images[0]?img(e.images[0]):''}${e.images.length>1?`<div class="thumbs">${e.images.slice(1).map(i=>img(i)).join('')}</div>`:''}
+   ${e.date?`<time datetime="${esc(e.date)}">${new Date(e.date+'T12:00:00').toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'})}</time>`:''}
+   ${e.title?`<h2>${esc(e.title)}</h2>`:''}${e.body?`<p>${esc(e.body)}</p>`:''}</article>`).join('');
+  box.querySelectorAll('img').forEach(i=>i.onerror=()=>i.remove())
+ }catch(e){box.innerHTML='<p class="sb-empty">The scrapbook is offline here. It needs the deployed backend.</p>'}
+}
 </script>
 </body>
 </html>

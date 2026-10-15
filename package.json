@@ -2,5 +2,11 @@
   "name": "nikh-exe",
   "private": true,
   "type": "module",
-  "dependencies": { "@neondatabase/serverless": "^0.10.4" }
+  "scripts": {
+    "dev": "node scripts/dev-server.mjs",
+    "hash-password": "node scripts/hash-password.mjs",
+    "test": "node --test --test-concurrency=1 tests/api.test.mjs"
+  },
+  "dependencies": { "@neondatabase/serverless": "^0.10.4" },
+  "devDependencies": { "pg": "^8.13.1" }
 }

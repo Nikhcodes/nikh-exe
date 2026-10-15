@@ -1,7 +1,7 @@
-import { neon } from '@neondatabase/serverless';
+import { sql } from './_lib/db.js';
+import { readJson } from './_lib/http.js';
 import { createHash } from 'node:crypto';
 
-const sql = neon(process.env.DATABASE_URL);
 const MAX_PER_HOUR = 3;
 
 const clean = (s, max) =>
@@ -11,10 +11,21 @@ export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
   try {
     if (req.method === 'GET') {
-      const rows = await sql`
-        SELECT name, message, created_at FROM guestbook_entries
-        WHERE approved = true ORDER BY created_at DESC LIMIT 50`;
-      return res.status(200).json({ entries: rows });
+      // ?before=<ISO date> pages backwards through older notes. Pinned notes come once, on the first page.
+      const PAGE = 24;
+      const raw = new URL(req.url, 'http://x').searchParams.get('before');
+      const before = raw && !Number.isNaN(Date.parse(raw)) ? new Date(raw).toISOString() : null;
+      const rows = before
+        ? await sql`SELECT left(id::text, 8) AS k, name, message, created_at FROM guestbook_entries
+            WHERE approved AND NOT rejected AND NOT featured AND created_at < ${before}
+            ORDER BY created_at DESC LIMIT ${PAGE + 1}`
+        : await sql`SELECT left(id::text, 8) AS k, name, message, created_at FROM guestbook_entries
+            WHERE approved AND NOT rejected AND NOT featured
+            ORDER BY created_at DESC LIMIT ${PAGE + 1}`;
+      const featured = before ? [] : await sql`SELECT left(id::text, 8) AS k, name, message, created_at
+        FROM guestbook_entries WHERE approved AND NOT rejected AND featured ORDER BY created_at DESC LIMIT 6`;
+      const more = rows.length > PAGE;
+      return res.status(200).json({ featured, entries: rows.slice(0, PAGE), more });
     }
 
     if (req.method === 'POST') {
@@ -23,7 +34,7 @@ export default async function handler(req, res) {
       if (origin && new URL(origin).host !== req.headers.host)
         return res.status(403).json({ error: 'Not allowed.' });
 
-      const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+      const body = await readJson(req);
       if (body.website) return res.status(200).json({ ok: true }); // honeypot: pretend success
 
       const name = clean(body.nm ?? body.name, 40);

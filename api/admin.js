@@ -1,7 +1,7 @@
-import { neon } from '@neondatabase/serverless';
+import { sql } from './_lib/db.js';
+import { readJson } from './_lib/http.js';
 import { timingSafeEqual } from 'node:crypto';
 
-const sql = neon(process.env.DATABASE_URL);
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function authorized(req) {
@@ -23,7 +23,7 @@ export default async function handler(req, res) {
       return res.status(200).json({ entries: rows });
     }
     if (req.method === 'POST') {
-      const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+      const body = await readJson(req);
       if (!UUID.test(body.id || '')) return res.status(400).json({ error: 'Bad id.' });
       if (body.action === 'approve') await sql`UPDATE guestbook_entries SET approved = true WHERE id = ${body.id}`;
       else if (body.action === 'delete') await sql`DELETE FROM guestbook_entries WHERE id = ${body.id}`;

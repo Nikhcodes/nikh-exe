@@ -1,0 +1,63 @@
+{
+  "about": "Starter pack: imported once from the admin dashboard through the normal upload API. Safe to import again (duplicates are detected).",
+  "media": [
+    { "key": "neuron", "file": "neuron-activation.webp", "name": "Neuron activation (orange cat)", "tags": ["meme", "egg"], "alt": "An orange cat in a harness standing bolt upright, staring into the distance" },
+    { "key": "delulu", "file": "delulu-cat.webp", "name": "Delulu becomes trululu", "tags": ["meme", "egg"], "alt": "A black cat in a green party hat holding a star wand. Text: May all your delulu become trululu" },
+    { "key": "myers", "file": "myers-mask.webp", "name": "Michael Myers mask", "tags": ["horror", "egg", "seasonal"], "alt": "The pale Michael Myers mask against a black background" },
+    { "key": "locked", "file": "locked-in-cat.webp", "name": "Locked in", "tags": ["meme", "cat"], "alt": "A kitten sitting at an old computer desk under the words LOCKED IN" },
+    { "key": "cat-pc", "file": "cat-in-pc.webp", "name": "Cat inside the PC", "tags": ["meme", "cat"], "alt": "An orange cat with its head inside an open PC case" },
+    { "key": "guitar", "file": "guitar-cat.webp", "name": "Guitar cat", "tags": ["drawing", "cat", "music"], "alt": "A scribbly black cat playing a red bass guitar" },
+    { "key": "floating", "file": "floating-cat.webp", "name": "Floating cat", "tags": ["drawing", "cat"], "alt": "A black ink cat floating above its own shadow" },
+    { "key": "snoopy-hp", "file": "snoopy-headphones.webp", "name": "Snoopy with headphones", "tags": ["music"], "alt": "Snoopy sitting with headphones and a cassette player on a blue background" },
+    { "key": "snoopy-gl", "file": "snoopy-glasses.webp", "name": "Snoopy with glasses", "tags": ["drawing"], "alt": "Snoopy standing with black glasses" },
+    { "key": "snoopy-vinyl", "file": "snoopy-vinyl.webp", "name": "Snoopy hugging a record", "tags": ["music"], "alt": "Snoopy in blue headphones hugging a blue vinyl record" },
+    { "key": "pixel-card", "file": "pixel-card.webp", "name": "Pixel hand holding a card", "tags": ["pixel"], "alt": "Pixel art of a hand holding up a glowing green trading card" },
+    { "key": "pixel-fall", "file": "pixel-fall.webp", "name": "Pixel guy falling", "tags": ["pixel"], "alt": "A grey pixel-art man falling backwards with a box" },
+    { "key": "doom-comic", "file": "doom-comic.webp", "name": "DOOM, comic style", "tags": ["music", "heroes"], "alt": "Comic-style drawing of a masked figure in a green hood raising a metal hand" },
+    { "key": "maldini-3", "file": "maldini-3.webp", "name": "Maldini number 3", "tags": ["football", "heroes"], "alt": "A footballer seen from behind in a red and black number 3 shirt" },
+    { "key": "connor-flag", "file": "connor-flag.webp", "name": "Connor under the flag", "tags": ["games", "heroes"], "alt": "A hooded assassin crouching under a flag in the snow" }
+  ],
+  "eggs": [
+    {
+      "name": "cutie", "trigger_type": "keyword", "phrases": ["cutie"], "enabled": true, "style": "card", "step_ms": 1600,
+      "title": "", "message": "", "priority": 10,
+      "hint": "Type something sweet.", "hint_public": false,
+      "steps": [
+        { "media": "neuron", "label": "Neuron activation meme", "caption": "*neuron activation*" },
+        { "media": null, "label": "Girlfriend photo", "caption": "" }
+      ]
+    },
+    {
+      "name": "jam", "trigger_type": "keyword", "phrases": ["jam"], "enabled": true, "style": "toast",
+      "title": "", "message": "Secret level unlocked. No prize, just vibes.", "steps": [],
+      "hint": "Three letters. What music does when it's good.", "hint_public": true
+    },
+    {
+      "name": "delulu", "trigger_type": "click", "target": "avatar", "click_count": 5, "enabled": true, "style": "card",
+      "title": "", "message": "", "repeat_mode": "always", "cooldown_s": 10,
+      "hint": "Poke the N. Keep poking.", "hint_public": true,
+      "steps": [{ "media": "delulu", "label": "Delulu cat", "caption": "" }]
+    },
+    {
+      "name": "halloween", "trigger_type": "keyword", "phrases": ["halloween"], "enabled": true, "style": "card",
+      "title": "Comfort film detected.", "message": "Seasonal secret. It only exists in October.",
+      "starts_at": "2026-10-01T00:00:00-03:00", "ends_at": "2026-11-01T00:00:00-03:00",
+      "hint": "Seasonal. Think of a certain night in October.", "hint_public": true,
+      "steps": [{ "media": "myers", "label": "The mask", "caption": "" }]
+    }
+  ],
+  "surprise": [
+    { "media": "locked", "caption": "Locked in." },
+    { "media": "cat-pc", "caption": "Hardware support has arrived." },
+    { "media": "guitar", "caption": "Currently on bass." },
+    { "media": "floating", "caption": "Levitating. No explanation given." },
+    { "media": "snoopy-hp", "caption": "Do not disturb." },
+    { "media": "snoopy-gl", "caption": "Reading the docs, for once." },
+    { "media": "snoopy-vinyl", "caption": "On repeat." },
+    { "media": "pixel-card", "caption": "Pulled a rare one." },
+    { "media": "pixel-fall", "caption": "Me after a Friday deploy." },
+    { "media": "doom-comic", "caption": "The villain, in comic form." },
+    { "media": "maldini-3", "caption": "Il Capitano." },
+    { "media": "connor-flag", "caption": "Growing-up material." }
+  ]
+}
