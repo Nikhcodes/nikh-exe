@@ -1,261 +1,1050 @@
+
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>NIKH.EXE | Under Construction Forever</title>
-<meta name="description" content="Nikhiel Lingard's personal corner of the internet: music, projects, and late-night things.">
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0d1018">
+<title>Guestbook Admin | NIKH.EXE</title>
+
 <link href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=Courier+Prime:wght@400;700&family=Newsreader:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+
 <style>
-:root{--ink:#0d1018;--navy:#14213a;--char:#22252d;--burg:#6b1f2e;--red:#b8343f;--amber:#e0a458;--cream:#f1e7d3;--paper:#e6d9bd;--disp:'Bowlby One',Impact,sans-serif;--mono:'Courier Prime',ui-monospace,monospace;--serif:'Newsreader',Georgia,serif}
-*{box-sizing:border-box;margin:0}
-html{background:var(--ink)}
-body{font-family:var(--serif);font-size:1.08rem;line-height:1.6;color:var(--cream);background:var(--ink);overflow-x:hidden;min-height:100vh;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
-a{color:var(--amber)}
-:focus-visible{outline:3px solid var(--amber);outline-offset:3px}
-.mono{font-family:var(--mono)}
-header{display:flex;flex-wrap:wrap;align-items:center;gap:8px 22px;padding:14px 22px;border-bottom:3px double var(--burg);background:var(--char);position:sticky;top:0;z-index:20}
-.logo{font-family:var(--disp);font-size:1.15rem;color:var(--amber);text-decoration:none;transform:rotate(-1.5deg);display:inline-block}
-nav{display:flex;flex-wrap:wrap;gap:4px}
-nav a{font-family:var(--mono);font-weight:700;text-decoration:none;color:var(--cream);padding:8px 12px;border:2px solid transparent;font-size:.9rem}
-nav a:hover{border-color:var(--amber);transform:rotate(-2deg)}
-nav a[aria-current=page]{background:var(--amber);color:var(--ink);transform:rotate(-2deg)}
-#view{animation:in .35s ease}
-@keyframes in{from{opacity:0;transform:translateY(8px)}}
-.wrap{max-width:1100px;margin:0 auto;padding:34px 22px 60px}
-h1,h2,h3{font-family:var(--disp);font-weight:400;line-height:1.05}
-h1{font-size:clamp(2.4rem,7vw,4.8rem)}
-h2{font-size:1.6rem;margin-bottom:12px}
-.tape{display:inline-block;background:rgba(224,164,88,.85);color:var(--ink);font-family:var(--mono);font-weight:700;font-size:.8rem;padding:3px 14px;transform:rotate(-3deg)}
-/* HOME */
-.home{display:grid;grid-template-columns:290px 1fr;gap:28px}
-.side{display:grid;gap:18px;align-self:start}
-.box{border:2px solid var(--burg);background:var(--char);padding:16px}
-.box h3{font-family:var(--mono);font-weight:700;font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;background:var(--burg);margin:-16px -16px 12px;padding:6px 16px}
-.avatar{aspect-ratio:1;background:repeating-linear-gradient(45deg,var(--navy) 0 10px,var(--ink) 10px 20px);display:grid;place-items:center;font-family:var(--disp);font-size:3rem;color:var(--amber);border:2px solid var(--amber);margin-bottom:10px}
-.status{font-family:var(--mono);color:var(--amber)}
-.stick{display:flex;flex-wrap:wrap;gap:8px}
-.stick span{font-family:var(--mono);font-size:.82rem;border:1.5px dashed var(--amber);padding:2px 9px;transition:transform .2s}
-.stick span:nth-child(odd){transform:rotate(-2deg)}.stick span:nth-child(even){transform:rotate(1.5deg)}
-.stick span:hover{transform:rotate(4deg) scale(1.12);background:var(--amber);color:var(--ink)}
-.hero p.big{font-size:1.5rem;font-style:italic;max-width:30ch;margin:16px 0}
-.btn{display:inline-block;font-family:var(--mono);font-weight:700;padding:11px 18px;background:var(--amber);color:var(--ink);text-decoration:none;border:2px solid var(--amber);margin:4px 8px 4px 0;cursor:pointer;font-size:1rem}
-.btn:hover{background:transparent;color:var(--amber)}
-.btn.ghost{background:transparent;color:var(--amber)}.btn.ghost:hover{background:var(--amber);color:var(--ink)}
-.picks{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:30px}
-#pick{font-family:var(--disp);font-size:1.4rem;color:var(--amber);min-height:2.6em}
-.updates li{list-style:none;padding:6px 0;border-bottom:1px dotted var(--grey,#777)}
-.updates b{font-family:var(--mono);color:var(--amber);font-size:.85rem}
-/* PROJECTS */
-.paper{background:var(--paper);color:#241b14;min-height:80vh}
-.paper a{color:var(--burg)}
-.paper .tape{background:var(--burg);color:var(--cream)}
-.pj{display:grid;grid-template-columns:1.1fr 1fr;gap:26px;padding:30px 0;border-top:2px solid #241b14}
-.pj:nth-of-type(even){direction:rtl}.pj:nth-of-type(even)>*{direction:ltr}
-.art{min-height:200px;padding:20px;position:relative;display:flex;flex-direction:column;justify-content:center;gap:8px}
-.art.rig{background:#0f1a14;color:#7ee0a3;font-family:var(--mono);font-size:.85rem;border:2px solid #7ee0a3;background-image:linear-gradient(#17301f 1px,transparent 1px),linear-gradient(90deg,#17301f 1px,transparent 1px);background-size:22px 22px}
-.art.rig .n{border:1px solid #7ee0a3;padding:3px 8px;display:inline-block}.art.rig .w{border-color:#ff9d5c;color:#ff9d5c}
-.art.mj{background:#c9a66b;color:#2a1a0c}
-.art.mj div{background:#f6e9c8;padding:8px 12px;box-shadow:2px 3px 0 rgba(0,0,0,.25);font-family:var(--mono);font-size:.82rem}
-.art.mj div:nth-child(1){transform:rotate(-2deg)}.art.mj div:nth-child(2){transform:rotate(1.5deg);margin-left:24px}.art.mj div:nth-child(3){transform:rotate(-1deg)}
-.art.led{background:#fbf6e8;border:1px solid #241b14;font-family:var(--mono);font-size:.82rem;background-image:repeating-linear-gradient(transparent 0 25px,#9bb7d4 25px 26px)}
-.art.os{background:var(--navy);color:var(--cream)}
-.phone{width:150px;height:200px;border:5px solid var(--char);border-radius:22px;background:var(--ink);padding:12px;margin:0 auto;font-family:var(--mono);font-size:.7rem;display:grid;gap:6px;align-content:start}
-.phone i{display:block;background:var(--burg);height:16px;border-radius:4px}.phone i:nth-child(2){background:var(--amber)}
-.art.cam{background:#111;color:#fff;border:2px solid #333;font-family:var(--mono)}
-.art.cam::before{content:"";position:absolute;inset:18px;border:2px solid rgba(255,255,255,.7);clip-path:polygon(0 0,18% 0,18% 3px,3px 3px,3px 18%,0 18%,0 0)}
-.art.cam .rec{color:#ff4b4b}
-.pj h3{font-size:1.8rem;margin:4px 0 8px}
-.stk{font-family:var(--mono);font-size:.8rem;opacity:.85}
-.lk{margin-top:10px;font-family:var(--mono);font-weight:700}.lk a{margin-right:16px}
-/* MUSIC */
-.crates{display:flex;flex-wrap:wrap;gap:8px;margin:20px 0}
-.crates button{font-family:var(--mono);font-weight:700;background:var(--char);color:var(--cream);border:2px solid var(--burg);padding:9px 14px;cursor:pointer;font-size:.9rem}
-.crates button[aria-pressed=true]{background:var(--amber);color:var(--ink);border-color:var(--amber)}
-.sleeves{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:18px}
-.sl{aspect-ratio:1;padding:14px;display:flex;flex-direction:column;justify-content:space-between;color:#fff;box-shadow:5px 5px 0 rgba(0,0,0,.5);transition:transform .2s;position:relative;overflow:hidden}
-.sl:hover{transform:rotate(-2deg) translateY(-4px)}
-.sl::after{content:"";position:absolute;right:-30px;bottom:-30px;width:110px;height:110px;border-radius:50%;background:repeating-radial-gradient(#0003 0 2px,#0000 2px 5px);}
-.sl b{font-family:var(--disp);font-weight:400;font-size:1.25rem;line-height:1.05}
-.sl small{font-family:var(--mono);font-size:.75rem}
-.shuf{margin:24px 0;padding:16px;border:2px dashed var(--amber)}
-/* LINKS */
-.bk{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin:22px 0 40px}
-.bk a{display:block;text-decoration:none;color:var(--cream);border:2px solid var(--burg);background:var(--char);padding:14px 16px;transition:transform .2s,border-color .2s}
-.bk a:hover{transform:rotate(-1.5deg) translateY(-3px);border-color:var(--amber)}
-.bk b{font-family:var(--disp);font-weight:400;font-size:1.25rem;color:var(--amber);display:block}
-.bk small{font-family:var(--mono);font-size:.8rem}
-.btn88{display:inline-block;width:88px;height:31px;line-height:27px;text-align:center;font-family:var(--mono);font-weight:700;font-size:.72rem;border:2px outset var(--amber);color:var(--ink);background:var(--amber);text-decoration:none;margin:0 6px 8px 0}
-.btn88:hover{background:var(--cream)}
-.heroes{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px;margin-top:18px}
-.card{background:var(--cream);color:#241b14;padding:16px;border:3px solid #241b14;box-shadow:5px 5px 0 rgba(0,0,0,.5);min-height:170px;display:flex;flex-direction:column;justify-content:space-between;transition:transform .2s}
-.card:nth-child(odd){transform:rotate(-1.2deg)}.card:nth-child(even){transform:rotate(1.2deg)}
-.card:hover{transform:rotate(0) scale(1.04)}
-.card b{font-family:var(--disp);font-weight:400;font-size:1.4rem;line-height:1.05}
-.card small{font-family:var(--mono);font-weight:700;color:var(--burg)}
-/* GUESTBOOK */
-.gf{display:grid;gap:10px;max-width:520px;margin:22px 0 34px;border:2px solid var(--burg);background:var(--char);padding:18px}
-.gf label{font-family:var(--mono);font-weight:700;font-size:.85rem}
-.gf input,.gf textarea{font:inherit;padding:10px;background:var(--ink);color:var(--cream);border:2px solid var(--burg);width:100%}
-.gf textarea{min-height:110px;resize:vertical}
-.hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
-.gb{background:var(--cream);color:#241b14;padding:14px 18px;margin-bottom:14px;border-left:8px solid var(--amber);box-shadow:4px 4px 0 rgba(0,0,0,.5);max-width:620px;overflow-wrap:anywhere}
-.gb b{font-family:var(--disp);font-weight:400;margin-right:10px}.gb time{font-family:var(--mono);font-size:.78rem;color:var(--burg)}
-/* JOURNAL */
-.jn{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:26px;margin-top:6px}
-.entry{background:var(--cream);color:#241b14;padding:22px;box-shadow:6px 6px 0 rgba(0,0,0,.5);border-top:10px solid var(--burg)}
-.entry:nth-child(3n+2){transform:rotate(1deg);border-top-color:var(--amber)}
-.entry:nth-child(3n){transform:rotate(-.8deg);border-top-color:var(--navy)}
-.entry time{font-family:var(--mono);font-size:.8rem;font-weight:700;color:var(--burg)}
-.entry h2{margin:6px 0 10px;font-size:1.35rem}
-.entry p{margin-bottom:10px}
-.entry ul{margin:0 0 10px 20px}
-.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
-.tags span{font-family:var(--mono);font-size:.74rem;border:1.5px solid #241b14;padding:1px 8px}
-/* ABOUT */
-.ab{display:grid;grid-template-columns:1.5fr 1fr;gap:36px;margin-top:26px}
-.ab p{margin-bottom:16px;max-width:58ch}
-.ab p.lede{font-size:1.45rem;font-style:italic;line-height:1.4}
-.ab p.lede::first-letter{font-family:var(--disp);font-size:3.4rem;float:left;line-height:.85;padding:4px 8px 0 0;color:var(--burg)}
-.fact{background:var(--cream);border:2px solid #241b14;padding:18px;transform:rotate(1.2deg);box-shadow:5px 5px 0 rgba(36,27,20,.35);align-self:start}
-.fact h3{font-size:1.1rem;color:var(--burg);margin-bottom:10px}
-.fact dt{font-family:var(--mono);font-weight:700;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--burg);margin-top:12px}
-.fact dd{margin:0}
-.faq{margin-top:34px;border-top:2px solid #241b14;padding-top:20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px}
-.faq h3{font-size:1.05rem;margin-bottom:6px;color:var(--burg)}
-@media(max-width:820px){.ab{grid-template-columns:1fr}}
-/* CONTACT */
-.ct{max-width:640px}
-.ct .mail{font-family:var(--disp);font-size:clamp(1.3rem,4.5vw,2.2rem);word-break:break-all}
-.ct li{list-style:none;padding:12px 0;border-bottom:2px dotted #241b14;font-family:var(--mono);font-weight:700}
-footer{padding:20px 22px calc(30px + env(safe-area-inset-bottom));font-family:var(--mono);font-size:.8rem;border-top:3px double var(--burg);color:#999}
-#egg{position:fixed;bottom:16px;right:16px;background:var(--amber);color:var(--ink);padding:10px 14px;font-family:var(--mono);font-weight:700;transform:rotate(-3deg);display:none;z-index:40}
-@media(max-width:820px){.home,.pj{grid-template-columns:1fr}.pj:nth-of-type(even){direction:ltr}}
-@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
-</style></head>
+:root {
+  --ink: #0d1018;
+  --navy: #14213a;
+  --char: #22252d;
+  --burg: #6b1f2e;
+  --red: #b8343f;
+  --amber: #e0a458;
+  --cream: #f1e7d3;
+  --paper: #e6d9bd;
+
+  --disp: 'Bowlby One', Impact, sans-serif;
+  --mono: 'Courier Prime', ui-monospace, monospace;
+  --serif: 'Newsreader', Georgia, serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 0;
+  min-height: 100%;
+  background: var(--ink);
+  scroll-behavior: smooth;
+  overflow-wrap: anywhere;
+}
+
+body {
+  min-width: 0;
+  min-height: 100vh;
+  margin: 0;
+  padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+
+  color: var(--cream);
+  background:
+    radial-gradient(ellipse at 50% 0%, #14213a 0%, transparent 65%),
+    var(--ink);
+
+  font-family: var(--serif);
+  font-size: 1.05rem;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  color: inherit;
+}
+
+button:focus-visible,
+input:focus-visible {
+  outline: 3px solid var(--amber);
+  outline-offset: 3px;
+}
+
+button:disabled {
+  cursor: wait;
+  opacity: .55;
+}
+
+a {
+  color: var(--amber);
+}
+
+::selection {
+  color: var(--ink);
+  background: var(--amber);
+}
+
+/* HEADER */
+
+.topbar {
+  position: relative;
+  border-bottom: 3px double var(--burg);
+  background: var(--char);
+}
+
+.topbar-inner {
+  width: min(100% - 36px, 980px);
+  min-width: 0;
+  margin: 0 auto;
+  padding: 16px 0;
+
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 20px;
+}
+
+.logo {
+  color: var(--amber);
+  font-family: var(--disp);
+  font-size: 1.15rem;
+  line-height: 1.3;
+  text-decoration: none;
+  transform: rotate(-1.5deg);
+}
+
+.logo span {
+  color: var(--cream);
+}
+
+.top-tag {
+  color: var(--amber);
+  font-family: var(--mono);
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  overflow-wrap: anywhere;
+}
+
+/* PAGE LAYOUT */
+
+main {
+  width: min(100% - 36px, 760px);
+  min-width: 0;
+  margin: 0 auto;
+  padding: 42px 0 70px;
+}
+
+.intro {
+  margin-bottom: 28px;
+}
+
+.tape {
+  display: inline-block;
+  max-width: 100%;
+  padding: 4px 12px;
+
+  color: var(--ink);
+  background: var(--amber);
+
+  font-family: var(--mono);
+  font-size: .76rem;
+  font-weight: 700;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+
+  transform: rotate(-2deg);
+}
+
+h1,
+h2,
+h3,
+p {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+h1 {
+  margin: 17px 0 12px;
+  font-family: var(--disp);
+  font-size: clamp(2rem, 7vw, 3.8rem);
+  font-weight: 400;
+  line-height: 1.08;
+  letter-spacing: -.025em;
+}
+
+.subtitle {
+  max-width: 55ch;
+  margin: 0;
+  color: #d2c6b2;
+  font-size: 1.08rem;
+}
+
+/* STATUS LINE */
+
+.status-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+
+  margin-top: 18px;
+  padding: 10px 12px;
+
+  border-left: 3px solid var(--amber);
+  background: #22252d;
+
+  font-family: var(--mono);
+  font-size: .8rem;
+  overflow-wrap: anywhere;
+}
+
+.status-dot {
+  flex: 0 0 8px;
+  width: 8px;
+  height: 8px;
+  margin-top: 7px;
+  border-radius: 50%;
+  background: var(--amber);
+}
+
+.status-line span:last-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* PANELS */
+
+.panel {
+  min-width: 0;
+  padding: clamp(14px, 4vw, 22px);
+
+  border: 2px solid var(--burg);
+  background: var(--char);
+  box-shadow: 5px 5px 0 #0005;
+}
+
+.panel + .panel {
+  margin-top: 22px;
+}
+
+.panel-heading {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+
+  margin: calc(-1 * clamp(14px, 4vw, 22px));
+  margin-bottom: 18px;
+  padding: 9px clamp(14px, 4vw, 22px);
+
+  color: var(--cream);
+  background: var(--burg);
+
+  font-family: var(--mono);
+  font-size: .82rem;
+  font-weight: 700;
+  letter-spacing: .045em;
+  text-transform: uppercase;
+}
+
+.panel-heading .right-label {
+  margin-left: auto;
+  color: var(--amber);
+  font-size: .72rem;
+}
+
+/* TOKEN FORM */
+
+.field-label {
+  display: block;
+  margin-bottom: 7px;
+
+  color: var(--amber);
+  font-family: var(--mono);
+  font-size: .85rem;
+  font-weight: 700;
+}
+
+.field-row {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  min-width: 0;
+}
+
+#t {
+  display: block;
+  flex: 1 1 220px;
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+  padding: 10px 12px;
+
+  border: 2px solid var(--burg);
+  border-radius: 0;
+
+  color: var(--cream);
+  background: var(--ink);
+
+  font-family: var(--mono);
+  font-size: 1rem;
+}
+
+#t::placeholder {
+  color: #9b9183;
+  opacity: 1;
+}
+
+.hint {
+  margin: 10px 0 0;
+  color: #c4b8a6;
+  font-size: .9rem;
+}
+
+/* BUTTONS */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  min-height: 42px;
+  max-width: 100%;
+  padding: 9px 15px;
+
+  border: 2px solid var(--amber);
+  border-radius: 0;
+
+  color: var(--ink);
+  background: var(--amber);
+
+  font-family: var(--mono);
+  font-size: .9rem;
+  font-weight: 700;
+  line-height: 1.35;
+  text-align: center;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+
+  cursor: pointer;
+  transition: background .15s, color .15s, border-color .15s;
+}
+
+.btn:hover:not(:disabled) {
+  color: var(--amber);
+  background: transparent;
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.btn-secondary {
+  color: var(--amber);
+  background: transparent;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  color: var(--ink);
+  background: var(--amber);
+}
+
+.btn-danger {
+  border-color: var(--red);
+  color: var(--cream);
+  background: var(--burg);
+}
+
+.btn-danger:hover:not(:disabled) {
+  border-color: var(--red);
+  color: var(--cream);
+  background: var(--red);
+}
+
+/* COUNTERS */
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.stat {
+  min-width: 0;
+  padding: 14px 12px;
+
+  border: 1px solid var(--burg);
+  background: var(--char);
+}
+
+.stat-label {
+  display: block;
+  margin-bottom: 4px;
+
+  color: #c9bda9;
+  font-family: var(--mono);
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .035em;
+  overflow-wrap: anywhere;
+}
+
+.stat-number {
+  display: block;
+  color: var(--amber);
+  font-family: var(--disp);
+  font-size: clamp(1.4rem, 5vw, 2rem);
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+/* LIST HEADER */
+
+.list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+
+  margin-bottom: 16px;
+}
+
+.list-title {
+  margin: 0;
+  font-family: var(--disp);
+  font-size: 1.3rem;
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+.list-count {
+  color: var(--amber);
+  font-family: var(--mono);
+  font-size: .8rem;
+}
+
+/* ENTRY CARDS */
+
+.entry {
+  min-width: 0;
+  max-width: 100%;
+  padding: clamp(13px, 3.5vw, 20px);
+  margin-bottom: 15px;
+
+  border: 1px solid var(--burg);
+  border-left: 5px solid var(--amber);
+  background: var(--ink);
+
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+.entry.pending {
+  border-left-color: var(--red);
+}
+
+.entry:last-child {
+  margin-bottom: 0;
+}
+
+.entry-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+
+  min-width: 0;
+  margin-bottom: 12px;
+}
+
+.entry-identity {
+  flex: 1 1 180px;
+  min-width: 0;
+}
+
+.entry-name {
+  display: block;
+  margin-bottom: 4px;
+
+  color: var(--cream);
+  font-family: var(--disp);
+  font-size: 1.15rem;
+  font-weight: 400;
+  line-height: 1.25;
+
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+.entry-date {
+  display: block;
+  color: #c4b8a6;
+  font-family: var(--mono);
+  font-size: .75rem;
+  line-height: 1.5;
+
+  overflow-wrap: anywhere;
+}
+
+.badge {
+  display: inline-block;
+  flex: 0 1 auto;
+  max-width: 100%;
+  padding: 3px 8px;
+
+  border: 1px solid var(--amber);
+  color: var(--amber);
+  background: transparent;
+
+  font-family: var(--mono);
+  font-size: .7rem;
+  font-weight: 700;
+  line-height: 1.5;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+.badge.pending-badge {
+  border-color: var(--red);
+  color: #ff9c9c;
+}
+
+.entry-message {
+  min-width: 0;
+  max-width: 100%;
+  margin: 0 0 18px;
+
+  color: var(--cream);
+  font-family: var(--serif);
+  font-size: 1.05rem;
+  line-height: 1.75;
+
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+.entry-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px dashed #49434a;
+}
+
+.entry-actions .btn {
+  flex: 0 1 auto;
+}
+
+/* EMPTY, LOADING AND ERROR STATES */
+
+.state {
+  padding: 26px 16px;
+  border: 1px dashed var(--burg);
+  background: var(--ink);
+  text-align: center;
+}
+
+.state-title {
+  margin: 0 0 8px;
+  color: var(--amber);
+  font-family: var(--disp);
+  font-size: 1.15rem;
+  font-weight: 400;
+}
+
+.state p {
+  margin: 0;
+  color: #c4b8a6;
+  font-size: .95rem;
+}
+
+.state.error {
+  border-color: var(--red);
+}
+
+.state.error .state-title {
+  color: #ff9c9c;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+/* FOOTER */
+
+footer {
+  padding: 20px 18px calc(28px + env(safe-area-inset-bottom));
+  border-top: 3px double var(--burg);
+
+  color: #999;
+  font-family: var(--mono);
+  font-size: .78rem;
+  text-align: center;
+}
+
+footer a {
+  color: var(--amber);
+  text-decoration: none;
+}
+
+footer a:hover {
+  text-decoration: underline;
+}
+
+/* MOBILE */
+
+@media (max-width: 520px) {
+  .topbar-inner {
+    width: calc(100% - 28px);
+    gap: 8px 12px;
+  }
+
+  .top-tag {
+    font-size: .68rem;
+  }
+
+  main {
+    width: calc(100% - 28px);
+    padding-top: 30px;
+    padding-bottom: 46px;
+  }
+
+  .field-row {
+    flex-direction: column;
+  }
+
+  .field-row .btn {
+    width: 100%;
+  }
+
+  .stats {
+    gap: 7px;
+  }
+
+  .stat {
+    padding: 11px 8px;
+  }
+
+  .stat-label {
+    font-size: .65rem;
+  }
+
+  .entry-actions .btn {
+    flex: 1 1 120px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition: none !important;
+    animation: none !important;
+  }
+}
+</style>
+</head>
+
 <body>
-<header><a class="logo" href="#/">NIKH.EXE</a><nav aria-label="Main" id="nav"></nav></header>
-<main id="view"></main>
-<footer>Built after hours in Suriname.</footer>
-<div id="egg" role="status" aria-live="polite"></div>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="logo" href="/" aria-label="NIKH.EXE home">
+      NIKH<span>.EXE</span>
+    </a>
+    <span class="top-tag">PRIVATE AREA / ADMIN</span>
+  </div>
+</header>
+
+<main>
+  <section class="intro">
+    <span class="tape">THE BACK ROOM</span>
+    <h1>Guestbook<br>Moderation</h1>
+    <p class="subtitle">
+      The messages people leave behind. Review them, approve the good ones,
+      and keep the nonsense out.
+    </p>
+
+    <div class="status-line" role="status" aria-live="polite">
+      <span class="status-dot" id="statusDot"></span>
+      <span id="statusText">AWAITING AUTHENTICATION</span>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="authHeading">
+    <div class="panel-heading">
+      <span id="authHeading">01 / Authentication</span>
+      <span class="right-label">ADMIN ONLY</span>
+    </div>
+
+    <form id="authForm">
+      <label class="field-label" for="t">ADMIN_TOKEN</label>
+
+      <div class="field-row">
+        <input
+          id="t"
+          type="password"
+          placeholder="Enter your admin token..."
+          aria-label="Admin token"
+          autocomplete="off"
+          autocapitalize="off"
+          spellcheck="false"
+          required
+        >
+        <button class="btn" id="go" type="submit">
+          Load entries &rarr;
+        </button>
+      </div>
+
+      <p class="hint">
+        Your token stays in page memory. It is not saved in local storage
+        or written into the page.
+      </p>
+    </form>
+  </section>
+
+  <section id="dashboard" hidden aria-label="Guestbook dashboard">
+    <div class="stats" aria-label="Entry statistics">
+      <div class="stat">
+        <span class="stat-label">PENDING</span>
+        <span class="stat-number" id="pendingCount">0</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">APPROVED</span>
+        <span class="stat-number" id="approvedCount">0</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">TOTAL</span>
+        <span class="stat-number" id="totalCount">0</span>
+      </div>
+    </div>
+
+    <section class="panel" aria-labelledby="entriesHeading">
+      <div class="panel-heading">
+        <span id="entriesHeading">02 / Messages</span>
+        <span class="right-label">GUESTBOOK LOG</span>
+      </div>
+
+      <div class="list-header">
+        <h2 class="list-title">All entries</h2>
+        <button class="btn btn-secondary" id="refresh" type="button">
+          &#8635; Refresh
+        </button>
+      </div>
+
+      <div id="out" aria-live="polite" aria-busy="false">
+        <div class="state">
+          <h3 class="state-title">Awaiting data</h3>
+          <p>Enter your admin token and load the guestbook.</p>
+        </div>
+      </div>
+    </section>
+  </section>
+</main>
+
+<footer>
+  NIKH.EXE &mdash; BUILT AFTER HOURS IN SURINAME.
+  <br>
+  <a href="/">Back to the main site &larr;</a>
+</footer>
+
 <script>
-/* ===== EDIT YOUR CONTENT HERE ===== */
-const ME={
- name:"Nikhiel Lingard",
- status:"Up late. Probably debugging something.",   // change anytime
- nowListening:"Not set yet. Edit ME.nowListening",
- blurb:"IT Operator by day, student and builder by night. Based in Suriname. Into kompa, anime, horror and backend systems.",
- into:["Kompa","Zouk","Hunter x Hunter","Stardew Valley","Horror films","Football","Spring Boot","Cowboy Bebop"],
- updates:[["Oct 2026","Rebuilt this site as a real personal corner of the internet."],["Oct 2026","Studying backend: Spring Security and PostgreSQL."]],
- picks:["Cowboy Bebop","GTO","Initial D-style drifting anime","Inuyasha","Hunter x Hunter","Dragon Ball Super","Assassin's Creed","Zelda: Breath of the Wild","Stardew Valley","Super Mario Odyssey","Sleeping Dogs","The Truman Show","Halloween"],
- email:"nikhiel.lingard.dev@gmail.com",
- github:"https://github.com/NikhCodes",
- linkedin:"https://www.linkedin.com/in/nikhiel-lingard/",
- site:"https://nikhcodes.github.io",
- resume:"" // add a real file URL here to show a résumé link
-};
-const CRATES={
- "Caribbean":{c:"#a8442b",items:[["Kassav'","Zouk","Add your favorite album or track + why."],["Gyptian","Dancehall","Add your favorite album or track + why."],["Beres Hammond","Reggae","Add your favorite album or track + why."],["Kompa","Any and all","Which groups? Add them here."]]},
- "Latin":{c:"#7a2a63",items:[["Elvis Crespo","Salsa / merengue","Add your favorite album or track + why."],["Bachata","Genre","Which artists? Add them here."],["Merengue","Genre","Which artists? Add them here."]]},
- "Loud guitars":{c:"#2b3a5c",items:[["My Chemical Romance","Alt rock","Add your favorite album or track + why."],["Green Day","Alt rock","Add your favorite album or track + why."]]},
- "Hip-hop":{c:"#5a4a1a",items:[["MF DOOM","Favorite artist ever","Add your favorite album or track + why."]]},
- "Stage & score":{c:"#4a1620",items:[["The Phantom of the Opera","Opera / musical","Add your favorite version or number + why."],["Classical","Genre","Which composers? Add them here."]]},
- "After midnight":{c:"#1c4a4a",items:[["Jazz","Genre","Add your favorite artists + why. Bebop is the mood reference."]]}
-};
-const PROJECTS=[
- {k:"rig",n:"RigSight",t:"Flagship backend project",d:"A simulated industrial monitoring platform. The question: how does a backend behave when input is a steady stream of equipment data instead of CRUD requests? It explores threshold monitoring, state transitions and alert deduplication, with JWT auth and role-based access.",s:"Java 21 · Spring Boot · Spring Security · JWT · Hibernate · PostgreSQL · Flyway · Docker",l:[["Source","https://github.com/NikhCodes/rigsight"]],a:'<span class="n">NORMAL</span> → <span class="n w">WARNING</span> → <span class="n w">CRITICAL</span><span>simulated data · repeat breaches = one alert</span>'},
- {k:"mj",n:"Microjobs.sr",t:"Full-stack product for Suriname",d:"A local-first micro-jobs and talent marketplace. People build profiles, showcase skills, post jobs, apply and message each other. Covers session auth with bcrypt, role-aware admin, the job and application lifecycle, and relational modeling.",s:"Next.js · React · TypeScript · Tailwind · Prisma · PostgreSQL (Neon) · Vercel",l:[["Live app","https://microjobs-sr.vercel.app/"],["Source","https://github.com/Nikhcodes/microjobs.sr"]],a:'<div>WANTED: logo designer, 1 week</div><div>OFFERING: photography, Paramaribo</div><div>NEED: web dev for small shop</div>'},
- {k:"led",n:"AGAS",t:"Academic group accountability system",d:"Built around trust boundaries: a three-role authorization model, hashed passwords and an append-only audit log, with JSONB metadata, UUID keys and soft deletion. No public demo or repository.",s:"Node.js · Express · PostgreSQL · JWT · bcrypt · Helmet · Joi",l:[],a:'<span>#001 &nbsp;role granted &nbsp;[append-only]</span><span>#002 &nbsp;record updated</span><span>#003 &nbsp;record soft-deleted</span>'},
- {k:"os",n:"NikhOS",t:"Student workspace / PWA",d:"A grade and assignment tracker that feels like a native app: installable and usable offline.",s:"React · Vite · Tailwind CSS · Framer Motion",l:[["Live app","https://nikh-os-red.vercel.app"],["Source","https://github.com/NikhCodes/NikhOS"]],a:'<div class="phone" aria-hidden="true"><span>NikhOS</span><i></i><i></i><i></i><i></i></div>'},
- {k:"cam",n:"Pose Cam",t:"Computer vision experiment",d:"Real-time hand gesture detection using landmark geometry instead of a trained classifier, to understand the math under the library calls.",s:"Python · MediaPipe · OpenCV · NumPy",l:[["Source","https://github.com/NikhCodes/face-tracker"]],a:'<span class="rec">● REC</span><span>21 landmarks → angles → gesture</span>'}
-];
-const JOURNAL=[ // newest first. Add entries here: {d,t,tags,body (html)}
- {d:"Oct 2026",t:"Welcome to the website",tags:["meta"],body:"<p>I had a normal portfolio. It was fine. It also sounded like every other developer on the internet. So I tore it up and built the kind of website people used to make: weird, personal and slightly too long.</p><p>The projects are still here. They just share the house with the music now.</p>"},
- {d:"Oct 2026",t:"Auth is not a login form",tags:["backend","security"],body:"<p>A login form takes an afternoon. The hard part is everything after it: how long a session lives, where a token is stored, how passwords are hashed, and what each role is actually allowed to do once it gets in.</p><p>That's why I like building it. Every shortcut shows up later as a bug or a hole.</p>"},
- {d:"Oct 2026",t:"Ops brain, dev hands",tags:["ops","backend"],body:"<p>Working in IT operations changed how I read code. I look at a feature and ask what happens when it fails, who finds out, and how fast. Happy paths are easy. Failure paths are where a system shows its character.</p>"},
- {d:"Oct 2026",t:"What I'm learning right now",tags:["learning"],body:"<ul><li>Spring Security and PostgreSQL, properly</li><li>The OWASP Top 10, and how to design auth</li><li>Caching strategies</li><li>Next up: Docker, Nginx and deployment</li></ul><p>No framework collecting. One system at a time.</p>"}
-];
-const LINKS=[ // [name, url, one-liner]
- ["Pinterest","https://www.pinterest.com","Where my taste goes to collect."],
- ["Spotify","https://open.spotify.com","Music, obviously."],
- ["GitHub","https://github.com","Obvious. My stuff lives at NikhCodes."],
- ["Stack Overflow","https://stackoverflow.com","Still funny. Still saves me."],
- ["Claude","https://claude.ai","Favorite, no questions asked."],
- ["Gemini","https://gemini.google.com","The other favorite, no questions asked."]
-];
-const HEROES=[ // [name, label, note]
- ["MF DOOM","Music","Favorite ever."],
- ["Paolo Maldini","Football","Idol growing up."],
- ["Ruud Gullit","Football","Idol growing up."],
- ["Lionel Messi","Football","Idol growing up."]
-];
-/* ===== END CONTENT ===== */
-const $=s=>document.querySelector(s),v=$('#view');
-const pages={
- home(){return `<div class="wrap home"><aside class="side">
- <div class="box"><h3>${ME.name}</h3><div class="avatar" aria-hidden="true">N</div><p class="status">“${ME.status}”</p></div>
- <div class="box"><h3>Now listening</h3><p class="mono">${ME.nowListening}</p></div>
- <div class="box"><h3>Currently into</h3><div class="stick">${ME.into.map(i=>`<span>${i}</span>`).join('')}</div></div></aside>
- <section class="hero"><span class="tape">WELCOME, STRANGER</span><h1>Hey, I'm Nikh.</h1><p class="big">${ME.blurb}</p>
- <a class="btn" href="#/projects">See what I build</a><a class="btn ghost" href="#/music">Flip through the crate</a>
- <div class="picks"><div class="box"><h3>Tonight's pick</h3><div id="pick">Press shuffle</div><button class="btn ghost" id="sh">Shuffle</button></div>
- <div class="box updates"><h3>Updates</h3><ul>${ME.updates.map(u=>`<li><b>${u[0]}</b> ${u[1]}</li>`).join('')}</ul></div></div></section></div>`},
- projects(){return `<div class="paper"><div class="wrap"><span class="tape">THE WORKBENCH</span><h1>Things I've built</h1><p style="max-width:50ch;margin-top:10px">Real projects, honestly described. Some are products, some are experiments, and one is still homework.</p>
- ${PROJECTS.map(p=>`<article class="pj"><div class="art ${p.k}">${p.a}</div><div><span class="tape">${p.t}</span><h3>${p.n}</h3><p>${p.d}</p><p class="stk">${p.s}</p><p class="lk">${p.l.map(x=>`<a href="${x[1]}" target="_blank" rel="noopener">${x[0]} ↗</a>`).join('')}</p></div></article>`).join('')}</div></div>`},
- music(){const names=Object.keys(CRATES);return `<div class="wrap"><span class="tape">THE CRATE</span><h1>What I listen to</h1><p style="max-width:55ch;margin-top:10px">Not just jazz. Genres and artists below are mine; the notes are waiting for me to fill in.</p>
- <div class="crates" role="group" aria-label="Genres">${names.map((n,i)=>`<button data-c="${n}" aria-pressed="${i==0}">${n}</button>`).join('')}</div>
- <div class="sleeves" id="sl"></div>
- <div class="shuf"><button class="btn" id="msh">Surprise me</button> <span id="mp" class="mono"></span></div></div>`},
- links(){return `<div class="wrap"><span class="tape">THE BOOKMARKS</span><h1>Links</h1><p style="max-width:55ch;margin-top:10px">Where I spend my internet time, and the people I keep thinking about.</p>
- <h2 style="margin-top:30px">Tabs that are always open</h2>
- <div class="bk">${LINKS.map(l=>`<a href="${l[1]}" target="_blank" rel="noopener"><b>${l[0]} ↗</b><small>${l[2]}</small></a>`).join('')}</div>
- <h2>Heroes</h2><div class="heroes">${HEROES.map(h=>`<div class="card"><small>${h[1]}</small><b>${h[0]}</b><small>${h[2]}</small></div>`).join('')}</div>
- <h2 style="margin-top:40px">Grab my button</h2><p class="mono" style="margin-bottom:10px">88x31, because some traditions deserve to live.</p>
- <a class="btn88" href="#/">NIKH.EXE</a></div>`},
- guestbook(){return `<div class="wrap"><span class="tape">SIGN HERE</span><h1>Guestbook</h1><p style="max-width:55ch;margin-top:10px">Leave a message. I read every one, and approve them by hand before they show up here.</p>
- <form class="gf" id="gf"><label for="gn">Name</label><input id="gn" name="nm" maxlength="40" required autocomplete="nickname">
- <label for="gmsg">Message (500 characters max)</label><textarea id="gmsg" name="msg" maxlength="500" required></textarea>
- <div class="hp" aria-hidden="true"><label>Leave this empty<input name="website" tabindex="-1" autocomplete="off"></label></div>
- <button class="btn" type="submit">Sign it</button><p class="mono" id="gm" role="status"></p></form>
- <div id="gl" aria-live="polite">Loading...</div></div>`},
- journal(){const tags=[...new Set(JOURNAL.flatMap(j=>j.tags))];return `<div class="wrap"><span class="tape">THE ZINE</span><h1>Journal</h1><p style="max-width:55ch;margin-top:10px">Things I'm learning, things I think, and the occasional rant. Newest first.</p>
- <div class="crates" role="group" aria-label="Filter by tag"><button data-t="" aria-pressed="true">all</button>${tags.map(t=>`<button data-t="${t}" aria-pressed="false">${t}</button>`).join('')}</div>
- <div class="jn" id="jn"></div></div>`},
- about(){return `<div class="paper"><div class="wrap"><span class="tape">THE LIQUOR-FREE INTERVIEW</span><h1>Who even is this guy</h1>
- <div class="ab"><div>
- <p class="lede">By day I keep banking systems running. By night I build things that nobody asked for, usually with more care than the situation strictly requires.</p>
- <p>I'm Nikhiel, but everyone calls me Nikh. I live in Suriname and work as an IT Operator at a fintech banking environment, which means I spend a lot of time making sure things work, and an even more suspicious amount of time wondering what happens when they stop working. I can't tell you the details, because banks get weird about that, but it has shaped how I think about software.</p>
- <p>I'm also studying BSc IT / Software Engineering at UNASAT, heading toward backend work. Java, Spring Boot, PostgreSQL, authentication, security. I like the parts of an app that users never see and absolutely notice when they're wrong.</p>
- <p>I'm not a ten-year veteran, and I'm not going to pretend. I'm early in my career, learning properly, and building real things along the way. My rule: I don't collect frameworks. I'd rather understand one system all the way down than skim ten tutorials.</p>
- <p>Outside the screen, I'm the guy with kompa on, an anime half-watched and a horror movie queued up. Yes, those can all happen in the same evening. This site is the proof.</p></div>
- <aside class="fact"><h3>FIELD NOTES</h3><dl>
- <dt>Day job</dt><dd>IT Operator, fintech banking</dd>
- <dt>School</dt><dd>BSc IT / Software Eng., UNASAT</dd>
- <dt>Heading toward</dt><dd>Backend engineering</dd>
- <dt>Base</dt><dd>Suriname</dd>
- <dt>Soundtrack</dt><dd>Kompa, zouk, salsa, reggae, alt rock, opera, jazz</dd>
- <dt>Screens</dt><dd>Bebop, GTO, Hunter x Hunter, Inuyasha, Dragon Ball Super</dd>
- <dt>Controllers</dt><dd>Zelda, Stardew, Assassin's Creed, Mario Odyssey</dd>
- <dt>Horror</dt><dd>Yes. Halloween is a comfort film. Don't ask.</dd></dl></aside></div>
- <div class="faq"><div><h3>Frequently asked, by nobody</h3><p>Why a personal site instead of a normal portfolio? Because I wanted a place that feels like mine, with the projects in one room of it.</p></div>
- <div><h3>Do you do jazz only?</h3><p>No. Jazz is the late-night shelf. The rest of the collection gets loud and goes to a party.</p></div>
- <div><h3>Open to work?</h3><p>Open to interesting things. Email me and we'll see.</p></div></div></div></div>`},
- contact(){return `<div class="paper"><div class="wrap ct"><span class="tape">OPEN CHANNEL</span><h1>Say hello</h1><p style="margin:12px 0 22px">Got something interesting to build, or just want to talk music or backend? Email is fastest.</p>
- <a class="mail" href="mailto:${ME.email}">${ME.email}</a><ul style="margin-top:28px">
- <li><a href="${ME.github}" target="_blank" rel="noopener">GitHub ↗</a></li><li><a href="${ME.linkedin}" target="_blank" rel="noopener">LinkedIn ↗</a></li><li><a href="${ME.site}" target="_blank" rel="noopener">nikhcodes.github.io ↗</a></li>
- ${ME.resume?`<li><a href="${ME.resume}" target="_blank" rel="noopener">Résumé ↗</a></li>`:''}</ul></div></div>`}
-};
-const nav=[["home","Home"],["about","About"],["projects","Projects"],["journal","Journal"],["links","Links"],["guestbook","Guestbook"],["music","Music"],["contact","Contact"]];
-function render(){const r=(location.hash.replace('#/','')||'home');const k=pages[r]?r:'home';
- v.innerHTML=pages[k]();document.title=(k=='home'?"NIKH.EXE | Under Construction Forever":nav.find(n=>n[0]==k)[1]+" · NIKH.EXE");window.scrollTo(0,0);
- $('#nav').innerHTML=nav.map(n=>`<a href="#/${n[0]=='home'?'':n[0]}" ${n[0]==k?'aria-current="page"':''}>${n[1]}</a>`).join('');
- if(k=='home'){$('#sh').onclick=()=>{$('#pick').textContent=ME.picks[Math.floor(Math.random()*ME.picks.length)]}}
- if(k=='guestbook'){const L=$('#gl'),M=$('#gm');
- fetch('/api/guestbook').then(r=>{if(!r.ok)throw 0;return r.json()}).then(d=>{L.textContent='';if(!d.entries.length){L.textContent='No signatures yet. Be the first.';return}d.entries.forEach(e=>{const a=document.createElement('article');a.className='gb';const b=document.createElement('b');b.textContent=e.name;const t=document.createElement('time');t.textContent=new Date(e.created_at).toLocaleDateString();const p=document.createElement('p');p.textContent=e.message;a.append(b,t,p);L.append(a)})}).catch(()=>{L.textContent='The guestbook is offline here. It only works once the site is deployed with its backend.';$('#gf').hidden=true});
- $('#gf').onsubmit=async ev=>{ev.preventDefault();const f=ev.target;M.textContent='Sending...';try{const r=await fetch('/api/guestbook',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nm:f.elements.nm.value,msg:f.elements.msg.value,website:f.elements.website.value})});const d=await r.json().catch(()=>({}));if(r.ok){f.reset();M.textContent='Thanks! Your message shows up once I approve it.'}else M.textContent=d.error||'Something went wrong.'}catch(e){M.textContent='Could not reach the guestbook.'}}}
- if(k=='journal'){const show=t=>{$('#jn').innerHTML=JOURNAL.filter(j=>!t||j.tags.includes(t)).map(j=>`<article class="entry"><time>${j.d}</time><h2>${j.t}</h2>${j.body}<div class="tags">${j.tags.map(x=>`<span>${x}</span>`).join('')}</div></article>`).join('');document.querySelectorAll('.crates button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.t==t))};show('');document.querySelectorAll('.crates button').forEach(b=>b.onclick=()=>show(b.dataset.t))}
- if(k=='music'){const draw=n=>{const c=CRATES[n];$('#sl').innerHTML=c.items.map(i=>`<div class="sl" style="background:${c.c}"><small>${i[1]}</small><b>${i[0]}</b><small>${i[2]}</small></div>`).join('');document.querySelectorAll('.crates button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.c==n))};
-  draw(Object.keys(CRATES)[0]);document.querySelectorAll('.crates button').forEach(b=>b.onclick=()=>draw(b.dataset.c));
-  $('#msh').onclick=()=>{const all=Object.entries(CRATES).flatMap(([g,c])=>c.items.map(i=>[g,i[0]]));const p=all[Math.floor(Math.random()*all.length)];$('#mp').textContent=`Try: ${p[1]} (${p[0]})`}}}
-addEventListener('hashchange',render);render();
-/* easter egg: type "jam" anywhere */
-let buf='';addEventListener('keydown',e=>{if(/INPUT|TEXTAREA/.test(e.target.tagName))return;buf=(buf+e.key).slice(-3).toLowerCase();if(buf=='jam'){const g=$('#egg');g.textContent='Secret level unlocked. No prize, just vibes.';g.style.display='block';setTimeout(()=>g.style.display='none',3500)}});
-</script></body></html>
+'use strict';
+
+const out = document.getElementById('out');
+const tokenInput = document.getElementById('t');
+const authForm = document.getElementById('authForm');
+const loadButton = document.getElementById('go');
+const refreshButton = document.getElementById('refresh');
+const dashboard = document.getElementById('dashboard');
+const statusText = document.getElementById('statusText');
+const statusDot = document.getElementById('statusDot');
+
+let token = '';
+let busy = false;
+
+function setStatus(message, color) {
+  statusText.textContent = message;
+  statusDot.style.background = color || 'var(--amber)';
+}
+
+function setLoading(isLoading) {
+  busy = isLoading;
+
+  loadButton.disabled = isLoading;
+  refreshButton.disabled = isLoading;
+
+  out.setAttribute('aria-busy', String(isLoading));
+
+  if (isLoading) {
+    loadButton.textContent = 'Loading...';
+    refreshButton.textContent = 'Loading...';
+  } else {
+    loadButton.textContent = 'Load entries →';
+    refreshButton.textContent = '↻ Refresh';
+  }
+}
+
+function showState(title, message, isError = false) {
+  const box = document.createElement('div');
+  box.className = 'state' + (isError ? ' error' : '');
+
+  const heading = document.createElement('h3');
+  heading.className = 'state-title';
+  heading.textContent = title;
+
+  const description = document.createElement('p');
+  description.textContent = message;
+
+  box.append(heading, description);
+  out.replaceChildren(box);
+}
+
+async function api(method, body) {
+  const options = {
+    method,
+    headers: {
+      'Authorization': 'Bearer ' + token
+    }
+  };
+
+  if (body !== undefined) {
+    options.headers['Content-Type'] = 'application/json';
+    options.body = JSON.stringify(body);
+  }
+
+  const response = await fetch('/api/admin', options);
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error('Wrong token. Check your ADMIN_TOKEN and try again.');
+    }
+
+    if (response.status === 403) {
+      throw new Error('Access denied. Your token may not have permission.');
+    }
+
+    throw new Error('Server error (' + response.status + '). Please try again.');
+  }
+
+  return response.json();
+}
+
+function updateStats(entries) {
+  const pending = entries.filter(entry => !entry.approved).length;
+  const approved = entries.filter(entry => entry.approved).length;
+
+  document.getElementById('pendingCount').textContent = pending;
+  document.getElementById('approvedCount').textContent = approved;
+  document.getElementById('totalCount').textContent = entries.length;
+}
+
+function createEntry(entry) {
+  const box = document.createElement('article');
+  box.className = 'entry' + (entry.approved ? '' : ' pending');
+
+  const head = document.createElement('div');
+  head.className = 'entry-head';
+
+  const identity = document.createElement('div');
+  identity.className = 'entry-identity';
+
+  const name = document.createElement('strong');
+  name.className = 'entry-name';
+  name.textContent = entry.name ?? 'Anonymous';
+
+  const date = document.createElement('time');
+  date.className = 'entry-date';
+
+  const timestamp = new Date(entry.created_at);
+
+  if (entry.created_at && !Number.isNaN(timestamp.getTime())) {
+    date.dateTime = timestamp.toISOString();
+    date.textContent = timestamp.toLocaleString();
+  } else {
+    date.textContent = 'Date unavailable';
+  }
+
+  identity.append(name, date);
+
+  const badge = document.createElement('span');
+  badge.className = 'badge' +
+    (entry.approved ? '' : ' pending-badge');
+  badge.textContent = entry.approved ? 'Live / Approved' : 'Pending review';
+
+  head.append(identity, badge);
+
+  const message = document.createElement('p');
+  message.className = 'entry-message';
+  message.textContent = entry.message ?? '';
+
+  box.append(head, message);
+
+  const actions = document.createElement('div');
+  actions.className = 'entry-actions';
+
+  if (!entry.approved) {
+    const approveButton = document.createElement('button');
+    approveButton.type = 'button';
+    approveButton.className = 'btn';
+    approveButton.textContent = '✓ Approve';
+
+    approveButton.addEventListener('click', async () => {
+      await performAction(
+        approveButton,
+        entry.id,
+        'approve',
+        'Approving entry...'
+      );
+    });
+
+    actions.append(approveButton);
+  }
+
+  const deleteButton = document.createElement('button');
+  deleteButton.type = 'button';
+  deleteButton.className = 'btn btn-danger';
+  deleteButton.textContent = 'Delete';
+
+  deleteButton.addEventListener('click', async () => {
+    if (!confirm('Delete this entry?')) {
+      return;
+    }
+
+    await performAction(
+      deleteButton,
+      entry.id,
+      'delete',
+      'Deleting entry...'
+    );
+  });
+
+  actions.append(deleteButton);
+  box.append(actions);
+
+  return box;
+}
+
+async function performAction(button, id, action, loadingText) {
+  if (busy) return;
+
+  const originalText = button.textContent;
+
+  button.disabled = true;
+  button.textContent = loadingText;
+
+  setStatus('UPDATING GUESTBOOK...', 'var(--amber)');
+
+  try {
+    await api('POST', { id, action });
+
+    setStatus(
+      action === 'approve' ? 'ENTRY APPROVED' : 'ENTRY DELETED',
+      '#7ee0a3'
+    );
+
+    await load();
+  } catch (error) {
+    button.disabled = false;
+    button.textContent = originalText;
+
+    setStatus('ACTION FAILED', 'var(--red)');
+
+    showState(
+      'Could not complete action',
+      error.message || 'Something went wrong. Please try again.',
+      true
+    );
+  }
+}
+
+async function load() {
+  if (busy) return;
+
+  setLoading(true);
+  setStatus('CONNECTING TO GUESTBOOK...', 'var(--amber)');
+
+  showState('Loading entries...', 'Contacting the guestbook API.');
+
+  try {
+    const data = await api('GET');
+
+    if (!data || !Array.isArray(data.entries)) {
+      throw new Error('Unexpected server response. Expected an entries list.');
+    }
+
+    const entries = data.entries;
+
+    updateStats(entries);
+    dashboard.hidden = false;
+
+    if (entries.length === 0) {
+      showState(
+        'Nothing here. Yet.',
+        'No guestbook entries have been submitted.'
+      );
+    } else {
+      const fragment = document.createDocumentFragment();
+
+      const count = document.createElement('div');
+      count.className = 'list-count';
+      count.style.marginBottom = '14px';
+      count.textContent = entries.length + (
+        entries.length === 1 ? ' entry found' : ' entries found'
+      );
+
+      fragment.append(count);
+
+      entries.forEach(entry => {
+        fragment.append(createEntry(entry));
+      });
+
+      out.replaceChildren(fragment);
+    }
+
+    setStatus('CONNECTED / GUESTBOOK LOADED', '#7ee0a3');
+  } catch (error) {
+    setStatus('REQUEST FAILED', 'var(--red)');
+
+    showState(
+      'Unable to load entries',
+      error.message || 'Something went wrong. Please try again.',
+      true
+    );
+  } finally {
+    setLoading(false);
+  }
+}
+
+authForm.addEventListener('submit', async event => {
+  event.preventDefault();
+
+  if (busy) return;
+
+  const suppliedToken = tokenInput.value.trim();
+
+  if (!suppliedToken) {
+    tokenInput.focus();
+    setStatus('ADMIN TOKEN REQUIRED', 'var(--red)');
+    return;
+  }
+
+  token = suppliedToken;
+  await load();
+});
+
+refreshButton.addEventListener('click', load);
+</script>
+
+</body>
+</html>
