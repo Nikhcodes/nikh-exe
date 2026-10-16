@@ -130,3 +130,36 @@ CREATE TABLE IF NOT EXISTS site_settings (
   value      text NOT NULL CHECK (char_length(value) <= 200),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
+
+-- ================================================================ v3 (pages, sounds, counter)
+-- Audio files in the media library (width/height are 0 for audio).
+ALTER TABLE media DROP CONSTRAINT IF EXISTS media_mime_check;
+ALTER TABLE media ADD CONSTRAINT media_mime_check CHECK (mime IN
+  ('image/jpeg','image/png','image/webp','image/gif','audio/mpeg','audio/ogg','audio/wav','audio/mp4'));
+ALTER TABLE media DROP CONSTRAINT IF EXISTS media_width_check;
+ALTER TABLE media ADD CONSTRAINT media_width_check CHECK (width >= 0);
+ALTER TABLE media DROP CONSTRAINT IF EXISTS media_height_check;
+ALTER TABLE media ADD CONSTRAINT media_height_check CHECK (height >= 0);
+
+-- Optional sound for an egg (plays only if the visitor switched sound on).
+ALTER TABLE eggs ADD COLUMN IF NOT EXISTS sound_id uuid REFERENCES media(id) ON DELETE SET NULL;
+
+-- Page content edited in the admin. One JSON document per page; missing = use the defaults in assets/content.js.
+CREATE TABLE IF NOT EXISTS site_content (
+  key        text PRIMARY KEY CHECK (key IN ('home','music','links','projects','journal','about','contact','footer')),
+  data       jsonb NOT NULL,
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+-- Which library images/sounds each page uses (keeps "where is this used" and image privacy correct).
+CREATE TABLE IF NOT EXISTS content_media (
+  key      text NOT NULL REFERENCES site_content(key) ON DELETE CASCADE,
+  media_id uuid NOT NULL REFERENCES media(id) ON DELETE CASCADE,
+  PRIMARY KEY (key, media_id)
+);
+CREATE INDEX IF NOT EXISTS content_media_media_idx ON content_media (media_id);
+
+-- Retro visitor counter (a number, nothing else is stored).
+CREATE TABLE IF NOT EXISTS site_counters (
+  key text PRIMARY KEY,
+  n   bigint NOT NULL DEFAULT 0
+);

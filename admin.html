@@ -104,6 +104,23 @@ dialog.modal::backdrop{background:#0d1018d0}
 .mh{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--burg);font-family:var(--mono);font-weight:700;position:sticky;top:0;z-index:2}
 .mh .grow{flex:1}
 .mb{padding:16px;overflow:auto}
+/* pages editor */
+.pageform{display:grid;gap:18px}
+.f>span:first-child{font-family:var(--mono);font-weight:700;font-size:.82rem;color:var(--amber)}
+div.f{display:grid;gap:6px}
+div.f .help{font-family:var(--mono);font-weight:400;color:var(--muted);font-size:.8rem}
+.imgfield{display:flex;gap:12px;align-items:flex-start}
+.imgfield img,.imgfield .th{width:96px;height:96px;object-fit:cover;background:#000;border:2px solid #3a3d46;flex:0 0 96px}
+.srow{display:flex;gap:6px;align-items:flex-start}
+.srow input,.srow textarea{flex:1}
+details.li{border:2px solid #2f323b;background:#1a1d24}
+details.li>summary{cursor:pointer;padding:8px 12px;font-family:var(--mono);font-weight:700;display:flex;gap:8px}
+details.li>summary::marker{color:var(--amber)}
+details.li[open]>summary{border-bottom:1px dashed #3a3d46}
+.li-body{display:grid;gap:12px;padding:12px}
+.li-body details.li{background:#15171d}
+.savebar{position:sticky;bottom:0;z-index:5;display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px 0;margin-top:16px;background:linear-gradient(transparent,var(--ink) 30%)}
+.mcard .aud,.items .aud{width:100%;aspect-ratio:1;display:grid;place-items:center;font-size:2.6rem;background:var(--navy);color:var(--amber)}
 /* toast */
 #toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:100;max-width:min(92vw,560px);padding:10px 16px;font-family:var(--mono);font-weight:700;box-shadow:4px 4px 0 #000a;background:var(--ok);color:var(--ink)}
 #toast.err{background:#f0a1a8}
@@ -131,6 +148,7 @@ dialog.modal::backdrop{background:#0d1018d0}
 </div></header>
 <main id="main" aria-live="polite"><p class="mono">Loading…</p></main>
 <div id="toast" role="status" aria-live="polite" hidden></div>
+<script src="assets/content.js"></script>
 <script src="assets/reveal.js"></script>
 <script src="assets/admin.js"></script>
 </body>

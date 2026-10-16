@@ -90,8 +90,11 @@
     if (e.target instanceof Element && e.target.closest(SKIP)) return;
     if (document.querySelector('dialog[open]')) return;
     if (e.key === 'Backspace') { buf.pop(); return; }
-    if ([...e.key].length !== 1) return;
-    const ch = e.key.toLowerCase();
+    // Arrow keys count as characters, so a trigger like ↑↑↓↓←→←→ba (the Konami code) works.
+    const ARROWS = { ArrowUp: '↑', ArrowDown: '↓', ArrowLeft: '←', ArrowRight: '→' };
+    const key = ARROWS[e.key] || e.key;
+    if ([...key].length !== 1) return;
+    const ch = key.toLowerCase();
     if (ch === ' ' && buf[buf.length - 1] === ' ') return;
     buf.push(ch); buf = buf.slice(-64);
     const text = buf.join('');

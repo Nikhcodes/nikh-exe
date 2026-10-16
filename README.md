@@ -167,9 +167,30 @@ Drafts never appear on the site. Use ↑ ↓ to change the order. The "Scrapbook
 **Junk drawer (Surprise me).** Add images from the library or short text notes, then enable or disable each one.
 The home-page box hides itself while the drawer is empty. It avoids repeating the last few picks.
 
-**Site text.** Status line and "Now listening" on the home page. Leave a field empty to use the text in `index.html`.
+**Pages (edit any page).** Admin → **Pages** → pick a page → **Edit**. Every page has a form: Home, Music, Links & heroes,
+Projects, Journal, About, Contact and the footer. Change text, swap photos, add, remove or reorder list items (↑ ↓ ×), then
+**Save page**. It's live right away. **View page ↗** opens it in a new tab. **Reset to default** throws away your saved version and
+brings back the built-in text from `assets/content.js`. The editor warns you if you try to leave with unsaved changes.
+- *Home:* profile photo (replaces the "N"), an optional second photo that shows on hover or tap, status, "Now listening" with
+  a link and cover, a note on the fridge, stickers, updates, Tonight's pick list, the visitor counter switch,
+  the tab-away title and the late-night message.
+- *Music:* crates (genre tabs) with their color, and records with a note, an optional cover and an optional link.
+  Spotify and YouTube links get **▶ Play here**, which opens the player on the page. The player only loads when someone clicks it.
+- *Journal:* write plain text. Leave an empty line between paragraphs and start a line with `- ` for a bullet.
+- *Projects:* pick one of the built-in drawings, or upload a screenshot instead.
+
+**Sounds.** Upload MP3, OGG, WAV or M4A files (up to 4 MB) in Media, then pick one under "Sound (optional)" in an egg.
+Visitors only hear sounds if they turn on the 🔇/🔊 switch in the footer. It's off by default and remembered in their browser.
+With sound on, eggs without their own sound play a short chime, and the junk drawer makes a little knock.
 
 ---
+
+### Easter eggs in the starter pack
+`cutie` (meme, then your photo slot), `jam`, `delulu` (click the N avatar 5×), `halloween` (October only),
+the Konami code `↑↑↓↓←→←→BA` (with a sound), `sudo`, `doom`, `maldini`, `bebop`, `hire me`, and clicking the logo 7×.
+Built into the site: a 404 page for links that don't exist, a late-night message between 00:00 and 04:00,
+and a tab title that changes while a visitor looks at another tab.
+After updating the site, press **Re-run import** on the dashboard to add new starter eggs. Your existing ones are left alone.
 
 ## Where visitors find secrets
 - **Typing anywhere** on a page (outside text boxes). Typing inside the guestbook form, the prompt or any
@@ -232,14 +253,23 @@ Everything, images included, lives in your Neon database, so backing up the data
 
 ---
 
-## Editing content in code (unchanged)
-Static content still lives in `index.html` between `/* ===== EDIT YOUR CONTENT HERE ===== */` and
-`/* ===== END CONTENT ===== */`: `ME`, `CRATES`, `PROJECTS`, `JOURNAL`, `LINKS`, `HEROES`.
-`HEROES` entries now take an optional image: `["Name","Category","Note","assets/heroes/file.webp","alt text",width,height]`.
-The About page text is in the `about()` function.
+## Default content (in code)
+The built-in text for every page lives in `assets/content.js`. The site uses it for any page you haven't saved in
+Admin → Pages, and "Reset to default" goes back to it. Once you save a page in the admin, the saved version wins,
+so you normally never need to edit this file.
+
+## Updating an existing deployment
+1. Run `schema.sql` again in the Neon SQL editor (it only adds what's new).
+2. Copy the new files into your repo folder, then `git add -A`, `git commit`, `git push`.
+3. In the admin, press **Re-run import** on the dashboard to get new starter eggs.
+
+## Visitor counter
+The home page shows a retro counter. It adds one per browser session and stores only the number: no IPs, no cookies, no tracking.
+Turn it off in Pages → Home.
 
 ## Not included yet
 - Guestbook reactions or "likes". They'd need extra spam protection; easy to add later.
-- No audio anywhere. If you add Spotify or YouTube embeds later, keep them click-to-play and add their domains to the CSP in `vercel.json`.
+- Only Spotify and YouTube can be played on the page. Other links (Apple Music, SoundCloud...) open in a new tab.
+  To add another player, add its domain to `frame-src` in `vercel.json` and to `embedOf()` in `index.html`.
 
 `archive/old-portfolio.html` is the earlier single-page "After Hours" portfolio, kept just in case.

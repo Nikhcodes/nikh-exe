@@ -14,7 +14,8 @@ import { createHash } from 'node:crypto';
 import { q } from './_lib/db.js';
 import { route, send, readJson, readBody, HttpError, UUID, clean, cleanMultiline } from './_lib/http.js';
 import { requireAdmin } from './_lib/auth.js';
-import { sniffImage, MAX_UPLOAD_BYTES, MAX_SIDE, mediaUrl } from './_lib/media.js';
+import { sniffImage, sniffAudio, isAudio, MAX_UPLOAD_BYTES, MAX_SIDE, mediaUrl } from './_lib/media.js';
+import { mediaMap } from './_lib/content.js';
 import { TARGETS, normPhrase, findConflicts, ACTIVE_SQL, ORDER_SQL } from './_lib/eggs.js';
 
 const bool = v => v === true || v === 'true' || v === 1;
@@ -40,8 +41,10 @@ async function stats() {
     (SELECT count(*)::int FROM scrapbook_entries) AS scrapbook,
     (SELECT count(*)::int FROM scrapbook_entries WHERE published) AS scrapbook_published,
     (SELECT count(*)::int FROM surprise_items WHERE enabled) AS surprise_enabled,
-    (SELECT COALESCE(sum(bytes), 0)::bigint FROM media) AS media_bytes`);
-  return { ...s, media_bytes: Number(s.media_bytes) };
+    (SELECT COALESCE(sum(bytes), 0)::bigint FROM media) AS media_bytes,
+    (SELECT count(*)::int FROM site_content) AS pages_edited,
+    (SELECT COALESCE(max(n), 0)::bigint FROM site_counters WHERE key = 'visits') AS visits`);
+  return { ...s, media_bytes: Number(s.media_bytes), visits: Number(s.visits) };
 }
 
 // ------------------------------------------------------------------ media
@@ -53,7 +56,13 @@ const USAGE_SQL = `
     FROM scrapbook_media sm JOIN scrapbook_entries se ON se.id = sm.entry_id WHERE sm.media_id = $1
   UNION ALL
   SELECT 'surprise', si.id, COALESCE(NULLIF(si.caption, ''), '(drawer item)'), 0, ''
-    FROM surprise_items si WHERE si.media_id = $1`;
+    FROM surprise_items si WHERE si.media_id = $1
+  UNION ALL
+  SELECT 'egg', e.id, e.name, 0, 'sound'
+    FROM eggs e WHERE e.sound_id = $1
+  UNION ALL
+  SELECT 'page', NULL::uuid, cm.key, 0, ''
+    FROM content_media cm WHERE cm.media_id = $1`;
 
 const MEDIA_COLS = `m.id, m.name, m.caption, m.alt, m.tags, m.mime, m.width, m.height, m.bytes, m.version, m.created_at, m.updated_at`;
 const withUrl = m => ({ ...m, url: mediaUrl(m.id, m.version) });
@@ -64,28 +73,33 @@ async function mediaList(url) {
   const rows = await q(`SELECT ${MEDIA_COLS},
       ((SELECT count(*) FROM egg_steps WHERE media_id = m.id) +
        (SELECT count(*) FROM scrapbook_media WHERE media_id = m.id) +
-       (SELECT count(*) FROM surprise_items WHERE media_id = m.id))::int AS uses
+       (SELECT count(*) FROM surprise_items WHERE media_id = m.id) +
+       (SELECT count(*) FROM eggs WHERE sound_id = m.id) +
+       (SELECT count(*) FROM content_media WHERE media_id = m.id))::int AS uses
     FROM media m
     WHERE ($1 = '' OR m.name ILIKE '%' || $1 || '%' OR m.caption ILIKE '%' || $1 || '%' OR $1 = ANY(m.tags))
       AND ($2 = '' OR $2 = ANY(m.tags))
-    ORDER BY m.created_at DESC LIMIT 500`, [term, tag]);
+      AND ($3 = '' OR m.mime LIKE $3 || '/%')
+    ORDER BY m.created_at DESC LIMIT 500`, [term, tag, ['image', 'audio'].includes(url.searchParams.get('kind')) ? url.searchParams.get('kind') : '']);
   const tags = await q(`SELECT DISTINCT unnest(tags) AS t FROM media ORDER BY 1`);
   return { media: rows.map(withUrl), tags: tags.map(t => t.t) };
 }
 
 async function mediaDetail(id) {
   const [m] = await q(`SELECT ${MEDIA_COLS} FROM media m WHERE m.id = $1`, [id]);
-  if (!m) throw new HttpError(404, 'That image no longer exists.');
+  if (!m) throw new HttpError(404, 'That file no longer exists.');
   return { media: withUrl(m), usage: await q(USAGE_SQL, [id]) };
 }
 
 async function readImage(req) {
   const ct = String(req.headers['content-type'] || '');
-  if (!ct.startsWith('application/octet-stream')) throw new HttpError(415, 'Send the image bytes as application/octet-stream.');
+  if (!ct.startsWith('application/octet-stream')) throw new HttpError(415, 'Send the file bytes as application/octet-stream.');
   const buf = await readBody(req, MAX_UPLOAD_BYTES);
   if (!buf.length) throw new HttpError(400, 'The file is empty.');
+  const audio = sniffAudio(buf);
+  if (audio) return { buf, info: audio, sha: createHash('sha256').update(buf).digest('hex') };
   const info = sniffImage(buf);
-  if (!info) throw new HttpError(415, 'That file is not a JPEG, PNG, WebP or GIF image. (SVG and other formats are not accepted.)');
+  if (!info) throw new HttpError(415, 'That file is not a JPEG, PNG, WebP or GIF image, or an MP3, OGG, WAV or M4A sound. (SVG and other formats are not accepted.)');
   if (!info.width || !info.height || info.width > MAX_SIDE || info.height > MAX_SIDE)
     throw new HttpError(400, `The image must be at most ${MAX_SIDE} pixels on each side.`);
   return { buf, info, sha: createHash('sha256').update(buf).digest('hex') };
@@ -111,8 +125,9 @@ async function mediaUpload(req, url) {
 
 async function mediaReplace(req, id) {
   const { buf, info, sha } = await readImage(req);
-  const [m] = await q(`SELECT id FROM media WHERE id = $1`, [id]);
-  if (!m) throw new HttpError(404, 'That image no longer exists.');
+  const [m] = await q(`SELECT id, mime FROM media WHERE id = $1`, [id]);
+  if (!m) throw new HttpError(404, 'That file no longer exists.');
+  if (isAudio(m.mime) !== isAudio(info.mime)) throw new HttpError(400, isAudio(m.mime) ? 'Replace a sound with another sound file.' : 'Replace an image with another image.');
   await q(`UPDATE media_blobs SET data = decode($2, 'base64') WHERE media_id = $1`, [id, buf.toString('base64')]);
   await q(`UPDATE media SET mime = $2, width = $3, height = $4, bytes = $5, sha256 = $6,
       version = version + 1, updated_at = now() WHERE id = $1`, [id, info.mime, info.width, info.height, buf.length, sha]);
@@ -149,8 +164,10 @@ async function eggRows(where = 'TRUE', params = []) {
       m.name AS media_name, m.version, m.width, m.height, m.alt
     FROM egg_steps s LEFT JOIN media m ON m.id = s.media_id
     WHERE s.egg_id = ANY($1::uuid[]) ORDER BY s.position`, [eggs.map(e => e.id)]);
+  const sounds = await q(`SELECT id, name, version FROM media WHERE id = ANY($1::uuid[])`, [eggs.map(e => e.sound_id).filter(Boolean)]);
   return eggs.map(e => ({
     ...e,
+    sound: (s => s ? { name: s.name, url: mediaUrl(s.id, s.version) } : null)(sounds.find(x => x.id === e.sound_id)),
     steps: steps.filter(s => s.egg_id === e.id).map(s => ({
       id: s.id, label: s.label, caption: s.caption, media_id: s.media_id,
       media: s.media_id ? { name: s.media_name, url: mediaUrl(s.media_id, s.version), w: s.width, h: s.height, alt: s.alt } : null
@@ -183,7 +200,8 @@ function validateEgg(b) {
     starts_at: dateOrNull(b.starts_at),
     ends_at: dateOrNull(b.ends_at),
     hint: clean(b.hint, 200),
-    hint_public: bool(b.hint_public)
+    hint_public: bool(b.hint_public),
+    sound_id: UUID.test(b.sound_id || '') ? b.sound_id : null
   };
   if (!egg.name) throw new HttpError(400, 'Give the egg a name (only you see it).');
   if (egg.starts_at && egg.ends_at && egg.ends_at <= egg.starts_at) throw new HttpError(400, 'The end date must be after the start date.');
@@ -219,6 +237,10 @@ async function eggSave(req, id) {
   if (mediaIds.length) {
     const found = await q(`SELECT id FROM media WHERE id = ANY($1::uuid[])`, [mediaIds]);
     if (found.length !== new Set(mediaIds).size) throw new HttpError(400, 'One of the chosen images was deleted. Pick it again.');
+  }
+  if (egg.sound_id) {
+    const [snd] = await q(`SELECT mime FROM media WHERE id = $1`, [egg.sound_id]);
+    if (!snd || !isAudio(snd.mime)) throw new HttpError(400, 'The chosen sound is missing or is not an audio file.');
   }
   // Conflicts only matter if this egg is going to be live.
   if (egg.enabled && !bool(body.force)) {
@@ -380,6 +402,78 @@ async function surpriseSave(req, id) {
   return { ok: true, id: row.id };
 }
 
+// ------------------------------------------------------------------ pages (site content)
+export const PAGE_KEYS = ['home', 'music', 'links', 'projects', 'journal', 'about', 'contact', 'footer'];
+const UUID_G = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Keep page JSON to plain, bounded data: text, numbers, true/false, lists and objects. */
+function cleanContent(v, depth = 0) {
+  if (depth > 6) throw new HttpError(400, 'That page is nested too deeply.');
+  if (v === null || typeof v === 'boolean') return v;
+  if (typeof v === 'number') return Number.isFinite(v) ? v : null;
+  if (typeof v === 'string') return v.replace(/\r\n?/g, '\n').replace(/[\u0000-\u0009\u000b-\u001f\u007f]/g, ' ').slice(0, 5000);
+  if (Array.isArray(v)) {
+    if (v.length > 300) throw new HttpError(400, 'One of the lists is too long (max 300 items).');
+    return v.map(x => cleanContent(x, depth + 1));
+  }
+  if (typeof v === 'object') {
+    const out = {};
+    const keys = Object.keys(v);
+    if (keys.length > 60) throw new HttpError(400, 'Too many fields.');
+    for (const k of keys) if (/^[A-Za-z0-9_]{1,40}$/.test(k)) out[k] = cleanContent(v[k], depth + 1);
+    return out;
+  }
+  return null;
+}
+function collectIds(v, set = new Set()) {
+  if (typeof v === 'string' && UUID_G.test(v)) set.add(v.toLowerCase());
+  else if (Array.isArray(v)) v.forEach(x => collectIds(x, set));
+  else if (v && typeof v === 'object') Object.values(v).forEach(x => collectIds(x, set));
+  return set;
+}
+function dropIds(v, keep) {
+  if (typeof v === 'string' && UUID_G.test(v)) return keep.has(v.toLowerCase()) ? v.toLowerCase() : null;
+  if (Array.isArray(v)) return v.map(x => dropIds(x, keep));
+  if (v && typeof v === 'object') return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, dropIds(x, keep)]));
+  return v;
+}
+async function contentGet() {
+  const rows = await q(`SELECT key, data, updated_at FROM site_content`);
+  const ids = await q(`SELECT DISTINCT media_id FROM content_media`);
+  const settings = await q(`SELECT key, value FROM site_settings`);
+  return {
+    content: Object.fromEntries(rows.map(r => [r.key, r.data])),
+    updated: Object.fromEntries(rows.map(r => [r.key, r.updated_at])),
+    media: await mediaMap(ids.map(r => r.media_id)),
+    settings: Object.fromEntries(settings.map(r => [r.key, r.value]))
+  };
+}
+
+async function contentPut(req, key) {
+  if (!PAGE_KEYS.includes(key)) throw new HttpError(400, 'Unknown page.');
+  const body = await readJson(req, 256 * 1024);
+  if (!body.data || typeof body.data !== 'object' || Array.isArray(body.data)) throw new HttpError(400, 'Nothing to save.');
+  let data = cleanContent(body.data);
+  const ids = [...collectIds(data)];
+  const found = ids.length ? (await q(`SELECT id FROM media WHERE id = ANY($1::uuid[])`, [ids])).map(r => r.id) : [];
+  data = dropIds(data, new Set(found));
+  const json = JSON.stringify(data);
+  if (json.length > 200 * 1024) throw new HttpError(413, 'That page is too big to save (over 200 KB of text).');
+  await q(`INSERT INTO site_content (key, data) VALUES ($1, $2::jsonb)
+    ON CONFLICT (key) DO UPDATE SET data = EXCLUDED.data, updated_at = now()`, [key, json]);
+  await q(`DELETE FROM content_media WHERE key = $1`, [key]);
+  if (found.length) await q(`INSERT INTO content_media (key, media_id) SELECT $1, unnest($2::uuid[]) ON CONFLICT DO NOTHING`, [key, found]);
+  // The old "Site text" settings are now part of the Home page.
+  if (key === 'home') await q(`DELETE FROM site_settings`);
+  return contentGet();
+}
+
+async function contentReset(key) {
+  if (!PAGE_KEYS.includes(key)) throw new HttpError(400, 'Unknown page.');
+  await q(`DELETE FROM site_content WHERE key = $1`, [key]);
+  return contentGet();
+}
+
 // ------------------------------------------------------------------ settings
 const SETTING_KEYS = ['status', 'now_listening'];
 async function settingsGet() {
@@ -441,6 +535,13 @@ export default route(async (req, res) => {
       if (M === 'PUT') return ok(await surpriseSave(req, needId(id)));
       if (M === 'DELETE') { await q(`DELETE FROM surprise_items WHERE id = $1`, [needId(id)]); return ok({ ok: true }); }
       break;
+    case 'content': {
+      const key = url.searchParams.get('key');
+      if (M === 'GET') return ok(await contentGet());
+      if (M === 'PUT') return ok(await contentPut(req, key));
+      if (M === 'DELETE') return ok(await contentReset(key));
+      break;
+    }
     case 'settings':
       if (M === 'GET') return ok(await settingsGet());
       if (M === 'PUT') return ok(await settingsPut(req));

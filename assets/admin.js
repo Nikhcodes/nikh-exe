@@ -84,8 +84,17 @@
     if (!blob || blob.size > MAX_BYTES) throw new Error('Could not make that image small enough. Try a smaller photo.');
     return blob;
   }
+  const isAudioFile = f => /^audio\//.test(f.type) || /\.(mp3|ogg|oga|wav|m4a)$/i.test(f.name);
+  const isAudioMedia = m => String(m && m.mime).startsWith('audio/');
+  async function prepareFile(file) {
+    if (isAudioFile(file)) {
+      if (file.size > MAX_BYTES) throw new Error('Sounds must be under 4 MB. A short clip (a few seconds) is best.');
+      return file;
+    }
+    return prepareImage(file);
+  }
   async function uploadFile(file, extra = {}) {
-    const blob = await prepareImage(file);
+    const blob = await prepareFile(file);
     const name = (extra.name || file.name.replace(/\.[^.]+$/, '') || 'Untitled image').slice(0, 120);
     const qs = new URLSearchParams({ r: 'media', name, tags: (extra.tags || []).join(',') });
     const d = await api('cms?' + qs, { method: 'POST', body: blob, headers: { 'Content-Type': 'application/octet-stream' } });
@@ -93,16 +102,24 @@
     return d.media;
   }
   async function replaceFile(id, file) {
-    const blob = await prepareImage(file);
+    const blob = await prepareFile(file);
     return api('cms?r=media&id=' + id, { method: 'PUT', body: blob, headers: { 'Content-Type': 'application/octet-stream' } });
   }
-  function filePicker(multiple) {
+  const ACCEPT = {
+    image: 'image/jpeg,image/png,image/webp,image/gif,image/heic',
+    audio: 'audio/mpeg,audio/ogg,audio/wav,audio/mp4,audio/x-m4a,.mp3,.ogg,.wav,.m4a'
+  };
+  function filePicker(multiple, kind = 'image') {
     return new Promise(resolve => {
-      const i = h('input', { type: 'file', accept: 'image/jpeg,image/png,image/webp,image/gif,image/heic', multiple: multiple || null, hidden: true });
+      const i = h('input', { type: 'file', accept: kind === 'any' ? ACCEPT.image + ',' + ACCEPT.audio : ACCEPT[kind], multiple: multiple || null, hidden: true });
       i.onchange = () => { resolve([...i.files]); i.remove(); };
       document.body.append(i); i.click();
     });
   }
+
+  /** Small preview for a library item: the image, or a note icon for sounds. */
+  const thumb = m => isAudioMedia(m) ? h('span', { class: 'aud', 'aria-hidden': 'true' }, '♪') : h('img', { src: m.url, alt: '', loading: 'lazy' });
+  const dims = m => isAudioMedia(m) ? `sound · ${fmtBytes(m.bytes)}` : `${m.width}×${m.height}`;
 
   // ---------------------------------------------------------------- modal helper
   function modal(title, body, { wide = true } = {}) {
@@ -128,15 +145,16 @@
   }
 
   /** Media library picker. Resolves with an array of chosen media (or [] if cancelled). */
-  function pickMedia({ multiple = false, title = 'Choose an image' } = {}) {
+  function pickMedia({ multiple = false, title = 'Choose an image', kind = 'image' } = {}) {
+    const word = kind === 'audio' ? 'sound' : 'image';
     return new Promise(resolve => {
       const chosen = new Map();
       let resolved = false;
       const grid = h('div', { class: 'mgrid' });
       const search = h('input', { type: 'search', placeholder: 'Search by name, caption or tag', 'aria-label': 'Search images' });
       const status = h('p', { class: 'mono small muted' });
-      const useBtn = h('button', { class: 'btn', type: 'button', disabled: true }, multiple ? 'Use selected' : 'Use this image');
-      const upBtn = h('button', { class: 'btn ghost', type: 'button' }, '↑ Upload new image');
+      const useBtn = h('button', { class: 'btn', type: 'button', disabled: true }, multiple ? 'Use selected' : 'Use this ' + word);
+      const upBtn = h('button', { class: 'btn ghost', type: 'button' }, '↑ Upload new ' + word);
       const body = [
         h('div', { class: 'row', style: 'margin-bottom:12px' }, upBtn, h('div', { style: 'flex:1;min-width:180px' }, search)),
         h('p', { class: 'mono small muted' }, 'New uploads stay private until you use them in something that is live.'),
@@ -147,13 +165,13 @@
       dlg.addEventListener('close', () => { if (!resolved) resolve([]); });
       async function load() {
         status.textContent = 'Loading…';
-        const d = await guard(null, () => cms('r=media&q=' + encodeURIComponent(search.value)));
+        const d = await guard(null, () => cms(`r=media&kind=${kind}&q=` + encodeURIComponent(search.value)));
         if (!d) return;
-        status.textContent = d.media.length ? '' : 'No images yet. Upload one.';
+        status.textContent = d.media.length ? '' : `No ${word}s yet. Upload one.`;
         grid.replaceChildren(...d.media.map(m => {
           const b = h('button', { class: 'mcard', type: 'button', 'aria-pressed': chosen.has(m.id) ? 'true' : 'false' },
-            h('img', { src: m.url, alt: '', loading: 'lazy' }), h('span', { class: 'nm' }, m.name),
-            h('span', { class: 'muted' }, `${m.width}×${m.height} · ${m.uses ? 'used ' + m.uses + '×' : 'unused'}`));
+            thumb(m), h('span', { class: 'nm' }, m.name),
+            h('span', { class: 'muted' }, `${dims(m)} · ${m.uses ? 'used ' + m.uses + '×' : 'unused'}`));
           b.onclick = () => {
             if (!multiple) { chosen.clear(); grid.querySelectorAll('.mcard').forEach(x => x.setAttribute('aria-pressed', 'false')); }
             if (chosen.has(m.id)) { chosen.delete(m.id); b.setAttribute('aria-pressed', 'false'); }
@@ -167,7 +185,7 @@
       let t; search.oninput = () => { clearTimeout(t); t = setTimeout(load, 250); };
       useBtn.onclick = () => finish([...chosen.values()]);
       upBtn.onclick = async () => {
-        const files = await filePicker(multiple);
+        const files = await filePicker(multiple, kind);
         if (!files.length) return;
         const done = [];
         await guard(upBtn, async () => {
@@ -208,14 +226,20 @@
 
   // ---------------------------------------------------------------- routing
   const SECTIONS = [['dashboard', 'Dashboard'], ['eggs', 'Easter eggs'], ['media', 'Media'], ['guestbook', 'Guestbook'],
-    ['scrapbook', 'Scrapbook'], ['drawer', 'Junk drawer'], ['text', 'Site text']];
+    ['pages', 'Pages'], ['scrapbook', 'Scrapbook'], ['drawer', 'Junk drawer']];
   let stats = null;
   function renderTabs(cur) {
     $('#tabs').replaceChildren(...SECTIONS.map(([k, label]) => h('a', { href: '#' + k, 'aria-current': k === cur ? 'page' : null },
       label, k === 'guestbook' && stats && stats.guestbook_pending ? h('span', { class: 'badge' }, stats.guestbook_pending) : null)));
   }
   async function refreshStats() { stats = await cms('r=stats').catch(() => stats); return stats; }
+  let lastHash = location.hash;
   async function router() {
+    if (pagesDirty && location.hash !== lastHash) {
+      if (!confirm('You have unsaved changes on this page. Leave without saving?')) { history.replaceState(null, '', lastHash || '#pages'); return; }
+      pagesDirty = false;
+    }
+    lastHash = location.hash;
     const [sec, arg] = (location.hash.slice(1) || 'dashboard').split('/');
     const view = VIEWS[sec] ? sec : 'dashboard';
     renderTabs(view);
@@ -237,7 +261,7 @@
     const stat = (n, label, href) => h('a', { class: 'stat', href }, h('b', {}, n), h('span', {}, label));
     const starter = h('div', { class: 'panel' }, h('h2', {}, 'Starter pack'),
       h('p', { style: 'margin-top:0' }, s.media
-        ? 'The starter pack (memes, the cutie, jam, delulu and halloween eggs, drawer items) can be re-imported. Anything already there is skipped.'
+        ? 'Re-run the starter pack import to add anything new (new versions of the site can bring new eggs). Anything you already have is skipped, and your changes are kept.'
         : 'Your library is empty. Import the starter pack: the images that came with the site, the "cutie" egg (with the neuron meme and an empty photo slot), the original "jam" egg, a few extra eggs and the junk drawer items.'),
       h('button', { class: s.media ? 'btn ghost' : 'btn', type: 'button', onclick: e => importStarter(e.currentTarget) }, s.media ? 'Re-run import' : 'Import starter pack'),
       h('p', { class: 'mono small', id: 'starter-out' }));
@@ -245,7 +269,7 @@
       h('div', { class: 'stats', style: 'margin-top:18px' },
         stat(s.eggs_active, 'live Easter eggs', '#eggs'), stat(s.eggs_inactive, 'eggs switched off', '#eggs'),
         stat(s.guestbook_pending, 'notes waiting for you', '#guestbook'), stat(s.media, `images (${fmtBytes(s.media_bytes || 1)})`, '#media'),
-        stat(`${s.scrapbook_published}/${s.scrapbook}`, 'scrapbook entries live', '#scrapbook'), stat(s.surprise_enabled, 'junk drawer items', '#drawer')),
+        stat(`${s.scrapbook_published}/${s.scrapbook}`, 'scrapbook entries live', '#scrapbook'), stat(s.surprise_enabled, 'junk drawer items', '#drawer'), stat(s.visits, 'visits counted', '#pages/home')),
       empty.length ? h('div', { class: 'panel' }, h('h2', {}, 'Optional slots not filled yet'),
         h('p', { style: 'margin-top:0' }, 'These reveal steps have no image. Visitors simply skip them, so nothing looks broken. Fill them whenever you are ready.'),
         h('div', { class: 'items' }, empty.map(({ egg, step }) => h('div', { class: 'item' },
@@ -254,7 +278,7 @@
           h('div', { class: 'acts' }, h('a', { class: 'btn sm', href: '#eggs/' + egg.id }, 'Open media settings')))))) : null,
       h('div', { class: 'panel' }, h('h2', {}, 'Quick actions'), h('div', { class: 'row' },
         h('a', { class: 'btn', href: '#media' }, 'Upload images'), h('a', { class: 'btn ghost', href: '#eggs/new' }, 'New Easter egg'),
-        h('a', { class: 'btn ghost', href: '#guestbook' }, 'Moderate guestbook'), h('a', { class: 'btn ghost', href: '#scrapbook/new' }, 'New scrapbook entry'))),
+        h('a', { class: 'btn ghost', href: '#guestbook' }, 'Moderate guestbook'), h('a', { class: 'btn ghost', href: '#scrapbook/new' }, 'New scrapbook entry'), h('a', { class: 'btn ghost', href: '#pages/home' }, 'Edit the home page'))),
       starter);
   };
 
@@ -265,7 +289,7 @@
       const ids = {};
       for (const [i, m] of man.media.entries()) {
         out.textContent = `Uploading images ${i + 1}/${man.media.length}…`;
-        const blob = await fetch('seed/' + m.file).then(r => r.blob());
+        const blob = await fetch('seed/' + m.file).then(r => { if (!r.ok) throw new Error('Missing starter file: ' + m.file); return r.blob(); });
         const qs = new URLSearchParams({ r: 'media', name: m.name, tags: m.tags.join(','), alt: m.alt || '' });
         const d = await api('cms?' + qs, { method: 'POST', body: blob, headers: { 'Content-Type': 'application/octet-stream' } });
         ids[m.key] = d.media.id;
@@ -276,7 +300,7 @@
         if (existing.includes(e.name)) continue;
         out.textContent = `Creating egg "${e.name}"…`;
         const steps = e.steps.map(s => ({ label: s.label, caption: s.caption, media_id: s.media ? ids[s.media] : null }));
-        await cms('r=eggs', { method: 'POST', json: { ...e, steps, force: true } });
+        await cms('r=eggs', { method: 'POST', json: { ...e, steps, sound_id: e.sound ? ids[e.sound] : null, force: true } });
         made++;
       }
       const inDrawer = new Set((await cms('r=surprise')).items.map(i => i.media_id));
@@ -288,7 +312,7 @@
       }
       out.textContent = `Done: ${man.media.length} images checked, ${made} eggs and ${drawer} drawer items added.`;
       toast('Starter pack imported.');
-      setTimeout(router, 900);
+      setTimeout(() => { if (!location.hash || location.hash === '#dashboard') router(); }, 900); // only if you're still on the dashboard
     });
   }
 
@@ -310,7 +334,7 @@
     : h('div', { class: 'th empty', title: 'Empty slot: visitors skip it' }, 'EMPTY', h('br'), 'slot');
   function previewEgg(e) {
     window.NikhReveal.show({
-      title: e.title, message: e.message, style: e.style, stepMs: +e.step_ms || 1600,
+      title: e.title, message: e.message, style: e.style, stepMs: +e.step_ms || 1600, sound: e.sound ? e.sound.url : null,
       steps: e.steps.map(s => s.media ? { url: s.media.url, w: s.media.w, h: s.media.h, alt: s.media.alt, caption: s.caption } : { empty: true, label: s.label })
     }, { preview: true }) || toast('This egg has nothing to show yet.', true);
   }
@@ -436,6 +460,14 @@
     }
     drawSteps();
 
+    // optional sound
+    const soundBox = h('div', {});
+    const drawSound = () => soundBox.replaceChildren(
+      e.sound ? h('div', { class: 'row' }, h('span', { class: 'mono small' }, '♪ ' + e.sound.name), h('audio', { src: e.sound.url, controls: true, preload: 'none' })) : h('p', { class: 'mono small muted', style: 'margin:0' }, 'No sound. Visitors with sound switched on hear the default chime.'),
+      h('div', { class: 'row', style: 'margin-top:8px' },
+        h('button', { class: 'btn sm', type: 'button', onclick: async () => { const [m] = await pickMedia({ kind: 'audio', title: 'Sound for this egg' }); if (m) { e.sound_id = m.id; e.sound = { name: m.name, url: m.url }; drawSound(); } } }, e.sound ? 'Change sound' : 'Choose or upload sound'),
+        e.sound ? h('button', { class: 'btn ghost sm', type: 'button', onclick: () => { e.sound_id = null; e.sound = null; drawSound(); } }, 'Remove sound') : null));
+    drawSound();
     const styleSel = h('select', {}, h('option', { value: 'card', selected: e.style === 'card' || null }, 'Card with images (pop-up)'),
       h('option', { value: 'toast', selected: e.style === 'toast' || null }, 'Small note in the corner (text only)'));
     styleSel.onchange = () => (e.style = styleSel.value);
@@ -486,7 +518,9 @@
         h('div', { class: 'grid2' }, field('Presentation', styleSel), field('Title (optional)', inp('title', { maxlength: 120 }))),
         h('div', { style: 'margin:12px 0' }, field('Message (optional)', msg)),
         h('p', { class: 'mono small muted' }, 'Steps play in order: step 1 first, then the next one after a short pause. Empty slots are skipped for visitors.'),
-        stepsBox),
+        stepsBox,
+        h('div', { class: 'f', style: 'margin-top:16px' }, h('span', {}, 'Sound (optional)'), soundBox,
+          h('span', { class: 'help' }, 'Plays only for visitors who switched sound on in the footer. Sound is off by default.'))),
       h('details', { class: 'adv' }, h('summary', {}, 'Advanced settings'), h('div', { class: 'grid2', style: 'margin-top:12px' },
         field('Pause between steps (ms)', inp('step_ms', { type: 'number', min: 500, max: 10000, step: 100 })),
         field('Can be triggered', repeat),
@@ -508,8 +542,8 @@
     const status = h('p', { class: 'mono small' });
     let items = d.media;
     const draw = () => grid.replaceChildren(...(items.length ? items.map(m => h('button', { class: 'mcard', type: 'button', onclick: () => mediaDetail(m.id) },
-      h('img', { src: m.url, alt: '', loading: 'lazy' }), h('span', { class: 'nm' }, m.name),
-      h('span', { class: 'muted' }, `${m.width}×${m.height} · ${fmtBytes(m.bytes)}`),
+      thumb(m), h('span', { class: 'nm' }, m.name),
+      h('span', { class: 'muted' }, isAudioMedia(m) ? dims(m) : `${m.width}×${m.height} · ${fmtBytes(m.bytes)}`),
       m.uses ? h('span', { class: 'badge b-live' }, `used ${m.uses}×`) : h('span', { class: 'badge b-off' }, 'unused · private'))) : [h('p', { class: 'muted' }, 'No images found.')]));
     const reload = async () => {
       const r = await guard(null, () => cms(`r=media&q=${encodeURIComponent(search.value)}&tag=${encodeURIComponent(tagSel.value)}`));
@@ -523,17 +557,18 @@
         status.textContent = `Uploading ${f.name}…`;
         try { await uploadFile(f); ok++; } catch (e) { if (e.status !== 401) toast(`${f.name}: ${e.message}`, true); }
       }
-      status.textContent = ok ? `${ok} image(s) uploaded.` : '';
+      status.textContent = ok ? `${ok} file(s) uploaded.` : '';
       reload();
     }
-    const drop = h('div', { class: 'drop' }, 'Drop images here or ', h('button', { class: 'btn sm', type: 'button', onclick: async () => upload(await filePicker(true)) }, 'choose files'),
-      h('div', { class: 'muted small', style: 'margin-top:6px' }, 'JPEG, PNG, WebP or GIF. Photos are resized to 1600 px and location data is removed before upload.'));
+    const drop = h('div', { class: 'drop' }, 'Drop images or sounds here or ', h('button', { class: 'btn sm', type: 'button', onclick: async () => upload(await filePicker(true, 'any')) }, 'choose files'),
+      h('div', { class: 'muted small', style: 'margin-top:6px' }, 'Images: JPEG, PNG, WebP or GIF. Photos are resized to 1600 px and location data is removed before upload.'),
+      h('div', { class: 'muted small' }, 'Sounds: MP3, OGG, WAV or M4A, up to 4 MB. Short clips work best for Easter eggs.'));
     drop.ondragover = ev => { ev.preventDefault(); drop.classList.add('over'); };
     drop.ondragleave = () => drop.classList.remove('over');
     drop.ondrop = ev => { ev.preventDefault(); drop.classList.remove('over'); upload([...ev.dataTransfer.files]); };
     draw();
     page('THE LIBRARY', 'Media', null,
-      h('div', { class: 'note', style: 'margin-top:14px' }, 'Uploaded images are private by default. An image becomes viewable to visitors only while it is used by something live: a live egg, a published scrapbook entry or an enabled drawer item. Anyone who gets that image\'s link can then open it, so a secret word is a surprise, not a lock.'),
+      h('div', { class: 'note', style: 'margin-top:14px' }, 'Uploads are private by default. A file becomes viewable to visitors only while something live uses it: a page, a live egg, a published scrapbook entry or an enabled drawer item. Anyone who gets that file\'s link can then open it, so a secret word is a surprise, not a lock.'),
       h('div', { class: 'panel' }, h('h2', {}, 'Upload'), drop, status),
       h('div', { class: 'panel' }, h('h2', {}, `Library (${d.media.length})`), h('div', { class: 'row', style: 'margin-bottom:12px' }, h('div', { style: 'flex:1;min-width:200px' }, search), tagSel), grid));
   };
@@ -547,15 +582,18 @@
     const caption = h('textarea', { maxlength: 500 }, m.caption);
     const tags = h('input', { type: 'text', value: m.tags.join(', '), placeholder: 'meme, cat, egg' });
     const saveBtn = h('button', { class: 'btn', type: 'button' }, 'Save details');
-    const replBtn = h('button', { class: 'btn ghost', type: 'button' }, 'Replace image…');
+    const aud = isAudioMedia(m);
+    const replBtn = h('button', { class: 'btn ghost', type: 'button' }, aud ? 'Replace sound…' : 'Replace image…');
     const delBtn = h('button', { class: 'btn danger', type: 'button' }, 'Delete');
     const usage = d.usage.length
-      ? h('ul', {}, d.usage.map(u => h('li', {}, u.kind === 'egg' ? h('a', { href: '#eggs/' + u.id }, `Egg "${u.label}", step ${u.pos}${u.slot ? ' (' + u.slot + ')' : ''}`)
+      ? h('ul', {}, d.usage.map(u => h('li', {}, u.kind === 'egg' ? h('a', { href: '#eggs/' + u.id }, u.slot === 'sound' && !u.pos ? `Egg "${u.label}" (its sound)` : `Egg "${u.label}", step ${u.pos}${u.slot ? ' (' + u.slot + ')' : ''}`)
+        : u.kind === 'page' ? h('a', { href: '#pages/' + u.label }, `Page: ${PAGES[u.label] ? PAGES[u.label].label : u.label}`)
         : u.kind === 'scrapbook' ? h('a', { href: '#scrapbook/' + u.id }, `Scrapbook: ${u.label}`) : h('a', { href: '#drawer' }, `Junk drawer: ${u.label}`))))
       : h('p', { class: 'muted' }, 'Not used anywhere. Visitors cannot load it.');
-    const img = h('img', { src: m.url, alt: m.alt, style: 'max-width:100%;max-height:50vh;display:block;margin:0 auto;background:#000' });
+    const img = aud ? h('audio', { src: m.url, controls: true, preload: 'none', style: 'display:block;width:100%;margin:10px 0' })
+      : h('img', { src: m.url, alt: m.alt, style: 'max-width:100%;max-height:50vh;display:block;margin:0 auto;background:#000' });
     const dlg = modal(m.name, [img,
-      h('p', { class: 'mono small muted', style: 'text-align:center' }, `${m.width}×${m.height} · ${m.mime.replace('image/', '').toUpperCase()} · ${fmtBytes(m.bytes)} · added ${fmtDate(m.created_at)}`),
+      h('p', { class: 'mono small muted', style: 'text-align:center' }, `${aud ? 'Sound' : m.width + '×' + m.height} · ${m.mime.split('/')[1].toUpperCase()} · ${fmtBytes(m.bytes)} · added ${fmtDate(m.created_at)}`),
       h('div', { class: 'grid2' }, h('label', { class: 'f' }, 'Name', name), h('label', { class: 'f' }, 'Tags', tags, h('span', { class: 'help' }, 'Comma separated'))),
       h('label', { class: 'f', style: 'margin-top:10px' }, 'Alt text', alt), h('label', { class: 'f', style: 'margin-top:10px' }, 'Caption / notes', caption),
       h('h3', { style: 'margin-top:16px' }, 'Where it is used'), usage,
@@ -565,14 +603,16 @@
       toast('Saved.'); dlg.close(); router();
     });
     replBtn.onclick = async () => {
-      const [f] = await filePicker(false); if (!f) return;
-      await guard(replBtn, async () => { await replaceFile(id, f); toast('Image replaced everywhere it is used.'); dlg.close(); router(); });
+      const [f] = await filePicker(false, aud ? 'audio' : 'image'); if (!f) return;
+      await guard(replBtn, async () => { await replaceFile(id, f); toast((aud ? 'Sound' : 'Image') + ' replaced everywhere it is used.'); dlg.close(); router(); });
     };
     delBtn.onclick = async () => {
       let force = false;
       if (d.usage.length) {
         force = await confirmBox('This image is in use', h('div', {}, h('p', {}, 'Deleting it will:'), h('ul', {},
-          d.usage.map(u => h('li', {}, u.kind === 'egg' ? `empty step ${u.pos} of egg "${u.label}" (the egg keeps working, visitors skip that step)`
+          d.usage.map(u => h('li', {}, u.kind === 'egg' && u.slot === 'sound' && !u.pos ? `remove the sound from egg "${u.label}"`
+            : u.kind === 'page' ? `remove it from the ${PAGES[u.label] ? PAGES[u.label].label : u.label} page (that spot goes back to its default)`
+            : u.kind === 'egg' ? `empty step ${u.pos} of egg "${u.label}" (the egg keeps working, visitors skip that step)`
             : u.kind === 'scrapbook' ? `remove it from scrapbook entry "${u.label}"` : `remove the junk drawer item "${u.label}"`))),
           h('p', {}, 'Tip: use "Replace image" instead if you only want a different picture.')), 'Delete anyway');
         if (!force) return;
@@ -725,18 +765,197 @@
     });
   }
 
-  // ---------------------------------------------------------------- Site text
-  VIEWS.text = async () => {
-    const d = await cms('r=settings');
-    const st = h('input', { type: 'text', value: d.settings.status || '', maxlength: 200, placeholder: 'Up late. Probably debugging something.' });
-    const nl = h('input', { type: 'text', value: d.settings.now_listening || '', maxlength: 200, placeholder: 'Artist - Track' });
-    const save = h('button', { class: 'btn', type: 'button' }, 'Save');
-    save.onclick = () => guard(save, async () => { await cms('r=settings', { method: 'PUT', json: { status: st.value, now_listening: nl.value } }); toast('Saved. The home page shows it now.'); });
-    page('THE SIGNS', 'Site text', 'Small bits of the home page that change often. Leave a field empty to fall back to the text written in index.html.',
-      h('div', { class: 'panel' }, h('h2', {}, 'Home page sidebar'),
-        h('label', { class: 'f' }, 'Status line', st), h('label', { class: 'f', style: 'margin-top:12px' }, 'Now listening', nl),
-        h('div', { class: 'row', style: 'margin-top:14px' }, save)));
+  // ---------------------------------------------------------------- Pages (edit every page of the site)
+  // Each page is described once; the form below is built from that description.
+  // Field types: text, url, textarea, bool, color, select, image, strings, texts, list.
+  const F = (k, t, label, extra = {}) => ({ k, t, label, ...extra });
+  const PAGES = {
+    home: { label: 'Home', route: '', fields: [
+      F('avatar', 'image', 'Profile photo', { help: 'Replaces the big letter. Square photos look best.' }),
+      F('avatarHover', 'image', 'Second photo (optional)', { help: 'Shows when someone hovers over or taps your photo.' }),
+      F('avatarLetter', 'text', 'Letter shown when there is no photo'),
+      F('name', 'text', 'Name (title of the first box)'),
+      F('status', 'text', 'Status line'),
+      F('nowListening', 'text', 'Now listening'),
+      F('nowListeningLink', 'url', 'Now listening link', { help: 'Spotify or YouTube links get a ▶ Play here button. Any other link shows "Listen ↗".' }),
+      F('nowListeningCover', 'image', 'Now listening cover (optional)'),
+      F('note', 'textarea', 'Note on the fridge (optional)', { help: 'A sticky note in the sidebar. Leave empty to hide it.' }),
+      F('tape', 'text', 'Tape label above the headline'),
+      F('headline', 'text', 'Headline'),
+      F('blurb', 'textarea', 'Intro'),
+      F('into', 'strings', 'Currently into (stickers)'),
+      F('updates', 'list', 'Updates', { sum: 'text', of: [F('date', 'text', 'Date'), F('text', 'text', 'Text')] }),
+      F('picks', 'strings', "Tonight's pick (the shuffle list)"),
+      F('showCounter', 'bool', 'Show the visitor counter'),
+      F('awayTitle', 'text', 'Tab title while a visitor looks at another tab', { help: 'Leave empty to turn it off.' }),
+      F('lateNight', 'text', 'Late-night message (shown 00:00 to 04:00, visitor time)', { help: 'Leave empty to turn it off.' })
+    ] },
+    music: { label: 'Music', route: 'music', fields: [
+      F('title', 'text', 'Title'),
+      F('intro', 'textarea', 'Intro'),
+      F('crates', 'list', 'Crates (genre tabs)', { sum: 'name', of: [
+        F('name', 'text', 'Crate name'), F('color', 'color', 'Card color'),
+        F('items', 'list', 'Records in this crate', { sum: 'title', of: [
+          F('title', 'text', 'Artist / album / track'), F('label', 'text', 'Small label (genre, year...)'),
+          F('note', 'textarea', 'Your note'), F('cover', 'image', 'Cover art (optional)'),
+          F('link', 'url', 'Link (optional)', { help: 'Spotify or YouTube links can be played right on the page.' })] })] })
+    ] },
+    links: { label: 'Links & heroes', route: 'links', fields: [
+      F('intro', 'textarea', 'Intro'),
+      F('links', 'list', 'Tabs that are always open', { sum: 'name', of: [F('name', 'text', 'Name'), F('url', 'url', 'Address'), F('note', 'text', 'Note')] }),
+      F('heroes', 'list', 'Heroes', { sum: 'name', of: [F('name', 'text', 'Name'), F('category', 'text', 'Category'), F('note', 'text', 'Note'),
+        F('image', 'image', 'Photo', { help: 'Leave empty to keep the built-in photo (if there is one).' })] })
+    ] },
+    projects: { label: 'Projects', route: 'projects', fields: [
+      F('intro', 'textarea', 'Intro'),
+      F('projects', 'list', 'Projects', { sum: 'name', of: [
+        F('name', 'text', 'Name'), F('tagline', 'text', 'Tagline (tape label)'), F('description', 'textarea', 'Description'), F('stack', 'text', 'Stack'),
+        F('art', 'select', 'Drawing', { options: [['rig', 'Monitoring states'], ['mj', 'Pinned job notes'], ['led', 'Ledger lines'], ['os', 'Phone app'], ['cam', 'Camera frame'], ['none', 'Plain']] }),
+        F('image', 'image', 'Screenshot (optional)', { help: 'Replaces the drawing.' }),
+        F('links', 'list', 'Links', { sum: 'label', of: [F('label', 'text', 'Label'), F('url', 'url', 'Address')] })] })
+    ] },
+    journal: { label: 'Journal', route: 'journal', fields: [
+      F('intro', 'textarea', 'Intro'),
+      F('entries', 'list', 'Entries (top = newest)', { sum: 'title', of: [
+        F('date', 'text', 'Date'), F('title', 'text', 'Title'), F('tags', 'strings', 'Tags'),
+        F('body', 'textarea', 'Text', { help: 'Leave an empty line between paragraphs. Start a line with "- " for a bullet point.', rows: 8 })] })
+    ] },
+    about: { label: 'About', route: 'about', fields: [
+      F('tape', 'text', 'Tape label'), F('title', 'text', 'Title'), F('lede', 'textarea', 'Opening line'),
+      F('paragraphs', 'texts', 'Paragraphs'),
+      F('factsTitle', 'text', 'Fact card title'),
+      F('facts', 'list', 'Fact card', { sum: 'label', of: [F('label', 'text', 'Label'), F('value', 'text', 'Value')] }),
+      F('faq', 'list', 'Questions at the bottom', { sum: 'q', of: [F('q', 'text', 'Question'), F('a', 'textarea', 'Answer')] })
+    ] },
+    contact: { label: 'Contact', route: 'contact', fields: [
+      F('title', 'text', 'Title'), F('intro', 'textarea', 'Intro'), F('line2', 'textarea', 'Second paragraph'),
+      F('stamp', 'text', 'Stamp text'), F('email', 'text', 'Email address'), F('note', 'text', 'Note under the email'),
+      F('github', 'url', 'GitHub'), F('linkedin', 'url', 'LinkedIn'), F('site', 'url', 'Website'),
+      F('resume', 'url', 'Résumé link (optional)', { help: 'A link to a PDF or page. Adds a Résumé button.' }),
+      F('sign', 'text', 'Sign-off line')
+    ] },
+    footer: { label: 'Footer', route: '', fields: [F('text', 'text', 'Footer text')] }
   };
+
+  const blank = fields => Object.fromEntries(fields.map(f => [f.k, ({ bool: false, image: null, strings: [], texts: [], list: [], color: '#2b3a5c', select: f.options ? f.options[f.options.length - 1][0] : '' })[f.t] ?? '']));
+  let pagesDirty = false;
+  const markDirty = () => { pagesDirty = true; const d = $('#dirty'); if (d) d.hidden = false; };
+  addEventListener('beforeunload', ev => { if (pagesDirty) { ev.preventDefault(); ev.returnValue = ''; } });
+
+  function moveBtns(arr, i, redraw) {
+    return [
+      i > 0 ? h('button', { class: 'btn ghost sm', type: 'button', 'aria-label': 'Move up', onclick: () => { arr.splice(i - 1, 0, arr.splice(i, 1)[0]); markDirty(); redraw(); } }, '↑') : null,
+      i < arr.length - 1 ? h('button', { class: 'btn ghost sm', type: 'button', 'aria-label': 'Move down', onclick: () => { arr.splice(i + 1, 0, arr.splice(i, 1)[0]); markDirty(); redraw(); } }, '↓') : null,
+      h('button', { class: 'btn danger sm', type: 'button', 'aria-label': 'Remove', onclick: () => { arr.splice(i, 1); markDirty(); redraw(); } }, '×')
+    ];
+  }
+
+  function formField(obj, f, media) {
+    const help = f.help ? h('span', { class: 'help' }, f.help) : null;
+    const wrap = (...kids) => h('div', { class: 'f' }, h('span', {}, f.label), ...kids, help);
+    const bind = (el, get = () => el.value) => { el.addEventListener('input', () => { obj[f.k] = get(); markDirty(); }); el.addEventListener('change', () => { obj[f.k] = get(); markDirty(); }); return el; };
+    switch (f.t) {
+      case 'text': case 'url':
+        return wrap(bind(h('input', { type: 'text', value: obj[f.k] ?? '', placeholder: f.t === 'url' ? 'https://...' : null, 'aria-label': f.label })));
+      case 'textarea':
+        return wrap(bind(h('textarea', { 'aria-label': f.label, rows: f.rows || null }, obj[f.k] ?? '')));
+      case 'bool': {
+        const i = h('input', { type: 'checkbox', checked: !!obj[f.k] });
+        i.onchange = () => { obj[f.k] = i.checked; markDirty(); };
+        return h('label', { class: 'check' }, i, f.label);
+      }
+      case 'color':
+        return wrap(bind(h('input', { type: 'color', value: /^#[0-9a-f]{6}$/i.test(obj[f.k] || '') ? obj[f.k] : '#2b3a5c', 'aria-label': f.label, style: 'width:80px;height:40px;padding:2px' })));
+      case 'select':
+        return wrap(bind(h('select', { 'aria-label': f.label }, f.options.map(([v, l]) => h('option', { value: v, selected: obj[f.k] === v || null }, l)))));
+      case 'image': {
+        const box = h('div', { class: 'imgfield' });
+        const draw = () => {
+          const m = obj[f.k] && media[obj[f.k]];
+          const fallback = !m && obj.img ? { url: obj.img } : null;
+          box.replaceChildren(
+            m || fallback ? h('img', { src: (m || fallback).url, alt: '' }) : h('div', { class: 'th empty' }, 'NONE'),
+            h('div', { style: 'display:grid;gap:6px;align-content:start' },
+              h('span', { class: 'mono small' }, m ? m.name || 'Chosen image' : fallback ? 'Built-in image' : 'No image'),
+              h('div', { class: 'row' },
+                h('button', { class: 'btn sm', type: 'button', onclick: async () => {
+                  const [x] = await pickMedia({ title: f.label });
+                  if (x) { media[x.id] = { url: x.url, name: x.name, w: x.width, h: x.height, alt: x.alt }; obj[f.k] = x.id; markDirty(); draw(); }
+                } }, m ? 'Change' : 'Choose or upload'),
+                m ? h('button', { class: 'btn ghost sm', type: 'button', onclick: () => { obj[f.k] = null; markDirty(); draw(); } }, 'Remove') : null)));
+        };
+        draw();
+        return wrap(box);
+      }
+      case 'strings': case 'texts': {
+        if (!Array.isArray(obj[f.k])) obj[f.k] = [];
+        const arr = obj[f.k], box = h('div', { class: 'items' });
+        const draw = () => box.replaceChildren(...arr.map((v, i) => {
+          const el = f.t === 'texts' ? h('textarea', { 'aria-label': `${f.label} ${i + 1}`, rows: 4 }, v) : h('input', { type: 'text', value: v, 'aria-label': `${f.label} ${i + 1}` });
+          el.oninput = () => { arr[i] = el.value; markDirty(); };
+          return h('div', { class: 'srow' }, el, h('div', { class: 'row', style: 'gap:4px' }, moveBtns(arr, i, draw)));
+        }), h('div', {}, h('button', { class: 'btn ghost sm', type: 'button', onclick: () => { arr.push(''); markDirty(); draw(); const last = box.querySelectorAll('input,textarea'); last[last.length - 1].focus(); } }, '+ Add')));
+        draw();
+        return wrap(box);
+      }
+      case 'list': {
+        if (!Array.isArray(obj[f.k])) obj[f.k] = [];
+        const arr = obj[f.k], box = h('div', { class: 'items' });
+        const openSet = new Set();
+        const draw = () => box.replaceChildren(...arr.map((item, i) => {
+          const sum = h('summary', {}, h('span', { class: 'grow' }, String(item[f.sum] || '').slice(0, 70) || `(new ${f.label.toLowerCase().replace(/s? \(.*$/, '').replace(/s$/, '')})`));
+          const det = h('details', { class: 'li', open: openSet.has(item) || null }, sum,
+            h('div', { class: 'li-body' }, f.of.map(sf => formField(item, sf, media)), h('div', { class: 'row' }, moveBtns(arr, i, draw))));
+          det.addEventListener('toggle', () => { if (det.open) openSet.add(item); else openSet.delete(item); });
+          det.addEventListener('input', () => { sum.firstChild.textContent = String(item[f.sum] || '').slice(0, 70) || '(untitled)'; });
+          return det;
+        }), h('div', {}, h('button', { class: 'btn ghost sm', type: 'button', onclick: () => { const it = blank(f.of); arr.push(it); openSet.add(it); markDirty(); draw(); } }, '+ Add')));
+        draw();
+        return wrap(box);
+      }
+    }
+    return null;
+  }
+
+  VIEWS.text = async () => { location.hash = 'pages/home'; };
+  VIEWS.pages = async arg => {
+    const d = await cms('r=content');
+    if (arg && PAGES[arg]) return pageEditor(arg, d);
+    page('THE PAGES', 'Pages', 'Edit the text, photos and lists on every page of the site. Changes go live as soon as you save. No code, no redeploy.',
+      h('div', { class: 'panel' }, h('h2', {}, 'Pages'), h('div', { class: 'items' }, Object.entries(PAGES).map(([k, pg]) =>
+        h('div', { class: 'item' }, h('div', { class: 'th empty' }, pg.label.slice(0, 5).toUpperCase()),
+          h('div', { class: 'meta' }, h('div', { class: 'row' }, h('b', {}, pg.label), d.content[k] ? h('span', { class: 'badge b-live' }, 'EDITED') : h('span', { class: 'badge b-off' }, 'DEFAULT')),
+            h('div', { class: 'mono small muted' }, d.updated[k] ? 'Saved ' + fmtDate(d.updated[k]) : 'Showing the built-in text')),
+          h('div', { class: 'acts' }, h('a', { class: 'btn ghost sm', href: '/#/' + pg.route, target: '_blank', rel: 'noopener' }, 'View ↗'), h('a', { class: 'btn sm', href: '#pages/' + k }, 'Edit')))))));
+  };
+
+  function pageEditor(key, d) {
+    const pg = PAGES[key];
+    const defaults = (window.NIKH_DEFAULTS || {})[key] || {};
+    const data = JSON.parse(JSON.stringify(Object.assign({}, defaults, d.content[key] || {})));
+    if (key === 'home' && !d.content.home) { // carry over the old "Site text" values
+      if (d.settings.status) data.status = d.settings.status;
+      if (d.settings.now_listening) data.nowListening = d.settings.now_listening;
+    }
+    const media = { ...d.media };
+    pagesDirty = false;
+    const saveBtn = h('button', { class: 'btn', type: 'button' }, 'Save page');
+    saveBtn.onclick = () => guard(saveBtn, async () => {
+      await cms('r=content&key=' + key, { method: 'PUT', json: { data } });
+      pagesDirty = false; $('#dirty').hidden = true;
+      toast(`${pg.label} saved. It's live now.`);
+    });
+    const resetBtn = d.content[key] ? h('button', { class: 'btn danger', type: 'button' }, 'Reset to default') : null;
+    if (resetBtn) resetBtn.onclick = async () => {
+      if (!(await confirmBox('Reset page', `Throw away your saved version of ${pg.label} and go back to the built-in text? Your images stay in the media library.`, 'Reset'))) return;
+      await guard(resetBtn, async () => { await cms('r=content&key=' + key, { method: 'DELETE' }); pagesDirty = false; toast('Back to the default.'); router(); });
+    };
+    page('THE PAGES', 'Edit: ' + pg.label, d.content[key] ? 'Last saved ' + fmtDate(d.updated[key]) + '.' : 'This page shows the built-in text right now. Saving creates your own version.',
+      h('p', {}, h('a', { href: '#pages' }, '← All pages')),
+      h('div', { class: 'panel pageform' }, pg.fields.map(f => formField(data, f, media))),
+      h('div', { class: 'savebar' }, saveBtn, h('a', { class: 'btn ghost', href: '/#/' + pg.route, target: '_blank', rel: 'noopener' }, 'View page ↗'), resetBtn,
+        h('span', { id: 'dirty', class: 'mono small', style: 'color:var(--amber)', hidden: true }, '● unsaved changes')));
+  }
 
   // ---------------------------------------------------------------- boot
   async function boot() {

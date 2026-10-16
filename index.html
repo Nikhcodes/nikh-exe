@@ -197,6 +197,47 @@ h2{font-size:1.6rem;margin-bottom:12px}
 .sbe h2{font-size:1.3rem;margin:4px 0 6px}
 .sbe p{white-space:pre-wrap;margin:0}
 .sb-empty{font-family:var(--mono);margin-top:30px}
+/* HOME EXTRAS */
+.avatar.photo{position:relative;background:#000;overflow:hidden;padding:0}
+.avatar.photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:opacity .25s}
+.avatar.photo img.alt{opacity:0}
+.avatar.swap:hover img.alt,.avatar.swap:focus img.alt,.avatar.swap.on img.alt{opacity:1}
+.late{font-family:var(--mono);font-size:.8rem;color:var(--cream);opacity:.8;margin-top:8px;border-left:3px solid var(--amber);padding-left:8px}
+.nl{display:flex;gap:12px;align-items:flex-start}
+.nl .cover{width:64px;height:64px;object-fit:cover;flex:0 0 64px;border:2px solid var(--amber);transform:rotate(-2deg)}
+.listen{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:8px;font-family:var(--mono);font-weight:700;font-size:.85rem;position:relative;z-index:1}
+.listen a{color:inherit}
+.listen .play{font:inherit;background:var(--amber);color:var(--ink);border:0;padding:3px 9px;cursor:pointer}
+.listen .play:hover{background:var(--cream)}
+.fridge-box{background:var(--char)}
+.fridge{background:#f3dca8;color:#241b14;padding:12px 14px;transform:rotate(1.2deg);box-shadow:3px 3px 0 rgba(0,0,0,.45);white-space:pre-wrap;font-style:italic;position:relative}
+.fridge::before{content:"";position:absolute;top:-6px;left:50%;width:30px;height:12px;margin-left:-15px;background:var(--red);border-radius:3px;box-shadow:0 2px 2px rgba(0,0,0,.4)}
+.odo{display:flex;gap:3px;justify-content:center;margin:4px 0}
+.odo span{font-family:var(--mono);font-weight:700;font-size:1.4rem;background:var(--ink);color:#7ee0a3;border:1px solid #2f323b;width:1.3em;text-align:center;line-height:1.5}
+.odo-note{font-size:.72rem;text-align:center;opacity:.7}
+/* MUSIC EXTRAS */
+.sl.has-cover{color:#fff}
+.sl .sl-cover{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0}
+.sl.has-cover::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.72),rgba(0,0,0,.25) 45%,rgba(0,0,0,.85));z-index:1}
+.sl.has-cover::after{z-index:1;opacity:.5}
+.sl>small,.sl>b,.sl>.listen{position:relative;z-index:2}
+.sl.has-cover>small,.sl.has-cover>b{text-shadow:0 1px 3px rgba(0,0,0,.8)}
+.sl .listen{margin-top:6px}
+.player .frame iframe{display:block;width:100%;border:0;background:#000}
+.player .frame.video{aspect-ratio:16/9}
+.player .frame.video iframe{height:100%}
+.player .small-note{font-size:.75rem;margin-top:8px;color:#241b14}
+.shuf .listen{display:inline-flex;margin-left:8px}
+/* PROJECT PHOTO */
+.art.photo{padding:0;background:#241b14;overflow:hidden}
+.art.photo img{width:100%;height:100%;min-height:200px;object-fit:cover;display:block}
+/* 404 */
+.lost{text-align:center}
+.lost img{display:block;margin:24px auto 0;max-width:min(80vw,368px);height:auto;image-rendering:pixelated}
+.lost .big{font-size:1.3rem;font-style:italic;margin:16px auto 22px;max-width:40ch}
+/* SOUND SWITCH */
+.snd{font:inherit;background:transparent;color:#999;border:1px dashed #555;padding:4px 10px;cursor:pointer}
+.snd[aria-pressed=true]{color:var(--amber);border-color:var(--amber)}
 footer{padding:20px 22px calc(30px + env(safe-area-inset-bottom));font-family:var(--mono);font-size:.8rem;border-top:3px double var(--burg);color:#999;display:flex;flex-wrap:wrap;align-items:center;gap:8px 24px}
 .prompt{display:flex;align-items:center;gap:6px;flex:1 1 260px;min-width:0}
 .prompt label{color:var(--amber);font-weight:700;white-space:nowrap}
@@ -213,84 +254,82 @@ footer{padding:20px 22px calc(30px + env(safe-area-inset-bottom));font-family:va
 <body>
 <header><a class="logo" href="#/" data-egg-target="logo">NIKH.EXE</a><nav aria-label="Main" id="nav"></nav></header>
 <main id="view"></main>
-<footer><span data-egg-target="footer">Built after hours in Suriname.</span>
+<footer><span data-egg-target="footer" id="foot-text">Built after hours in Suriname.</span>
 <form class="prompt" id="prompt" autocomplete="off"><label for="cmd">C:\NIKH&gt;</label><input id="cmd" name="cmd" maxlength="60" autocapitalize="off" spellcheck="false" enterkeyhint="go"></form>
-<span id="found" aria-live="polite"></span><p id="cmd-out" role="status" aria-live="polite"></p></footer>
+<span id="found" aria-live="polite"></span><button class="snd" id="snd" type="button" aria-pressed="false">🔇 sound off</button><p id="cmd-out" role="status" aria-live="polite"></p></footer>
+<script src="assets/content.js"></script>
+<script src="assets/sound.js"></script>
 <script src="assets/reveal.js"></script>
 <script src="assets/eggs.js"></script>
 <script>
-/* ===== EDIT YOUR CONTENT HERE ===== */
-const ME={
- name:"Nikhiel Lingard",
- status:"Up late. Probably debugging something.",
- nowListening:"Not set yet. Edit ME.nowListening",
- blurb:"IT Operator by day, student and builder by night. Based in Suriname. Into music, anime, horror and backend systems.",
- into:["Rock","Kompa","Zouk","Hunter x Hunter","Stardew Valley","Horror films","Football","Spring Boot","Cowboy Bebop"],
- updates:[["Oct 2026","Rebuilt this site as a real personal corner of the internet."],["Oct 2026","Studying backend: Spring Security and PostgreSQL."]],
- picks:["Cowboy Bebop","GTO","Initial D-style drifting anime","Inuyasha","Hunter x Hunter","Dragon Ball Super","Assassin's Creed","Zelda: Breath of the Wild","Stardew Valley","Super Mario Odyssey","Sleeping Dogs","The Truman Show","Halloween"],
- email:"nikhiel.lingard.dev@gmail.com",
- github:"https://github.com/NikhCodes",
- linkedin:"https://www.linkedin.com/in/nikhiel-lingard/",
- site:"https://nikhcodes.github.io",
- resume:""
-};
-const CRATES={
- "Caribbean":{c:"#a8442b",items:[["Kassav'","Zouk","Add your favorite album or track + why."],["Gyptian","Dancehall","Add your favorite album or track + why."],["Beres Hammond","Reggae","Add your favorite album or track + why."],["Kompa","Any and all","Which groups? Add them here."]]},
- "Latin":{c:"#7a2a63",items:[["Elvis Crespo","Salsa / merengue","Add your favorite album or track + why."],["Bachata","Genre","Which artists? Add them here."],["Merengue","Genre","Which artists? Add them here."]]},
- "Loud guitars":{c:"#2b3a5c",items:[["My Chemical Romance","Alt rock","Add your favorite album or track + why."],["Green Day","Alt rock","Add your favorite album or track + why."]]},
- "Hip-hop":{c:"#5a4a1a",items:[["MF DOOM","Favorite artist ever","Add your favorite album or track + why."]]},
- "Stage & score":{c:"#4a1620",items:[["The Phantom of the Opera","Opera / musical","Add your favorite version or number + why."],["Classical","Genre","Which composers? Add them here."]]},
- "After midnight":{c:"#1c4a4a",items:[["Jazz","Genre","Add your favorite artists + why. Bebop is the mood reference."]]}
-};
-const PROJECTS=[
- {k:"rig",n:"RigSight",t:"Flagship backend project",d:"A simulated industrial monitoring platform. The question: how does a backend behave when input is a steady stream of equipment data instead of CRUD requests? It explores threshold monitoring, state transitions and alert deduplication, with JWT auth and role-based access.",s:"Java 21 · Spring Boot · Spring Security · JWT · Hibernate · PostgreSQL · Flyway · Docker",l:[["Source","https://github.com/NikhCodes/rigsight"]],a:'<span class="n">NORMAL</span> → <span class="n w">WARNING</span> → <span class="n w">CRITICAL</span><span>simulated data · repeat breaches = one alert</span>'},
- {k:"mj",n:"Microjobs.sr",t:"Full-stack product for Suriname",d:"A local-first micro-jobs and talent marketplace. People build profiles, showcase skills, post jobs, apply and message each other. Covers session auth with bcrypt, role-aware admin, the job and application lifecycle, and relational modeling.",s:"Next.js · React · TypeScript · Tailwind · Prisma · PostgreSQL (Neon) · Vercel",l:[["Live app","https://microjobs-sr.vercel.app/"],["Source","https://github.com/Nikhcodes/microjobs.sr"]],a:'<div>WANTED: logo designer, 1 week</div><div>OFFERING: photography, Paramaribo</div><div>NEED: web dev for small shop</div>'},
- {k:"led",n:"AGAS",t:"Academic group accountability system",d:"Built around trust boundaries: a three-role authorization model, hashed passwords and an append-only audit log, with JSONB metadata, UUID keys and soft deletion. No public demo or repository.",s:"Node.js · Express · PostgreSQL · JWT · bcrypt · Helmet · Joi",l:[],a:'<span>#001 &nbsp;role granted &nbsp;[append-only]</span><span>#002 &nbsp;record updated</span><span>#003 &nbsp;record soft-deleted</span>'},
- {k:"os",n:"NikhOS",t:"Student workspace / PWA",d:"A grade and assignment tracker that feels like a native app: installable and usable offline.",s:"React · Vite · Tailwind CSS · Framer Motion",l:[["Live app","https://nikh-os-red.vercel.app"],["Source","https://github.com/NikhCodes/NikhOS"]],a:'<div class="phone" aria-hidden="true"><span>NikhOS</span><i></i><i></i><i></i><i></i></div>'},
- {k:"cam",n:"Pose Cam",t:"Computer vision experiment",d:"Real-time hand gesture detection using landmark geometry instead of a trained classifier, to understand the math under the library calls.",s:"Python · MediaPipe · OpenCV · NumPy",l:[["Source","https://github.com/NikhCodes/face-tracker"]],a:'<span class="rec">● REC</span><span>21 landmarks → angles → gesture</span>'}
-];
-const JOURNAL=[
- {d:"Oct 2026",t:"Welcome to the website",tags:["meta"],body:"<p>I had a normal portfolio. It was fine. It also sounded like every other developer on the internet. So I tore it up and built the kind of website people used to make: weird, personal and slightly too long.</p><p>The projects are still here. They just share the house with the music now.</p>"},
- {d:"Oct 2026",t:"Auth is not a login form",tags:["backend","security"],body:"<p>A login form takes an afternoon. The hard part is everything after it: how long a session lives, where a token is stored, how passwords are hashed, and what each role is actually allowed to do once it gets in.</p><p>That's why I like building it. Every shortcut shows up later as a bug or a hole.</p>"},
- {d:"Oct 2026",t:"Ops brain, dev hands",tags:["ops","backend"],body:"<p>Working in IT operations changed how I read code. I look at a feature and ask what happens when it fails, who finds out, and how fast. Happy paths are easy. Failure paths are where a system shows its character.</p>"},
- {d:"Oct 2026",t:"What I'm learning right now",tags:["learning"],body:"<ul><li>Spring Security and PostgreSQL, properly</li><li>The OWASP Top 10, and how to design auth</li><li>Caching strategies</li><li>Next up: Docker, Nginx and deployment</li></ul><p>No framework collecting. One system at a time.</p>"}
-];
-const LINKS=[
- ["Pinterest","https://www.pinterest.com","Where my taste goes to collect."],
- ["Spotify","https://open.spotify.com","Music, obviously."],
- ["GitHub","https://github.com","Obvious. My stuff lives at NikhCodes."],
- ["Stack Overflow","https://stackoverflow.com","Still funny. Still saves me."],
- ["Claude","https://claude.ai","Favorite, no questions asked."],
- ["Gemini","https://gemini.google.com","The other favorite, no questions asked."]
-];
-const HEROES=[
- ["MF DOOM","Music","Favorite ever.","assets/heroes/doom.webp","The metal DOOM mask with a halo",520,520],
- ["Paolo Maldini","Football","Idol growing up.","assets/heroes/maldini.webp","Paolo Maldini pointing, in an AC Milan shirt",520,468],
- ["Connor Kenway","Video Games","Character I remember from growing up.","assets/heroes/connor.webp","Connor Kenway mid-fight with a tomahawk",520,520],
- ["Michael Myers","Horror","Fav Horror Character.","assets/heroes/myers.webp","The pale Michael Myers mask in the dark",284,520]
-];
-/* ===== END CONTENT ===== */
+/* Page content lives in assets/content.js (defaults) and in the admin panel (Admin → Pages).
+   The last version received from the server is remembered in this browser, so pages don't flash old text. */
+const D=window.NIKH_DEFAULTS;
+let C={},MEDIA={};
+try{const c=JSON.parse(localStorage.getItem('nikh-content')||'null');if(c&&c.content){C=c.content;MEDIA=c.media||{}}}catch{}
+const S=k=>Object.assign({},D[k],C[k]||{});
+const M=id=>(id&&MEDIA[id])||null;
 const $=s=>document.querySelector(s),v=$('#view');
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const safeUrl=u=>{u=String(u||'').trim();return /^(https?:\/\/|mailto:|#\/)/i.test(u)?u:''};
+const safeColor=c=>/^#[0-9a-f]{3,8}$/i.test(c||'')?c:'#2b3a5c';
+const img=(i,cls,extra)=>i?`<img${cls?` class="${cls}"`:''} src="${esc(i.url)}" alt="${esc(i.alt)}" width="${+i.w||''}" height="${+i.h||''}" loading="lazy" decoding="async"${extra||''}>`:'';
+/* Plain text with blank lines between paragraphs; lines starting with "- " become a list. */
+const textHtml=t=>String(t||'').split(/\n\s*\n/).map(b=>{const L=b.split('\n').filter(x=>x.trim());
+ return L.length&&L.every(x=>/^\s*-\s+/.test(x))?`<ul>${L.map(x=>`<li>${esc(x.replace(/^\s*-\s+/,''))}</li>`).join('')}</ul>`:`<p>${L.map(esc).join('<br>')}</p>`}).join('');
+/* Spotify / YouTube links can be played on the page (the player loads only after a click). */
+function embedOf(u){try{const x=new URL(u);
+ if(x.hostname==='open.spotify.com'){const m=x.pathname.match(/^\/(?:intl-[a-z-]+\/)?(track|album|playlist|artist|episode|show)\/([A-Za-z0-9]+)/);if(m)return{src:`https://open.spotify.com/embed/${m[1]}/${m[2]}`,h:/track|episode/.test(m[1])?152:380}}
+ let id=null;
+ if(/(^|\.)youtube\.com$/.test(x.hostname))id=x.searchParams.get('v')||(x.pathname.match(/^\/(?:shorts|embed|live)\/([\w-]{11})/)||[])[1];
+ if(x.hostname==='youtu.be')id=x.pathname.slice(1,12);
+ if(id&&/^[\w-]{11}$/.test(id))return{src:`https://www.youtube-nocookie.com/embed/${id}?autoplay=1`,h:0,video:1}
+}catch{}return null}
+function player(link,title){
+ const e=embedOf(link);if(!e)return;
+ const d=document.createElement('dialog');d.className='rv player';d.setAttribute('aria-label','Player: '+title);
+ d.innerHTML=`<div class="rv-card"><span class="rv-tape">NOW PLAYING</span><button class="rv-close" type="button" aria-label="Close">×</button><h2 class="rv-title"></h2><div class="frame${e.video?' video':''}"><iframe title="" src="${esc(e.src)}" ${e.h?`height="${e.h}"`:''} allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe></div><p class="mono small-note">Playback comes from ${e.video?'YouTube':'Spotify'}. Closing this stops it.</p></div>`;
+ d.querySelector('.rv-title').textContent=title;d.querySelector('iframe').title=title;
+ d.querySelector('.rv-close').onclick=()=>d.close();
+ d.addEventListener('click',ev=>{if(ev.target===d)d.close()});
+ d.addEventListener('close',()=>d.remove());
+ document.body.append(d);d.showModal()
+}
+const listenBtns=(link,title)=>{const u=safeUrl(link);if(!u)return'';return `<span class="listen">${embedOf(u)?`<button class="play" type="button" data-play="${esc(u)}" data-title="${esc(title)}">▶ Play here</button>`:''}<a href="${esc(u)}" target="_blank" rel="noopener">Listen ↗</a></span>`};
+document.addEventListener('click',ev=>{const b=ev.target instanceof Element&&ev.target.closest('[data-play]');if(b)player(b.dataset.play,b.dataset.title)});
+const ART={
+ rig:'<span class="n">NORMAL</span> → <span class="n w">WARNING</span> → <span class="n w">CRITICAL</span><span>simulated data · repeat breaches = one alert</span>',
+ mj:'<div>WANTED: logo designer, 1 week</div><div>OFFERING: photography, Paramaribo</div><div>NEED: web dev for small shop</div>',
+ led:'<span>#001 &nbsp;role granted &nbsp;[append-only]</span><span>#002 &nbsp;record updated</span><span>#003 &nbsp;record soft-deleted</span>',
+ os:'<div class="phone" aria-hidden="true"><span>NikhOS</span><i></i><i></i><i></i><i></i></div>',
+ cam:'<span class="rec">● REC</span><span>21 landmarks → angles → gesture</span>'
+};
+const lateNight=()=>{const h=new Date().getHours();return h>=0&&h<4};
 const pages={
- home(){return `<div class="wrap home"><aside class="side">
- <div class="box"><h3>${ME.name}</h3><div class="avatar" aria-hidden="true" data-egg-target="avatar">N</div><p class="status" id="st">“${ME.status}”</p></div>
- <div class="box"><h3>Now listening</h3><p class="mono" id="nl">${ME.nowListening}</p></div>
- <div class="box"><h3>Currently into</h3><div class="stick">${ME.into.map(i=>`<span>${i}</span>`).join('')}</div></div>
- <div class="box drawer" id="drawer" ${SITE.counts.surprise?'':'hidden'}><h3>The junk drawer</h3><div class="dr-out" id="dr-out" aria-live="polite"></div><button class="btn ghost" id="dr">Surprise me</button></div></aside>
- <section class="hero"><span class="tape" data-egg-target="welcome-tape">WELCOME, STRANGER</span><h1>Hey, I'm Nikh.</h1><p class="big">${ME.blurb}</p>
+ home(){const h=S('home'),av=M(h.avatar),avh=M(h.avatarHover),cov=M(h.nowListeningCover);
+  const status=C.home?h.status:(SITE.settings.status||h.status),nl=C.home?h.nowListening:(SITE.settings.now_listening||h.nowListening);
+  return `<div class="wrap home"><aside class="side">
+ <div class="box"><h3>${esc(h.name)}</h3>${av?`<div class="avatar photo${avh?' swap':''}" data-egg-target="avatar" ${avh?'tabindex="0"':''}>${img(av,'main',' loading="eager"')}${avh?img(avh,'alt'):''}</div>`:`<div class="avatar" aria-hidden="true" data-egg-target="avatar">${esc(h.avatarLetter||'N')}</div>`}
+ <p class="status" id="st">“${esc(status)}”</p>${h.lateNight&&lateNight()?`<p class="late">${esc(h.lateNight)}</p>`:''}</div>
+ <div class="box"><h3>Now listening</h3><div class="nl">${cov?img(cov,'cover'):''}<div><p class="mono" id="nl">${esc(nl)}</p>${listenBtns(h.nowListeningLink,nl)}</div></div></div>
+ ${h.note?`<div class="box fridge-box"><h3>Note on the fridge</h3><p class="fridge">${esc(h.note)}</p></div>`:''}
+ <div class="box"><h3>Currently into</h3><div class="stick">${(h.into||[]).map(i=>`<span>${esc(i)}</span>`).join('')}</div></div>
+ <div class="box drawer" id="drawer" ${SITE.counts.surprise?'':'hidden'}><h3>The junk drawer</h3><div class="dr-out" id="dr-out" aria-live="polite"></div><button class="btn ghost" id="dr">Surprise me</button></div>
+ ${h.showCounter?`<div class="box counter" id="counter" ${SITE.hits?'':'hidden'}><h3>Visitors</h3><p class="odo" id="odo" aria-label="${SITE.hits} visits">${odo(SITE.hits)}</p><p class="mono odo-note">since the last rebuild. Hi, you.</p></div>`:''}</aside>
+ <section class="hero"><span class="tape" data-egg-target="welcome-tape">${esc(h.tape)}</span><h1>${esc(h.headline)}</h1><p class="big">${esc(h.blurb)}</p>
  <a class="btn" href="#/projects">See what I build</a><a class="btn ghost" href="#/music">Flip through the crate</a>
  <div class="picks"><div class="box"><h3>Tonight's pick</h3><div id="pick">Press shuffle</div><button class="btn ghost" id="sh">Shuffle</button></div>
- <div class="box updates"><h3>Updates</h3><ul>${ME.updates.map(u=>`<li><b>${u[0]}</b> ${u[1]}</li>`).join('')}</ul></div></div></section></div>`},
- projects(){return `<div class="paper"><div class="wrap"><span class="tape">THE WORKBENCH</span><h1>Things I've built</h1><p style="max-width:50ch;margin-top:10px">Real projects, honestly described. Some are products, some are experiments, and one is still homework.</p>
- ${PROJECTS.map(p=>`<article class="pj"><div class="art ${p.k}">${p.a}</div><div><span class="tape">${p.t}</span><h3>${p.n}</h3><p>${p.d}</p><p class="stk">${p.s}</p><p class="lk">${p.l.map(x=>`<a href="${x[1]}" target="_blank" rel="noopener">${x[0]} ↗</a>`).join('')}</p></div></article>`).join('')}</div></div>`},
- music(){const names=Object.keys(CRATES);return `<div class="wrap"><span class="tape">THE CRATE</span><h1>What I listen to</h1><p style="max-width:55ch;margin-top:10px">Not just jazz. Genres and artists below are mine; the notes are waiting for me to fill in.</p>
- <div class="crates" role="group" aria-label="Genres">${names.map((n,i)=>`<button data-c="${n}" aria-pressed="${i==0}">${n}</button>`).join('')}</div>
+ <div class="box updates"><h3>Updates</h3><ul>${(h.updates||[]).map(u=>`<li><b>${esc(u.date)}</b> ${esc(u.text)}</li>`).join('')}</ul></div></div></section></div>`},
+ projects(){const P=S('projects');return `<div class="paper"><div class="wrap"><span class="tape">THE WORKBENCH</span><h1>Things I've built</h1><p style="max-width:50ch;margin-top:10px">${esc(P.intro)}</p>
+ ${(P.projects||[]).map(p=>{const pi=M(p.image);return `<article class="pj">${pi?`<div class="art photo">${img(pi)}</div>`:`<div class="art ${esc(p.art)}">${ART[p.art]||''}</div>`}<div><span class="tape">${esc(p.tagline)}</span><h3>${esc(p.name)}</h3><p>${esc(p.description)}</p><p class="stk">${esc(p.stack)}</p><p class="lk">${(p.links||[]).filter(x=>safeUrl(x.url)).map(x=>`<a href="${esc(safeUrl(x.url))}" target="_blank" rel="noopener">${esc(x.label)} ↗</a>`).join('')}</p></div></article>`}).join('')}</div></div>`},
+ music(){const m=S('music'),cr=m.crates||[];return `<div class="wrap"><span class="tape">THE CRATE</span><h1>${esc(m.title)}</h1><p style="max-width:55ch;margin-top:10px">${esc(m.intro)}</p>
+ <div class="crates" role="group" aria-label="Genres">${cr.map((c,i)=>`<button data-c="${i}" aria-pressed="${i==0}">${esc(c.name)}</button>`).join('')}</div>
  <div class="sleeves" id="sl"></div>
  <div class="shuf"><button class="btn" id="msh">Surprise me</button> <span id="mp" class="mono"></span></div></div>`},
- links(){return `<div class="wrap"><span class="tape">THE BOOKMARKS</span><h1>Links</h1><p style="max-width:55ch;margin-top:10px">Where I spend my internet time, and the people I keep thinking about.</p>
+ links(){const L=S('links');return `<div class="wrap"><span class="tape">THE BOOKMARKS</span><h1>Links</h1><p style="max-width:55ch;margin-top:10px">${esc(L.intro)}</p>
  <h2 style="margin-top:30px">Tabs that are always open</h2>
- <div class="bk">${LINKS.map(l=>`<a href="${l[1]}" target="_blank" rel="noopener"><b>${l[0]} ↗</b><small>${l[2]}</small></a>`).join('')}</div>
- <h2>Heroes</h2><div class="heroes">${HEROES.map(h=>`<div class="card">${h[3]?`<img class="hero-img" src="${h[3]}" alt="${h[4]}" width="${h[5]}" height="${h[6]}" loading="lazy" decoding="async">`:''}<small>${h[1]}</small><b>${h[0]}</b><small>${h[2]}</small></div>`).join('')}</div>
+ <div class="bk">${(L.links||[]).filter(l=>safeUrl(l.url)).map(l=>`<a href="${esc(safeUrl(l.url))}" target="_blank" rel="noopener"><b>${esc(l.name)} ↗</b><small>${esc(l.note)}</small></a>`).join('')}</div>
+ <h2>Heroes</h2><div class="heroes">${(L.heroes||[]).map(h=>{const hi=M(h.image)||(h.img?{url:h.img,alt:h.alt,w:h.w,h:h.h}:null);return `<div class="card">${hi?img(hi,'hero-img'):''}<small>${esc(h.category)}</small><b>${esc(h.name)}</b><small>${esc(h.note)}</small></div>`}).join('')}</div>
  <h2 style="margin-top:40px">Grab my button</h2><p class="mono" style="margin-bottom:10px">88x31, because some traditions deserve to live.</p>
  <a class="btn88" href="#/" data-egg-target="button88">NIKH.EXE</a></div>`},
  guestbook(){return `<div class="wrap"><section class="guestbook-page board-page"><span class="tape">SIGN HERE</span><h1>Guestbook</h1><p class="guestbook-intro">Pin a note to the board. Leave a message, recommend something, or prove that a real human made it this far. I approve notes by hand before they go up.</p>
@@ -301,57 +340,46 @@ const pages={
  <div class="board-wrap"><div class="board-head"><span>The board</span><span id="gcount"></span></div><div id="gl" aria-live="polite"><p class="board-empty">Loading notes...</p></div><button class="btn ghost board-more" id="gmore" hidden>Load older notes</button></div></section></div>`},
  scrapbook(){return `<div class="paper"><div class="wrap"><span class="tape">THE SHOEBOX</span><h1>Scrapbook</h1><p style="max-width:52ch;margin-top:10px">Photos, small memories and other things worth keeping. Added whenever something deserves a spot.</p>
  <div class="sb" id="sb" aria-live="polite"><p class="sb-empty">Opening the shoebox...</p></div></div></div>`},
- journal(){const tags=[...new Set(JOURNAL.flatMap(j=>j.tags))];return `<div class="wrap"><span class="tape">THE ZINE</span><h1>Journal</h1><p style="max-width:55ch;margin-top:10px">Things I'm learning, things I think, and the occasional rant. Newest first.</p>
- <div class="crates" role="group" aria-label="Filter by tag"><button data-t="" aria-pressed="true">all</button>${tags.map(t=>`<button data-t="${t}" aria-pressed="false">${t}</button>`).join('')}</div>
+ journal(){const J=S('journal'),E=J.entries||[],tags=[...new Set(E.flatMap(j=>j.tags||[]))];return `<div class="wrap"><span class="tape">THE ZINE</span><h1>Journal</h1><p style="max-width:55ch;margin-top:10px">${esc(J.intro)}</p>
+ <div class="crates" role="group" aria-label="Filter by tag"><button data-t="" aria-pressed="true">all</button>${tags.map(t=>`<button data-t="${esc(t)}" aria-pressed="false">${esc(t)}</button>`).join('')}</div>
  <div class="jn" id="jn"></div></div>`},
- about(){return `<div class="paper"><div class="wrap"><span class="tape">THE LIQUOR-FREE INTERVIEW</span><h1>Who even is this guy</h1>
+ about(){const A=S('about');return `<div class="paper"><div class="wrap"><span class="tape">${esc(A.tape)}</span><h1>${esc(A.title)}</h1>
  <div class="ab"><div>
- <p class="lede">By day I keep banking systems running. By night I build things that nobody asked for, usually with more care than the situation strictly requires.</p>
- <p>I'm Nikhiel, but everyone calls me Nikh. I live in Suriname and work as an IT Operator at a fintech banking environment, which means I spend a lot of time making sure things work, and an even more suspicious amount of time wondering what happens when they stop working. I can't tell you the details, because banks get weird about that, but it has shaped how I think about software.</p>
- <p>I'm also studying BSc IT / Software Engineering at UNASAT, heading toward backend work. Java, Spring Boot, PostgreSQL, authentication, security. I like the parts of an app that users never see and absolutely notice when they're wrong.</p>
- <p>I'm not a ten-year veteran, and I'm not going to pretend. I'm early in my career, learning properly, and building real things along the way. My rule: I don't collect frameworks. I'd rather understand one system all the way down than skim ten tutorials.</p>
- <p>Outside the screen, I'm the guy with music on, an anime half-watched and a horror movie queued up. Yes, those can all happen in the same evening. This site is the proof.</p></div>
- <aside class="fact"><h3>FIELD NOTES</h3><dl>
- <dt>Day job</dt><dd>IT Operator, fintech banking</dd>
- <dt>School</dt><dd>BSc IT / Software Eng., UNASAT</dd>
- <dt>Heading toward</dt><dd>Backend engineering</dd>
- <dt>Base</dt><dd>Suriname</dd>
- <dt>Soundtrack</dt><dd>Kompa, zouk, salsa, reggae, alt rock, opera, jazz</dd>
- <dt>Screens</dt><dd>Bebop, GTO, Hunter x Hunter, Inuyasha, Dragon Ball Super</dd>
- <dt>Controllers</dt><dd>Zelda, Stardew, Assassin's Creed, Mario Odyssey</dd>
- <dt>Horror</dt><dd>Yes. Halloween is a comfort film. Don't ask.</dd></dl></aside></div>
- <div class="faq"><div><h3>Frequently asked, by nobody</h3><p>Why a personal site instead of a normal portfolio? Because I wanted a place that feels like mine, with the projects in one room of it.</p></div>
- <div><h3>Do you do jazz only?</h3><p>No. Jazz is the late-night shelf. The rest of the collection gets loud and goes to a party.</p></div>
- <div><h3>Open to work?</h3><p>Open to interesting things. Email me and we'll see.</p></div></div></div></div>`},
- contact(){return `<div class="paper"><div class="wrap ct">
- <span class="tape">OPEN CHANNEL</span><h1>Say hello.</h1>
- <p class="contact-intro" style="margin:16px 0 12px">Got something to build? Found a song I need to hear? Have a strong opinion about a movie? My inbox is open.</p>
- <p style="max-width:58ch">I'm always up for interesting projects, good conversations, and meeting people who care about what they make.</p>
- <span class="contact-stamp">NO CORPORATE SMALL TALK REQUIRED</span>
+ <p class="lede">${esc(A.lede)}</p>${(A.paragraphs||[]).map(x=>`<p>${esc(x)}</p>`).join('')}</div>
+ <aside class="fact"><h3>${esc(A.factsTitle)}</h3><dl>${(A.facts||[]).map(f=>`<dt>${esc(f.label)}</dt><dd>${esc(f.value)}</dd>`).join('')}</dl></aside></div>
+ <div class="faq">${(A.faq||[]).map(f=>`<div><h3>${esc(f.q)}</h3><p>${esc(f.a)}</p></div>`).join('')}</div></div></div>`},
+ contact(){const K=S('contact'),opt=(u,t,s)=>safeUrl(u)?`<a class="contact-option" href="${esc(safeUrl(u))}" target="_blank" rel="noopener"><b>${t} ↗</b><small>${s}</small></a>`:'';return `<div class="paper"><div class="wrap ct">
+ <span class="tape">OPEN CHANNEL</span><h1>${esc(K.title)}</h1>
+ <p class="contact-intro" style="margin:16px 0 12px">${esc(K.intro)}</p>
+ <p style="max-width:58ch">${esc(K.line2)}</p>
+ <span class="contact-stamp">${esc(K.stamp)}</span>
  <p class="mono" style="margin-bottom:8px">THE DIRECT LINE</p>
- <a class="mail" href="mailto:${ME.email}">${ME.email}</a>
- <p class="contact-note">Email is the best way to reach me. I do eventually emerge from my editor.</p>
+ <a class="mail" href="mailto:${esc(K.email)}">${esc(K.email)}</a>
+ <p class="contact-note">${esc(K.note)}</p>
  <div class="contact-options">
- <a class="contact-option" href="${ME.github}" target="_blank" rel="noopener"><b>GitHub ↗</b><small>Things I've built, broken, and fixed.</small></a>
- <a class="contact-option" href="${ME.linkedin}" target="_blank" rel="noopener"><b>LinkedIn ↗</b><small>The professional side of the operation.</small></a>
- <a class="contact-option" href="${ME.site}" target="_blank" rel="noopener"><b>My website ↗</b><small>In case you took a wrong turn getting here.</small></a>
+ ${opt(K.github,'GitHub',"Things I've built, broken, and fixed.")}${opt(K.linkedin,'LinkedIn','The professional side of the operation.')}${opt(K.site,'My website','In case you took a wrong turn getting here.')}${opt(K.resume,'Résumé','The one-page version of all this.')}
  </div>
- <p class="mono" style="font-size:.85rem">BUILT IN SURINAME. REPLIES SENT WHEN HUMANLY POSSIBLE.</p>
- </div></div>`}
+ <p class="mono" style="font-size:.85rem">${esc(K.sign)}</p>
+ </div></div>`},
+ lost(){return `<div class="wrap lost"><span class="tape">ERROR 404</span><h1>You fell off the map.</h1><img src="seed/pixel-fall.webp" alt="A pixel-art man falling backwards" width="368" height="368"><p class="big">This page doesn't exist. Or it did, and I deleted it at 2 a.m.</p><a class="btn" href="#/">Climb back home</a></div>`}
 };
 const nav=[["home","Home"],["about","About"],["projects","Projects"],["journal","Journal"],["scrapbook","Scrapbook"],["links","Links"],["guestbook","Guestbook"],["music","Music"],["contact","Contact"]];
-/* Live content from the admin panel (filled in when /api/public answers; the site works without it). */
-const SITE={counts:{surprise:0,scrapbook:0},settings:{}};
-const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+/* Live data from the admin panel (filled in when /api/public answers; the site works without it). */
+const SITE={counts:{surprise:0,scrapbook:0},settings:{},hits:0};
 const navVisible=(n,k)=>n[0]!='scrapbook'||SITE.counts.scrapbook>0||k=='scrapbook';
-function render(){
- const r=(location.hash.replace('#/','')||'home');
- const k=pages[r]?r:'home';
+const odo=n=>String(n||0).padStart(7,'0').split('').map(d=>`<span>${d}</span>`).join('');
+const route=()=>{const r=location.hash.replace(/^#\/?/,'').split('?')[0];return r===''?'home':(pages[r]&&r!=='lost'?r:'lost')};
+function drawNav(k){$('#nav').innerHTML=nav.filter(n=>navVisible(n,k)).map(n=>`<a href="#/${n[0]=='home'?'':n[0]}" ${n[0]==k?'aria-current="page"':''}>${n[1]}</a>`).join('')}
+function render(keepScroll){
+ const k=route();
  v.innerHTML=pages[k]();
- document.title=(k=='home'?"NIKH.EXE | Under Construction Forever":nav.find(n=>n[0]==k)[1]+" · NIKH.EXE");
- window.scrollTo(0,0);
- $('#nav').innerHTML=nav.filter(n=>navVisible(n,k)).map(n=>`<a href="#/${n[0]=='home'?'':n[0]}" ${n[0]==k?'aria-current="page"':''}>${n[1]}</a>`).join('');
- if(k=='home'){$('#sh').onclick=()=>{$('#pick').textContent=ME.picks[Math.floor(Math.random()*ME.picks.length)]};applySettings();$('#dr').onclick=openDrawer}
+ document.title=(k=='home'?"NIKH.EXE | Under Construction Forever":k=='lost'?"404 · NIKH.EXE":nav.find(n=>n[0]==k)[1]+" · NIKH.EXE");
+ baseTitle=document.title;
+ if(!keepScroll)window.scrollTo(0,0);
+ drawNav(k);
+ $('#foot-text').textContent=S('footer').text;
+ if(k=='home'){const h=S('home');$('#sh').onclick=()=>{const p=h.picks||[];if(p.length)$('#pick').textContent=p[Math.floor(Math.random()*p.length)]};$('#dr').onclick=openDrawer;
+  const sw=$('.avatar.swap');if(sw)sw.onkeydown=e=>{if(e.key=='Enter'||e.key==' '){e.preventDefault();sw.classList.toggle('on')}}}
  if(k=='scrapbook')loadScrapbook();
  if(k=='guestbook'){
   const L=$('#gl'),M=$('#gm'),more=$('#gmore');
@@ -393,44 +421,55 @@ function render(){
   }
  }
  if(k=='journal'){
+  const E=S('journal').entries||[];
   const show=t=>{
-   $('#jn').innerHTML=JOURNAL.filter(j=>!t||j.tags.includes(t)).map(j=>`<article class="entry"><time>${j.d}</time><h2>${j.t}</h2>${j.body}<div class="tags">${j.tags.map(x=>`<span>${x}</span>`).join('')}</div></article>`).join('');
+   $('#jn').innerHTML=E.filter(j=>!t||(j.tags||[]).includes(t)).map(j=>`<article class="entry"><time>${esc(j.date)}</time><h2>${esc(j.title)}</h2>${textHtml(j.body)}<div class="tags">${(j.tags||[]).map(x=>`<span>${esc(x)}</span>`).join('')}</div></article>`).join('');
    document.querySelectorAll('.crates button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.t==t))
   };
   show('');
   document.querySelectorAll('.crates button').forEach(b=>b.onclick=()=>show(b.dataset.t))
  }
  if(k=='music'){
-  const draw=n=>{
-   const c=CRATES[n];
-   $('#sl').innerHTML=c.items.map(i=>`<div class="sl" style="background:${c.c}"><small>${i[1]}</small><b>${i[0]}</b><small>${i[2]}</small></div>`).join('');
-   document.querySelectorAll('.crates button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.c==n))
+  const cr=S('music').crates||[];
+  const draw=i=>{
+   const c=cr[i];if(!c)return;
+   $('#sl').innerHTML=(c.items||[]).map(it=>{const cv=M(it.cover);return `<div class="sl${cv?' has-cover':''}" style="background-color:${safeColor(c.color)}">${cv?img(cv,'sl-cover'):''}<small>${esc(it.label)}</small><b>${esc(it.title)}</b><small>${esc(it.note)}</small>${listenBtns(it.link,it.title)}</div>`}).join('');
+   document.querySelectorAll('.crates button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.c==i))
   };
-  draw(Object.keys(CRATES)[0]);
-  document.querySelectorAll('.crates button').forEach(b=>b.onclick=()=>draw(b.dataset.c));
+  draw(0);
+  document.querySelectorAll('.crates button').forEach(b=>b.onclick=()=>draw(+b.dataset.c));
   $('#msh').onclick=()=>{
-   const all=Object.entries(CRATES).flatMap(([g,c])=>c.items.map(i=>[g,i[0]]));
-   const p=all[Math.floor(Math.random()*all.length)];
-   $('#mp').textContent=`Try: ${p[1]} (${p[0]})`
+   const all=cr.flatMap((c,ci)=>(c.items||[]).map(it=>[c.name,it,ci]));
+   if(!all.length)return;
+   const [g,it,ci]=all[Math.floor(Math.random()*all.length)];
+   $('#mp').innerHTML=`Try: ${esc(it.title)} (${esc(g)}) ${listenBtns(it.link,it.title)}`;
+   draw(ci)
   }
  }
 }
-addEventListener('hashchange',render);
+let baseTitle=document.title;
+addEventListener('hashchange',()=>render());
 render();
-/* Admin-editable bits: status line, now listening, junk drawer, scrapbook */
-function applySettings(){
- if(SITE.settings.status&&$('#st'))$('#st').textContent=`“${SITE.settings.status}”`;
- if(SITE.settings.now_listening&&$('#nl'))$('#nl').textContent=SITE.settings.now_listening;
- if($('#drawer'))$('#drawer').hidden=!SITE.counts.surprise
-}
+/* A cheeky tab title while the visitor looks at another tab. */
+document.addEventListener('visibilitychange',()=>{const t=S('home').awayTitle;if(!t)return;document.title=document.hidden?t:baseTitle});
+/* Fresh content from the server. Re-render only if something actually changed. */
 document.addEventListener('nikh:config',ev=>{
  if(!ev.detail)return;
- SITE.counts=ev.detail.counts;SITE.settings=ev.detail.settings;
- const k=(location.hash.replace('#/','')||'home');
- $('#nav').innerHTML=nav.filter(n=>navVisible(n,k)).map(n=>`<a href="#/${n[0]=='home'?'':n[0]}" ${n[0]==k?'aria-current="page"':''}>${n[1]}</a>`).join('');
- applySettings()
+ SITE.counts=ev.detail.counts;SITE.settings=ev.detail.settings||{};
+ const fresh={content:ev.detail.content||{},media:ev.detail.media||{}};
+ const changed=JSON.stringify(fresh)!==JSON.stringify({content:C,media:MEDIA});
+ C=fresh.content;MEDIA=fresh.media;
+ try{localStorage.setItem('nikh-content',JSON.stringify(fresh))}catch{}
+ const k=route();
+ if(changed||k=='home')render(true);else drawNav(k)
 });
-function img(i,cls){return `<img${cls?` class="${cls}"`:''} src="${esc(i.url)}" alt="${esc(i.alt)}" width="${+i.w||''}" height="${+i.h||''}" loading="lazy" decoding="async">`}
+/* Retro visitor counter: counts one visit per browser session. Nothing about the visitor is stored. */
+(async()=>{try{
+ let first=false;try{first=!sessionStorage.getItem('nikh-hit');sessionStorage.setItem('nikh-hit','1')}catch{}
+ const r=await fetch('/api/public?r=hit',{method:first?'POST':'GET'});if(!r.ok)return;
+ SITE.hits=(await r.json()).n;
+ const box=$('#counter');if(box){box.hidden=!SITE.hits;$('#odo').innerHTML=odo(SITE.hits);$('#odo').setAttribute('aria-label',SITE.hits+' visits')}
+}catch{}})();
 let seen=[];
 try{seen=JSON.parse(sessionStorage.getItem('nikh-drawer'))||[]}catch{}
 async function openDrawer(){
@@ -441,6 +480,7 @@ async function openDrawer(){
   const {item}=await r.json();
   if(!item){out.innerHTML='<p class="mono">The drawer is empty right now.</p>';return}
   seen.push(item.id);try{sessionStorage.setItem('nikh-drawer',JSON.stringify(seen.slice(-20)))}catch{}
+  window.NikhSound&&NikhSound.drawer();
   out.innerHTML=item.kind=='image'
    ?`<figure>${img(item)}${item.caption?`<figcaption>${esc(item.caption)}</figcaption>`:''}</figure>`
    :`<p class="dr-note">${esc(item.body)}</p>${item.caption?`<p class="mono" style="font-size:.8rem;margin-top:8px">${esc(item.caption)}</p>`:''}`;

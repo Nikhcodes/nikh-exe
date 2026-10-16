@@ -1,5 +1,5 @@
 /* NIKH.EXE reveal component — shared by the public site and the admin preview.
- * NikhReveal.show({title, message, style:'card'|'toast', stepMs, steps:[{url,w,h,alt,caption} | {empty:true,label}]}, {preview})
+ * NikhReveal.show({title, message, style:'card'|'toast', stepMs, sound, steps:[{url,w,h,alt,caption} | {empty:true,label}]}, {preview})
  * - Steps play in order (meme first, then the payoff). Images are preloaded; one that fails is skipped.
  * - Empty slots are skipped for visitors. In admin preview they show a labelled placeholder.
  * - Nothing opens if there is nothing to show.
@@ -31,12 +31,30 @@
     return true;
   }
 
+  /* Sound: visitors only hear it when they switched sound on (footer). The admin preview always plays the egg's own sound. */
+  function sound(data, preview, dlg) {
+    const S = window.NikhSound;
+    if (preview) {
+      if (!data.sound) return;
+      const a = new Audio(data.sound); a.play().catch(() => {});
+      if (dlg) dlg.addEventListener('close', () => a.pause());
+      return;
+    }
+    if (!S || !S.enabled()) return;
+    if (data.sound) { S.play(data.sound); if (dlg) dlg.addEventListener('close', () => S.stop()); }
+    else S.chime();
+  }
+
   let open = null;
   async function show(data, opts = {}) {
     const preview = !!opts.preview;
     if (open) open.close();
     const raw = (data.steps || []).filter(s => s && (s.url || (preview && s.empty)));
-    if (data.style === 'toast' && !raw.length) return (data.title || data.message) ? toast(data) : false;
+    if (data.style === 'toast' && !raw.length) {
+      if (!(data.title || data.message)) return false;
+      sound(data, preview, null);
+      return toast(data);
+    }
 
     // Load the first showable step before opening anything; later steps load in the background.
     const steps = raw.map(s => ({ ...s, img: null, ready: s.empty ? Promise.resolve('empty') : load(s) }));
@@ -109,6 +127,7 @@
 
     open = dlg;
     dlg.showModal();
+    sound(data, preview, dlg);
     close.focus();
     if (shown.length) render(0); else { stage.remove(); cap.remove(); }
     return true;

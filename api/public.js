@@ -7,6 +7,7 @@ import { q } from './_lib/db.js';
 import { route, send, readJson, HttpError, UUID, sameOrigin } from './_lib/http.js';
 import { ACTIVE_SQL, ORDER_SQL, normPhrase, phraseHash } from './_lib/eggs.js';
 import { mediaUrl } from './_lib/media.js';
+import { mediaMap } from './_lib/content.js';
 
 const HAS_CONTENT = `(e.title <> '' OR e.message <> '' OR EXISTS (SELECT 1 FROM egg_steps s WHERE s.egg_id = e.id AND s.media_id IS NOT NULL))`;
 
@@ -18,7 +19,13 @@ async function config() {
   const [counts] = await q(`SELECT
       (SELECT count(*)::int FROM surprise_items WHERE enabled) AS surprise,
       (SELECT count(*)::int FROM scrapbook_entries WHERE published) AS scrapbook`);
+  const content = await q(`SELECT key, data FROM site_content`);
+  const ids = await q(`SELECT DISTINCT media_id FROM content_media`);
+  const media = await mediaMap(ids.map(r => r.media_id));
+  for (const m of Object.values(media)) delete m.name;
   return {
+    content: Object.fromEntries(content.map(r => [r.key, r.data])),
+    media,
     eggs: eggs.map(e => {
       const base = { id: e.id, type: e.trigger_type, repeat: e.repeat_mode, cooldown: e.cooldown_s };
       if (e.trigger_type === 'keyword')
@@ -36,8 +43,10 @@ async function reveal(req) {
   if (!sameOrigin(req)) throw new HttpError(403, 'Not allowed.');
   const body = await readJson(req, 2048);
   if (!UUID.test(body.id || '')) throw new HttpError(400, 'Bad id.');
-  const [egg] = await q(`SELECT e.id, e.trigger_type, e.phrases, e.title, e.message, e.style, e.step_ms
-    FROM eggs e WHERE e.id = $1 AND ${ACTIVE_SQL}`, [body.id]);
+  const [egg] = await q(`SELECT e.id, e.trigger_type, e.phrases, e.title, e.message, e.style, e.step_ms,
+      snd.id AS sound_id, snd.version AS sound_v
+    FROM eggs e LEFT JOIN media snd ON snd.id = e.sound_id AND snd.mime LIKE 'audio/%'
+    WHERE e.id = $1 AND ${ACTIVE_SQL}`, [body.id]);
   if (!egg) throw new HttpError(404, 'Nothing here.');
   if (egg.trigger_type === 'keyword' && !egg.phrases.includes(normPhrase(body.phrase)))
     throw new HttpError(404, 'Nothing here.');
@@ -46,6 +55,7 @@ async function reveal(req) {
     FROM egg_steps s JOIN media m ON m.id = s.media_id WHERE s.egg_id = $1 ORDER BY s.position`, [egg.id]);
   return {
     id: egg.id, title: egg.title, message: egg.message, style: egg.style, stepMs: egg.step_ms,
+    sound: egg.sound_id ? mediaUrl(egg.sound_id, egg.sound_v) : null,
     steps: steps.map(s => ({ url: mediaUrl(s.media_id, s.version), w: s.width, h: s.height, alt: s.alt, caption: s.caption }))
   };
 }
@@ -62,6 +72,18 @@ async function surprise(url) {
     id: it.id, kind: it.kind, body: it.body, caption: it.caption,
     ...(it.media_id ? { url: mediaUrl(it.media_id, it.version), w: it.width, h: it.height, alt: it.alt } : {})
   } };
+}
+
+/** Retro visitor counter. POST adds one (the page does that once per browser session). */
+async function hit(req) {
+  if (req.method === 'POST') {
+    if (!sameOrigin(req)) throw new HttpError(403, 'Not allowed.');
+    const [r] = await q(`INSERT INTO site_counters (key, n) VALUES ('visits', 1)
+      ON CONFLICT (key) DO UPDATE SET n = site_counters.n + 1 RETURNING n`);
+    return { n: Number(r.n) };
+  }
+  const [r] = await q(`SELECT n FROM site_counters WHERE key = 'visits'`);
+  return { n: r ? Number(r.n) : 0 };
 }
 
 async function scrapbook() {
@@ -84,5 +106,6 @@ export default route(async (req, res) => {
   if (req.method === 'POST' && r === 'reveal') return send(res, 200, await reveal(req));
   if (req.method === 'GET' && r === 'surprise') return send(res, 200, await surprise(url));
   if (req.method === 'GET' && r === 'scrapbook') return send(res, 200, await scrapbook());
+  if ((req.method === 'GET' || req.method === 'POST') && r === 'hit') return send(res, 200, await hit(req));
   throw new HttpError(404, 'Unknown request.');
 });

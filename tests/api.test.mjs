@@ -204,6 +204,68 @@ test('scrapbook and drawer: drafts stay private, published items appear', async 
   await call('/api/cms?r=media&id=' + m.id + '&force=1', { method: 'DELETE' });
 });
 
+test('pages: save, sanitise, images become public, reset to default', async () => {
+  const before = (await call('/api/public?r=config', { auth: false })).data;
+  assert.equal(before.content.home, undefined);
+  const photo = (await upload(unique(png1x1), 'test-avatar')).data.media;
+  assert.equal((await call(photo.url, { auth: false })).status, 404);
+  const anon = await call('/api/cms?r=content&key=home', { method: 'PUT', json: { data: { name: 'x' } }, auth: false });
+  assert.equal(anon.status, 401);
+  const saved = await call('/api/cms?r=content&key=home', { method: 'PUT', json: { data: {
+    name: 'Test <b>Name</b>', avatar: photo.id, ghost: '00000000-0000-0000-0000-000000000000', into: ['a', 'b'], 'bad key!': 1, showCounter: true } } });
+  assert.equal(saved.status, 200, JSON.stringify(saved.data));
+  const home = saved.data.content.home;
+  assert.equal(home.name, 'Test <b>Name</b>');           // stored as text; the page escapes it
+  assert.equal(home.ghost, null);                          // unknown media id dropped
+  assert.equal(home['bad key!'], undefined);               // odd keys dropped
+  const cfg = (await call('/api/public?r=config', { auth: false })).data;
+  assert.equal(cfg.content.home.avatar, photo.id);
+  assert.ok(cfg.media[photo.id].url.includes(photo.id));
+  assert.equal((await call(photo.url, { auth: false })).status, 200);
+  const usage = (await call('/api/cms?r=media&id=' + photo.id)).data.usage;
+  assert.ok(usage.some(u => u.kind === 'page' && u.label === 'home'));
+  assert.equal((await call('/api/cms?r=content&key=nope', { method: 'PUT', json: { data: {} } })).status, 400);
+  assert.equal((await call('/api/cms?r=content&key=home', { method: 'DELETE' })).status, 200);
+  assert.equal((await call('/api/public?r=config', { auth: false })).data.content.home, undefined);
+  assert.equal((await call(photo.url, { auth: false })).status, 404);
+  await call('/api/cms?r=media&force=1&id=' + photo.id, { method: 'DELETE' });
+});
+
+test('sounds: audio uploads, egg sound only public while the egg is live, byte ranges', async () => {
+  const wav = unique(readFileSync(new URL('../seed/arcade-chirp.wav', import.meta.url)));
+  const up = await upload(wav, 'test-sound');
+  assert.equal(up.status, 201, JSON.stringify(up.data));
+  const snd = up.data.media;
+  assert.equal(snd.mime, 'audio/wav');
+  const img = (await upload(unique(png1x1), 'test-notsound')).data.media;
+  const bad = await call('/api/cms?r=eggs', { method: 'POST', json: { name: 'test-snd', trigger_type: 'keyword', phrases: ['zzsound'], message: 'x', sound_id: img.id } });
+  assert.equal(bad.status, 400);
+  const eg = await call('/api/cms?r=eggs', { method: 'POST', json: { name: 'test-snd', trigger_type: 'keyword', phrases: ['zzsound'], message: 'x', enabled: true, sound_id: snd.id, force: true } });
+  assert.equal(eg.status, 201);
+  assert.equal(eg.data.egg.sound.name, 'test-sound');
+  const rev = await call('/api/public?r=reveal', { method: 'POST', json: { id: eg.data.egg.id, phrase: 'zzsound' }, auth: false });
+  assert.ok(rev.data.sound.includes(snd.id));
+  const part = await call(rev.data.sound, { auth: false, headers: { range: 'bytes=0-99' } });
+  assert.equal(part.status, 206);
+  assert.equal(part.headers.get('content-range'), `bytes 0-99/${wav.length}`);
+  const repl = await call('/api/cms?r=media&id=' + snd.id, { method: 'PUT', body: unique(png1x1), headers: { 'content-type': 'application/octet-stream' } });
+  assert.equal(repl.status, 400); // can't swap a sound for an image
+  await call('/api/cms?r=eggs&id=' + eg.data.egg.id, { method: 'PATCH', json: { enabled: false } });
+  assert.equal((await call(rev.data.sound, { auth: false })).status, 404);
+  await call('/api/cms?r=eggs&id=' + eg.data.egg.id, { method: 'DELETE' });
+  for (const m of [snd, img]) await call('/api/cms?r=media&force=1&id=' + m.id, { method: 'DELETE' });
+  const audioList = (await call('/api/cms?r=media&kind=audio')).data.media;
+  assert.ok(audioList.every(m => m.mime.startsWith('audio/')));
+});
+
+test('visitor counter counts up', async () => {
+  const a = (await call('/api/public?r=hit', { auth: false })).data.n;
+  const b = (await call('/api/public?r=hit', { method: 'POST', auth: false, csrf: false })).data.n;
+  assert.equal(b, a + 1);
+  const evil = await call('/api/public?r=hit', { method: 'POST', auth: false, headers: { origin: 'https://evil.example' } });
+  assert.equal(evil.status, 403);
+});
+
 test('logout ends the session on the server', async () => {
   const saved = cookie;
   assert.equal((await call('/api/auth', { method: 'POST', json: { action: 'logout' } })).status, 200);

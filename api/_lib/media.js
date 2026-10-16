@@ -43,4 +43,18 @@ export function sniffImage(b) {
   return null;
 }
 
+/** Returns {mime, width:0, height:0} for MP3, OGG, WAV or M4A audio, else null. */
+export function sniffAudio(b) {
+  if (!Buffer.isBuffer(b) || b.length < 32) return null;
+  const a = (i, j) => b.toString('ascii', i, j);
+  let mime = null;
+  if (a(0, 3) === 'ID3' || (b[0] === 0xff && (b[1] & 0xe0) === 0xe0 && (b[1] & 0x06) !== 0)) mime = 'audio/mpeg';
+  else if (a(0, 4) === 'OggS') mime = 'audio/ogg';
+  else if (a(0, 4) === 'RIFF' && a(8, 12) === 'WAVE') mime = 'audio/wav';
+  else if (a(4, 8) === 'ftyp' && ['M4A ', 'M4B ', 'mp42', 'isom', 'iso2', 'dash'].includes(a(8, 12))) mime = 'audio/mp4';
+  return mime ? { mime, width: 0, height: 0 } : null;
+}
+
+export const isAudio = mime => String(mime).startsWith('audio/');
+
 export const mediaUrl = (id, version) => `/api/media?id=${id}&v=${version}`;
