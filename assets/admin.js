@@ -439,7 +439,7 @@
         const pic = s.media
           ? h('img', { class: 'pic', src: s.media.url, alt: s.media.alt || s.media.name })
           : h('div', { class: 'slot-empty' }, h('b', {}, 'NOT SET YET'), h('span', {}, 'Optional. Visitors skip this step.'));
-        const label = h('input', { type: 'text', value: s.label, placeholder: 'e.g. Girlfriend photo', maxlength: 80 });
+        const label = h('input', { type: 'text', value: s.label, placeholder: 'e.g. Reaction meme', maxlength: 80 });
         label.oninput = () => (s.label = label.value);
         const cap = h('input', { type: 'text', value: s.caption, placeholder: 'Optional line under the image', maxlength: 300 });
         cap.oninput = () => (s.caption = cap.value);
