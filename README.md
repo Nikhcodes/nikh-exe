@@ -1,114 +1,128 @@
-# NIKH.EXE
+<div align="center">
 
-My personal corner of the internet: a hand-built website with music, projects, a journal, a guestbook and a few
-things you have to find yourself. It looks like a static site from the early web; under the hood it runs on a small
-custom CMS I wrote, so every page, photo and secret can be changed from a private admin panel without touching code.
+```
+ ███╗   ██╗██╗██╗  ██╗██╗  ██╗   ███████╗██╗  ██╗███████╗
+ ████╗  ██║██║██║ ██╔╝██║  ██║   ██╔════╝╚██╗██╔╝██╔════╝
+ ██╔██╗ ██║██║█████╔╝ ███████║   █████╗   ╚███╔╝ █████╗
+ ██║╚██╗██║██║██╔═██╗ ██╔══██║   ██╔══╝   ██╔██╗ ██╔══╝
+ ██║ ╚████║██║██║  ██╗██║  ██║██╗███████╗██╔╝ ██╗███████╗
+ ╚═╝  ╚═══╝╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚══════╝╚═╝  ╚═╝╚══════╝
+```
 
-> No framework, no build step. Plain HTML, CSS and JavaScript on the front, Node.js serverless functions and
-> PostgreSQL on the back.
+**under construction forever** · built after hours in suriname 🇸🇷
+
+![no framework](https://img.shields.io/badge/framework-none-e0a458?style=flat-square&labelColor=0d1018)
+![no build step](https://img.shields.io/badge/build_step-nope-e0a458?style=flat-square&labelColor=0d1018)
+![postgres](https://img.shields.io/badge/postgres-neon-6b1f2e?style=flat-square&labelColor=0d1018)
+![vercel](https://img.shields.io/badge/hosted_on-vercel-6b1f2e?style=flat-square&labelColor=0d1018)
+![easter eggs](https://img.shields.io/badge/easter_eggs-classified-f1e7d3?style=flat-square&labelColor=0d1018)
+
+</div>
 
 ---
 
-## Features
+### `WELCOME, STRANGER`
 
-**For visitors**
-- Pages: Home, About, Projects, Journal, Scrapbook, Links, Guestbook, Music, Contact.
-- **Guestbook as a bulletin board**: visitors pin notes; nothing appears until it's approved.
-- **Music crates** with click-to-play Spotify/YouTube players. Nothing third-party loads until you press play.
-- **Scrapbook** of photos and small memories, and a **"Surprise me"** junk drawer on the home page.
-- **Hidden Easter eggs.** Some are typed, some are clicked. There's a prompt in the footer if you get stuck.
-- Optional sound effects (off by default), a retro visitor counter, and a proper 404 page.
-- Works on phones, with the keyboard and with reduced motion. No tracking, no analytics, no cookies for visitors.
+I had a normal portfolio. It was fine. It also sounded like every other developer on the internet.
+So I tore it up and built the kind of website people used to make: **weird, personal and slightly too long.**
 
-**Behind the scenes (admin panel)**
-- Edit every page through generated forms: text, lists, photos, links. Changes go live on save, with no redeploy.
-- Media library for images and sounds: upload, replace, tag, and see where each file is used before deleting it.
-- A data-driven **Easter egg engine**: keyword, click and click-sequence triggers; multi-step reveals; sounds;
-  start/end dates; cooldowns; conflict detection; a live preview and a trigger tester.
-- Guestbook moderation (approve, pin, reject, delete) and scrapbook drafts and publishing.
-
-## Tech stack
-
-| Layer | Choice |
-|---|---|
-| Frontend | Vanilla HTML/CSS/JS, hash routing, no build step |
-| Backend | Node.js serverless functions on Vercel (`/api`) |
-| Database | PostgreSQL on Neon (`@neondatabase/serverless`; `pg` for local development) |
-| Media storage | PostgreSQL (`bytea`), served through an API route with byte-range support |
-| Auth | Single admin, scrypt password hash, server-side sessions |
-| Tests | `node:test` integration tests that run against a real database |
-
-## Architecture
+It looks like a homemade page from the early web. Under the hood it runs on a small CMS I wrote from scratch,
+so every page, photo and secret can be changed from a private admin panel without touching a line of code.
 
 ```
-Browser ──► index.html + assets/*.js          (static, served by Vercel's CDN)
+C:\NIKH> dir
+  HOME        ABOUT       PROJECTS    JOURNAL     SCRAPBOOK
+  LINKS       GUESTBOOK   MUSIC       CONTACT     ??????
+```
+
+---
+
+### `THE TOUR`
+
+| | |
+|---|---|
+| 📌 **Guestbook as a bulletin board** | Visitors pin sticky notes. Nothing goes up until I approve it. Spam bots get a honeypot. |
+| 💿 **The crate** | My music, sorted into crates. Spotify and YouTube links play right on the page, and nothing third-party loads until you press play. |
+| 📦 **The shoebox** | A scrapbook of photos and small memories. |
+| 🗄️ **The junk drawer** | A "Surprise me" button on the home page. You never know what's in there. |
+| 🔢 **Hit counter** | A retro odometer. It counts visits and nothing else: no IPs, no cookies, no tracking. |
+| 🔊 **Sound** | Off by default, because I respect you. Turn it on in the footer if you're brave. |
+| 🥚 **Secrets** | Yes. Some you type, some you click. If you get stuck, the footer has a prompt that takes commands. Try `help`. |
+
+---
+
+### `THE BACK OFFICE`
+
+The admin panel at `/admin.html` is where the site actually gets run:
+
+- **Every page is editable.** Forms are generated from one schema per page: text, lists, photos, links.
+  Hit save and it's live. No redeploy.
+- **Media library** for images and sounds. Upload, replace, tag, and see everywhere a file is used before you delete it.
+- **An Easter egg engine.** Keyword, click and click-sequence triggers, multi-step reveals, sounds, seasonal dates,
+  cooldowns, conflict warnings, a live preview and a "would this trigger fire?" tester.
+- **Moderation** for the guestbook, plus drafts and publishing for the scrapbook.
+
+---
+
+### `THE STACK`
+
+```
+Browser ──► index.html + assets/*.js            plain HTML/CSS/JS, hash routes, zero build
    │
-   ├──► /api/public     read-only: page content, egg triggers (hashed), drawer, scrapbook, visitor count
-   ├──► /api/guestbook  submit notes (rate-limited), read approved notes
-   ├──► /api/media      images & sounds, only if used by something published
-   ├──► /api/auth       login / logout
-   └──► /api/cms        everything the admin panel does (session + CSRF checks)
+   ├──► /api/public     page content, hashed egg triggers, drawer, scrapbook, hit counter
+   ├──► /api/guestbook  pin a note (rate-limited) / read approved notes
+   ├──► /api/media      images & sounds, only if something published uses them
+   ├──► /api/auth       log in / log out
+   └──► /api/cms        everything the admin panel does
                               │
                               ▼
-                        PostgreSQL (Neon)
+                     PostgreSQL on Neon  ◄── yes, the images live here too
 ```
 
-Some decisions worth explaining:
+<details>
+<summary><b>Why it's built like this</b> (click)</summary>
+
+<br>
 
 - **Content lives in the database, defaults live in code.** `assets/content.js` holds the built-in text for every page.
-  Saving a page in the admin stores your version as JSON; "reset" deletes it and the default returns.
-  The admin forms are generated from one schema per page, so adding a field is a one-line change.
-- **Images are stored in Postgres.** For a personal site this keeps everything in one place: one service, one backup,
-  nothing lost between deploys. Photos are resized and re-encoded in the browser before upload (which also strips
-  GPS metadata), then validated on the server by their actual bytes.
-- **Media is private by default.** `/api/media` only serves a file if something published references it.
-  Unpublished drafts and unused uploads return 404 to visitors.
-- **Easter egg triggers never appear in the page source.** The browser receives SHA-256 hashes of the trigger words
-  and asks the server for an egg's content only after a match.
+  Saving a page stores my version as JSON; "reset" deletes it and the default comes back.
+- **Images are stored in Postgres.** It's a personal site: one service, one backup, nothing lost between deploys.
+  Photos get resized and re-encoded in the browser before upload (which also strips GPS data), then the server
+  checks the actual bytes.
+- **Media is private until it's published.** `/api/media` only serves a file if something live uses it.
+  Drafts and unused uploads return 404.
+- **The secrets aren't in the source.** The browser only gets SHA-256 hashes of trigger words, and asks for an egg's
+  content after a match. View-source won't save you.
 
-## Security
+</details>
 
-- Admin password stored only as an **scrypt** hash in an environment variable.
-- Random session tokens in **HttpOnly, Secure, SameSite=Strict** cookies; sessions are stored hashed server-side,
-  so logout really ends them.
-- **CSRF protection**: state-changing requests need a custom header and a same-origin check.
-- **Login rate limiting** (5 failures per 15 minutes per IP) and guestbook rate limiting (3 notes per hour).
-  IPs are only stored as salted hashes.
-- Uploads are checked by **magic bytes** (JPEG, PNG, WebP, GIF, MP3, OGG, WAV, M4A); SVG is refused; size and dimensions are capped.
-- All user and admin text is escaped on render; page JSON is sanitised and size-limited on save.
-- A strict **Content-Security-Policy** and security headers in `vercel.json`; media is served with `nosniff` and a sandbox CSP.
+<details>
+<summary><b>Security, because I work in banking and can't help myself</b> (click)</summary>
 
-## Project structure
+<br>
 
-```
-index.html            the public site (pages are rendered by the script at the bottom)
-admin.html            the admin panel shell
-assets/
-  content.js          default content for every page
-  eggs.js             Easter egg engine (public side)
-  reveal.js/.css      the reveal card, shared with the admin preview
-  sound.js            optional sound (off by default)
-  admin.js            the admin panel
-  heroes/             static images
-api/
-  public.js  guestbook.js  media.js  auth.js  cms.js   Vercel functions
-  _lib/                shared server code (not exposed as routes)
-schema.sql            database schema (idempotent: safe to run again)
-seed/                 starter images and the starter set of eggs, imported from the admin dashboard
-scripts/              local dev server and the password-hash helper
-tests/                API integration tests
-```
+- The admin password exists only as an **scrypt** hash in an environment variable.
+- Random session tokens in **HttpOnly · Secure · SameSite=Strict** cookies, stored hashed server-side, so logout actually logs you out.
+- **CSRF**: state-changing requests need a custom header and a same-origin check.
+- **Rate limits** on login (5 tries per 15 minutes) and the guestbook (3 notes per hour). IPs are only ever stored as salted hashes.
+- Uploads are checked by **magic bytes**, not file names. SVGs are refused. Size and dimensions are capped.
+- All text is escaped on render, and page JSON is sanitised and size-limited on save.
+- Strict **Content-Security-Policy** plus security headers; media is served with `nosniff` and a sandbox CSP.
 
-## Running it locally
+</details>
 
-Requirements: Node.js 18+ and a PostgreSQL database you don't mind wiping (local Postgres or a Neon branch).
+---
+
+### `THE WORKBENCH` (run it yourself)
+
+You need Node.js 18+ and a PostgreSQL database you don't mind wiping.
 
 ```bash
 npm install
-npm run hash-password          # prints an scrypt hash for the admin password you type
+npm run hash-password        # type a password, get an scrypt hash
 ```
 
-Create `.env.local` (git-ignored):
+Make a `.env.local` (it's git-ignored):
 
 ```
 DATABASE_URL=postgres://user:pass@localhost:5432/nikh
@@ -116,28 +130,48 @@ ADMIN_PASSWORD_HASH=scrypt:...
 IP_SALT=any-random-string
 ```
 
-Then:
-
 ```bash
-psql "$DATABASE_URL" -f schema.sql
-npm run dev                    # http://localhost:3000  and  /admin.html
-TEST_ADMIN_PASSWORD=yourpassword npm test   # with the dev server running
+psql "$DATABASE_URL" -f schema.sql   # safe to run again, it never drops anything
+npm run dev                          # http://localhost:3000  ·  /admin.html
+TEST_ADMIN_PASSWORD=yourpassword npm test
 ```
 
-`scripts/dev-server.mjs` mimics Vercel locally (static files plus `/api/*`). Opening `index.html` straight from disk
-also works for the static parts; anything that needs the backend hides itself.
+**Deploying your own:** create a Postgres database (Neon's free tier is plenty) and run `schema.sql` in it.
+Import the repo into Vercel (no build command), set `DATABASE_URL`, `ADMIN_PASSWORD_HASH` and `IP_SALT`, and deploy.
+Then log into `/admin.html` and hit **Import starter pack**.
 
-## Deploying your own copy
+<details>
+<summary><b>What's where</b></summary>
 
-1. Create a Postgres database (Neon's free tier is enough) and run `schema.sql` in it.
-2. Import the repo into Vercel. No build command is needed.
-3. Set the environment variables `DATABASE_URL`, `ADMIN_PASSWORD_HASH` and `IP_SALT`, then deploy.
-4. Open `/admin.html`, log in, and use **Import starter pack** on the dashboard, or start from an empty library.
+```
+index.html            the public site
+admin.html            the back office
+assets/
+  content.js          default content for every page
+  eggs.js             the Easter egg engine
+  reveal.js / .css    the "secret found" card
+  sound.js            optional sound (off by default)
+  admin.js            the admin panel
+api/
+  public · guestbook · media · auth · cms     Vercel functions
+  _lib/               shared server code (not exposed as routes)
+schema.sql            the database (idempotent)
+seed/                 starter images and eggs
+scripts/              local dev server and password-hash helper
+tests/                API integration tests
+archive/              older versions, kept for nostalgia
+```
 
-## Credits
+</details>
 
-Code and writing by [Nikhiel Lingard](https://www.linkedin.com/in/nikhiel-lingard/).
-Some pictures on the site (memes, fan art, characters and photos of people I look up to) belong to their
-respective owners and are used here for personal, non-commercial fun. If you own one and want it removed, open an issue.
+---
 
-`archive/` keeps earlier versions of the site and admin pages for reference.
+### `OPEN CHANNEL`
+
+Found a bug? Found a secret? Have a strong opinion about a movie?
+→ **nikhiel.lingard.dev@gmail.com** · [LinkedIn](https://www.linkedin.com/in/nikhiel-lingard/) · or sign the guestbook.
+
+<sub>Code and writing by Nikhiel Lingard. Some pictures on the site (memes, fan art, characters, and photos of people I look up to)
+belong to their respective owners and are used here for personal, non-commercial fun. If one is yours and you want it gone, open an issue.</sub>
+
+<div align="center"><sub>NO CORPORATE SMALL TALK REQUIRED.</sub></div>
