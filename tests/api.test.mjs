@@ -87,7 +87,7 @@ test('cutie flow: optional empty slot, photo added later, media privacy follows 
   const meme = (await upload(webp(), 'test-meme')).data.media;
   const created = await call('/api/cms?r=eggs', { method: 'POST', json: {
     name: 'test-cutie', trigger_type: 'keyword', phrases: ['  TestCutie  '], enabled: true, style: 'card', force: true,
-    steps: [{ label: 'meme', media_id: meme.id }, { label: 'Girlfriend photo', media_id: null }] } });
+    steps: [{ label: 'meme', media_id: meme.id }, { label: 'Photo (add later)', media_id: null }] } });
   assert.equal(created.status, 201, JSON.stringify(created.data));
   const egg = created.data.egg;
   assert.deepEqual(egg.phrases, ['testcutie']);
@@ -264,6 +264,89 @@ test('visitor counter counts up', async () => {
   assert.equal(b, a + 1);
   const evil = await call('/api/public?r=hit', { method: 'POST', auth: false, headers: { origin: 'https://evil.example' } });
   assert.equal(evil.status, 403);
+});
+
+test('guestbook replies: saved by admin, shown on the board, removable', async () => {
+  const msg = 'test-reply-note ' + Date.now();
+  await call('/api/guestbook', { method: 'POST', json: { nm: 'test-replyee', msg }, auth: false, headers: { 'x-forwarded-for': '10.8.' + Math.floor(Math.random() * 250) + '.2' } });
+  const note = (await call('/api/cms?r=guestbook&status=pending')).data.entries.find(e => e.message === msg);
+  assert.equal((await call('/api/cms?r=guestbook', { method: 'POST', json: { id: note.id, action: 'reply', reply: 'thanks!' }, auth: false })).status, 401);
+  await call('/api/cms?r=guestbook', { method: 'POST', json: { id: note.id, action: 'approve' } });
+  const r = await call('/api/cms?r=guestbook', { method: 'POST', json: { id: note.id, action: 'reply', reply: '  <b>thanks!</b>  ' } });
+  assert.equal(r.data.reply, '<b>thanks!</b>'); // stored as text, the page renders it with textContent
+  const pub = (await call('/api/guestbook', { auth: false })).data.entries.find(e => e.message === msg);
+  assert.equal(pub.reply, '<b>thanks!</b>');
+  await call('/api/cms?r=guestbook', { method: 'POST', json: { id: note.id, action: 'reply', reply: '' } });
+  assert.equal((await call('/api/guestbook', { auth: false })).data.entries.find(e => e.message === msg).reply, null);
+  await call('/api/cms?r=guestbook', { method: 'POST', json: { id: note.id, action: 'delete' } });
+});
+
+test('videos: MP4/WebM accepted, usable as egg steps, not as sounds', async () => {
+  const mp4 = unique(Buffer.concat([Buffer.from([0, 0, 0, 0x18]), Buffer.from('ftypisom'), Buffer.alloc(64, 1)]));
+  const webm = unique(Buffer.concat([Buffer.from([0x1a, 0x45, 0xdf, 0xa3]), Buffer.alloc(64, 2)]));
+  const v1 = await call('/api/cms?r=media&name=test-vid&w=640&h=360', { method: 'POST', body: mp4, headers: { 'content-type': 'application/octet-stream' } });
+  assert.equal(v1.status, 201, JSON.stringify(v1.data));
+  assert.equal(v1.data.media.mime, 'video/mp4');
+  assert.equal(v1.data.media.width, 640);
+  const v2 = await call('/api/cms?r=media&name=test-vid2', { method: 'POST', body: webm, headers: { 'content-type': 'application/octet-stream' } });
+  assert.equal(v2.data.media.mime, 'video/webm');
+  const m4a = await call('/api/cms?r=media&name=test-m4a&as=audio', { method: 'POST', body: unique(mp4), headers: { 'content-type': 'application/octet-stream' } });
+  assert.equal(m4a.data.media.mime, 'audio/mp4');
+  const visual = (await call('/api/cms?r=media&kind=visual')).data.media;
+  assert.ok(visual.some(m => m.id === v1.data.media.id) && !visual.some(m => m.id === m4a.data.media.id));
+  const eg = await call('/api/cms?r=eggs', { method: 'POST', json: { name: 'test-video-egg', trigger_type: 'keyword', phrases: ['zzvideo'], enabled: true, force: true, steps: [{ media_id: v1.data.media.id }] } });
+  assert.equal(eg.status, 201, JSON.stringify(eg.data));
+  const rev = await call('/api/public?r=reveal', { method: 'POST', json: { id: eg.data.egg.id, phrase: 'zzvideo' }, auth: false });
+  assert.equal(rev.data.steps[0].mime, 'video/mp4');
+  const badStep = await call('/api/cms?r=eggs', { method: 'POST', json: { name: 'test-audio-step', trigger_type: 'keyword', phrases: ['zzaud'], steps: [{ media_id: m4a.data.media.id }] } });
+  assert.equal(badStep.status, 400);
+  const badSound = await call('/api/cms?r=eggs', { method: 'POST', json: { name: 'test-video-sound', trigger_type: 'keyword', phrases: ['zzvs'], message: 'x', sound_id: v1.data.media.id } });
+  assert.equal(badSound.status, 400);
+  const swap = await call('/api/cms?r=media&id=' + v1.data.media.id, { method: 'PUT', body: unique(png1x1), headers: { 'content-type': 'application/octet-stream' } });
+  assert.equal(swap.status, 400);
+  await call('/api/cms?r=eggs&id=' + eg.data.egg.id, { method: 'DELETE' });
+  for (const m of [v1, v2, m4a]) await call('/api/cms?r=media&force=1&id=' + m.data.media.id, { method: 'DELETE' });
+});
+
+test('arcade: tickets, plausibility checks, initials filter, moderation', async () => {
+  const ip = { 'x-forwarded-for': '10.7.' + Math.floor(Math.random() * 250) + '.9' };
+  const start = game => call('/api/arcade?r=start', { method: 'POST', json: { game }, auth: false, headers: ip }).then(r => r.data.run);
+  const submit = (run, initials, score) => call('/api/arcade?r=score', { method: 'POST', json: { run, initials, score, duration: 2000 }, auth: false, headers: ip });
+  assert.equal((await call('/api/arcade?r=start', { method: 'POST', json: { game: 'pong' }, auth: false })).status, 400);
+  // too fast
+  let run = await start('snake');
+  let r = await submit(run, 'ZZT', 5);
+  assert.equal(r.status, 400); assert.match(r.data.error, /too fast/);
+  // the ticket is spent even on a refused score
+  assert.equal((await submit(run, 'ZZT', 0)).status, 400);
+  // a rude name is refused before the ticket is used
+  run = await start('snake');
+  await new Promise(res => setTimeout(res, 1700));
+  for (const bad of ['FUK', 'f0k'.replace('0', 'U'), 'A55', 'KUT', 'n1g']) assert.equal((await submit(run, bad, 3)).status, 400, bad);
+  // impossible score
+  assert.match((await submit(run, 'ZZT', 300)).data.error, /humanly|beyond/);
+  run = await start('snake');
+  await new Promise(res => setTimeout(res, 1700));
+  r = await submit(run, 'zzt', 4);
+  assert.equal(r.status, 200, JSON.stringify(r.data));
+  assert.equal(r.data.initials, 'ZZT');
+  assert.ok(r.data.board.some(b => b.initials === 'ZZT' && b.score === 4));
+  // Crate Match: score has to fit the time played
+  run = await start('match');
+  await new Promise(res => setTimeout(res, 4200));
+  assert.equal((await submit(run, 'ZZT', 5000)).status, 200); // 4s: 5000 - 4*40 + slack still fits
+  const boards = (await call('/api/arcade?r=boards', { auth: false })).data;
+  assert.ok(Array.isArray(boards.snake) && Array.isArray(boards.nightshift));
+  // admin: hide, clear
+  assert.equal((await call('/api/cms?r=scores&game=snake', { auth: false })).status, 401);
+  const list = (await call('/api/cms?r=scores&game=snake')).data.scores;
+  const mine = list.find(x => x.initials === 'ZZT');
+  await call('/api/cms?r=scores', { method: 'POST', json: { id: mine.id, action: 'hide' } });
+  assert.ok(!(await call('/api/arcade?r=boards', { auth: false })).data.snake.some(b => b.initials === 'ZZT'));
+  for (const g of ['snake', 'match']) for (const x of (await call('/api/cms?r=scores&game=' + g)).data.scores.filter(x => x.initials === 'ZZT'))
+    await call('/api/cms?r=scores', { method: 'POST', json: { id: x.id, action: 'delete' } });
+  const pool = (await call('/api/arcade?r=pool', { auth: false })).data;
+  assert.ok(Array.isArray(pool.images));
 });
 
 test('logout ends the session on the server', async () => {

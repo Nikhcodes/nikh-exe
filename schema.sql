@@ -163,3 +163,39 @@ CREATE TABLE IF NOT EXISTS site_counters (
   key text PRIMARY KEY,
   n   bigint NOT NULL DEFAULT 0
 );
+
+-- ================================================================ v4 (replies, video, arcade)
+-- Your replies on guestbook notes.
+ALTER TABLE guestbook_entries ADD COLUMN IF NOT EXISTS reply text CHECK (char_length(reply) <= 500);
+ALTER TABLE guestbook_entries ADD COLUMN IF NOT EXISTS replied_at timestamptz;
+
+-- Short videos (MP4/WebM) in the media library, for Easter eggs.
+ALTER TABLE media DROP CONSTRAINT IF EXISTS media_mime_check;
+ALTER TABLE media ADD CONSTRAINT media_mime_check CHECK (mime IN
+  ('image/jpeg','image/png','image/webp','image/gif','audio/mpeg','audio/ogg','audio/wav','audio/mp4','video/mp4','video/webm'));
+
+-- The Arcade page has its own editable intro.
+ALTER TABLE site_content DROP CONSTRAINT IF EXISTS site_content_key_check;
+ALTER TABLE site_content ADD CONSTRAINT site_content_key_check CHECK (key IN
+  ('home','music','links','projects','journal','about','contact','footer','arcade'));
+
+-- Arcade: every game run gets a server-issued ticket; a score must come back with an unused ticket.
+CREATE TABLE IF NOT EXISTS arcade_runs (
+  id         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  game       text NOT NULL,
+  ip_hash    text NOT NULL,
+  started_at timestamptz NOT NULL DEFAULT now(),
+  used       boolean NOT NULL DEFAULT false
+);
+CREATE INDEX IF NOT EXISTS arcade_runs_ip_idx ON arcade_runs (ip_hash, started_at DESC);
+CREATE TABLE IF NOT EXISTS arcade_scores (
+  id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  game        text NOT NULL CHECK (game IN ('nightshift','snake','match')),
+  initials    text NOT NULL CHECK (initials ~ '^[A-Z0-9]{3}$'),
+  score       int  NOT NULL CHECK (score >= 0),
+  duration_ms int  NOT NULL CHECK (duration_ms >= 0),
+  ip_hash     text NOT NULL,
+  hidden      boolean NOT NULL DEFAULT false,
+  created_at  timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS arcade_scores_board_idx ON arcade_scores (game, hidden, score DESC, created_at ASC);

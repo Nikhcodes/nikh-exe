@@ -26,6 +26,7 @@ window.NIKH_DEFAULTS = {
       'Zelda: Breath of the Wild', 'Stardew Valley', 'Super Mario Odyssey', 'Sleeping Dogs', 'The Truman Show', 'Halloween'],
     note: '',
     showCounter: true,
+    photoDrop: 'sometimes',
     awayTitle: 'psst... come back',
     lateNight: "It's past midnight. Go to sleep. (So should I.)"
   },
@@ -149,5 +150,9 @@ window.NIKH_DEFAULTS = {
   },
   footer: {
     text: 'Built after hours in Suriname.'
+  },
+  arcade: {
+    title: 'Insert coin.',
+    intro: 'Three tiny games, all made for this site. Beat the board and leave your initials. No accounts, no tracking: just three letters and bragging rights.'
   }
 };

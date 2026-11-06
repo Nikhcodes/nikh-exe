@@ -51,10 +51,25 @@ export function sniffAudio(b) {
   if (a(0, 3) === 'ID3' || (b[0] === 0xff && (b[1] & 0xe0) === 0xe0 && (b[1] & 0x06) !== 0)) mime = 'audio/mpeg';
   else if (a(0, 4) === 'OggS') mime = 'audio/ogg';
   else if (a(0, 4) === 'RIFF' && a(8, 12) === 'WAVE') mime = 'audio/wav';
-  else if (a(4, 8) === 'ftyp' && ['M4A ', 'M4B ', 'mp42', 'isom', 'iso2', 'dash'].includes(a(8, 12))) mime = 'audio/mp4';
+  else if (a(4, 8) === 'ftyp' && ['M4A ', 'M4B '].includes(a(8, 12))) mime = 'audio/mp4';
   return mime ? { mime, width: 0, height: 0 } : null;
 }
 
 export const isAudio = mime => String(mime).startsWith('audio/');
+export const isVideo = mime => String(mime).startsWith('video/');
+/** What kind of thing a file is, for "replace with the same kind" checks. */
+export const kindOf = mime => isAudio(mime) ? 'audio' : isVideo(mime) ? 'video' : 'image';
+
+/**
+ * MP4 or WebM video. An MP4 container can also hold just audio (.m4a); `asAudio` (the uploader
+ * says it picked a sound file) makes those count as audio/mp4. Width/height come from the browser
+ * (it reads them before uploading); they only size the player, so they are not security-relevant.
+ */
+export function sniffVideo(b, asAudio = false) {
+  if (!Buffer.isBuffer(b) || b.length < 32) return null;
+  if (b.readUInt32BE(0) === 0x1a45dfa3) return { mime: 'video/webm' };
+  if (b.toString('ascii', 4, 8) === 'ftyp') return { mime: asAudio ? 'audio/mp4' : 'video/mp4' };
+  return null;
+}
 
 export const mediaUrl = (id, version) => `/api/media?id=${id}&v=${version}`;
