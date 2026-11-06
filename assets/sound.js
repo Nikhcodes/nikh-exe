@@ -45,7 +45,9 @@
       current.volume = 0.8;
       current.play().catch(() => api.chime());
     },
-    stop() { if (current) { current.pause(); current = null; } }
+    stop() { if (current) { current.pause(); current = null; } },
+    /** A short game sound effect (arcade). */
+    blip(freq, dur = 0.08, type = 'square') { if (!on) return; tone(freq, 0, dur, type, 0.06); }
   };
 
   function sync() {

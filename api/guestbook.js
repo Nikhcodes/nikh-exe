@@ -16,13 +16,13 @@ export default async function handler(req, res) {
       const raw = new URL(req.url, 'http://x').searchParams.get('before');
       const before = raw && !Number.isNaN(Date.parse(raw)) ? new Date(raw).toISOString() : null;
       const rows = before
-        ? await sql`SELECT left(id::text, 8) AS k, name, message, created_at FROM guestbook_entries
+        ? await sql`SELECT left(id::text, 8) AS k, name, message, created_at, reply, replied_at FROM guestbook_entries
             WHERE approved AND NOT rejected AND NOT featured AND created_at < ${before}
             ORDER BY created_at DESC LIMIT ${PAGE + 1}`
-        : await sql`SELECT left(id::text, 8) AS k, name, message, created_at FROM guestbook_entries
+        : await sql`SELECT left(id::text, 8) AS k, name, message, created_at, reply, replied_at FROM guestbook_entries
             WHERE approved AND NOT rejected AND NOT featured
             ORDER BY created_at DESC LIMIT ${PAGE + 1}`;
-      const featured = before ? [] : await sql`SELECT left(id::text, 8) AS k, name, message, created_at
+      const featured = before ? [] : await sql`SELECT left(id::text, 8) AS k, name, message, created_at, reply, replied_at
         FROM guestbook_entries WHERE approved AND NOT rejected AND featured ORDER BY created_at DESC LIMIT 6`;
       const more = rows.length > PAGE;
       return res.status(200).json({ featured, entries: rows.slice(0, PAGE), more });

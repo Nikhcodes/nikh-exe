@@ -14,8 +14,9 @@ import { createHash } from 'node:crypto';
 import { q } from './_lib/db.js';
 import { route, send, readJson, readBody, HttpError, UUID, clean, cleanMultiline } from './_lib/http.js';
 import { requireAdmin } from './_lib/auth.js';
-import { sniffImage, sniffAudio, isAudio, MAX_UPLOAD_BYTES, MAX_SIDE, mediaUrl } from './_lib/media.js';
+import { sniffImage, sniffAudio, sniffVideo, isAudio, kindOf, MAX_UPLOAD_BYTES, MAX_SIDE, mediaUrl } from './_lib/media.js';
 import { mediaMap } from './_lib/content.js';
+import { GAMES } from './_lib/arcade.js';
 import { TARGETS, normPhrase, findConflicts, ACTIVE_SQL, ORDER_SQL } from './_lib/eggs.js';
 
 const bool = v => v === true || v === 'true' || v === 1;
@@ -43,7 +44,9 @@ async function stats() {
     (SELECT count(*)::int FROM surprise_items WHERE enabled) AS surprise_enabled,
     (SELECT COALESCE(sum(bytes), 0)::bigint FROM media) AS media_bytes,
     (SELECT count(*)::int FROM site_content) AS pages_edited,
-    (SELECT COALESCE(max(n), 0)::bigint FROM site_counters WHERE key = 'visits') AS visits`);
+    (SELECT COALESCE(max(n), 0)::bigint FROM site_counters WHERE key = 'visits') AS visits,
+    (SELECT count(*)::int FROM arcade_scores WHERE NOT hidden) AS arcade_scores,
+    (SELECT count(*)::int FROM arcade_runs) AS arcade_runs`);
   return { ...s, media_bytes: Number(s.media_bytes), visits: Number(s.visits) };
 }
 
@@ -79,8 +82,8 @@ async function mediaList(url) {
     FROM media m
     WHERE ($1 = '' OR m.name ILIKE '%' || $1 || '%' OR m.caption ILIKE '%' || $1 || '%' OR $1 = ANY(m.tags))
       AND ($2 = '' OR $2 = ANY(m.tags))
-      AND ($3 = '' OR m.mime LIKE $3 || '/%')
-    ORDER BY m.created_at DESC LIMIT 500`, [term, tag, ['image', 'audio'].includes(url.searchParams.get('kind')) ? url.searchParams.get('kind') : '']);
+      AND ($3 = '' OR m.mime LIKE $3 || '/%' OR ($3 = 'visual' AND (m.mime LIKE 'image/%' OR m.mime LIKE 'video/%')))
+    ORDER BY m.created_at DESC LIMIT 500`, [term, tag, ['image', 'audio', 'video', 'visual'].includes(url.searchParams.get('kind')) ? url.searchParams.get('kind') : '']);
   const tags = await q(`SELECT DISTINCT unnest(tags) AS t FROM media ORDER BY 1`);
   return { media: rows.map(withUrl), tags: tags.map(t => t.t) };
 }
@@ -91,22 +94,28 @@ async function mediaDetail(id) {
   return { media: withUrl(m), usage: await q(USAGE_SQL, [id]) };
 }
 
-async function readImage(req) {
+async function readImage(req, url) {
   const ct = String(req.headers['content-type'] || '');
   if (!ct.startsWith('application/octet-stream')) throw new HttpError(415, 'Send the file bytes as application/octet-stream.');
   const buf = await readBody(req, MAX_UPLOAD_BYTES);
   if (!buf.length) throw new HttpError(400, 'The file is empty.');
+  const sha = createHash('sha256').update(buf).digest('hex');
   const audio = sniffAudio(buf);
-  if (audio) return { buf, info: audio, sha: createHash('sha256').update(buf).digest('hex') };
+  if (audio) return { buf, info: audio, sha };
+  const video = sniffVideo(buf, url && url.searchParams.get('as') === 'audio');
+  if (video) {
+    const dim = k => Math.min(8000, Math.max(0, parseInt(url && url.searchParams.get(k), 10) || 0));
+    return { buf, info: { ...video, width: video.mime.startsWith('audio/') ? 0 : dim('w'), height: video.mime.startsWith('audio/') ? 0 : dim('h') }, sha };
+  }
   const info = sniffImage(buf);
-  if (!info) throw new HttpError(415, 'That file is not a JPEG, PNG, WebP or GIF image, or an MP3, OGG, WAV or M4A sound. (SVG and other formats are not accepted.)');
+  if (!info) throw new HttpError(415, 'That file is not a JPEG, PNG, WebP or GIF image, an MP4 or WebM video, or an MP3, OGG, WAV or M4A sound. (SVG and other formats are not accepted.)');
   if (!info.width || !info.height || info.width > MAX_SIDE || info.height > MAX_SIDE)
     throw new HttpError(400, `The image must be at most ${MAX_SIDE} pixels on each side.`);
-  return { buf, info, sha: createHash('sha256').update(buf).digest('hex') };
+  return { buf, info, sha };
 }
 
 async function mediaUpload(req, url) {
-  const { buf, info, sha } = await readImage(req);
+  const { buf, info, sha } = await readImage(req, url);
   const [dupe] = await q(`SELECT ${MEDIA_COLS} FROM media m WHERE m.sha256 = $1 LIMIT 1`, [sha]);
   if (dupe) return { media: withUrl(dupe), duplicate: true };
   const name = clean(url.searchParams.get('name'), 120) || 'Untitled image';
@@ -123,11 +132,11 @@ async function mediaUpload(req, url) {
   return mediaDetail(m.id);
 }
 
-async function mediaReplace(req, id) {
-  const { buf, info, sha } = await readImage(req);
+async function mediaReplace(req, id, url) {
+  const { buf, info, sha } = await readImage(req, url);
   const [m] = await q(`SELECT id, mime FROM media WHERE id = $1`, [id]);
   if (!m) throw new HttpError(404, 'That file no longer exists.');
-  if (isAudio(m.mime) !== isAudio(info.mime)) throw new HttpError(400, isAudio(m.mime) ? 'Replace a sound with another sound file.' : 'Replace an image with another image.');
+  if (kindOf(m.mime) !== kindOf(info.mime)) throw new HttpError(400, `Replace ${({ audio: 'a sound with another sound file', video: 'a video with another video', image: 'an image with another image' })[kindOf(m.mime)]}.`);
   await q(`UPDATE media_blobs SET data = decode($2, 'base64') WHERE media_id = $1`, [id, buf.toString('base64')]);
   await q(`UPDATE media SET mime = $2, width = $3, height = $4, bytes = $5, sha256 = $6,
       version = version + 1, updated_at = now() WHERE id = $1`, [id, info.mime, info.width, info.height, buf.length, sha]);
@@ -161,7 +170,7 @@ async function eggRows(where = 'TRUE', params = []) {
   const eggs = await q(`SELECT e.*, (${ACTIVE_SQL}) AS live FROM eggs e WHERE ${where} ORDER BY ${ORDER_SQL}`, params);
   if (!eggs.length) return [];
   const steps = await q(`SELECT s.id, s.egg_id, s.position, s.label, s.caption, s.media_id,
-      m.name AS media_name, m.version, m.width, m.height, m.alt
+      m.name AS media_name, m.version, m.width, m.height, m.alt, m.mime
     FROM egg_steps s LEFT JOIN media m ON m.id = s.media_id
     WHERE s.egg_id = ANY($1::uuid[]) ORDER BY s.position`, [eggs.map(e => e.id)]);
   const sounds = await q(`SELECT id, name, version FROM media WHERE id = ANY($1::uuid[])`, [eggs.map(e => e.sound_id).filter(Boolean)]);
@@ -170,7 +179,7 @@ async function eggRows(where = 'TRUE', params = []) {
     sound: (s => s ? { name: s.name, url: mediaUrl(s.id, s.version) } : null)(sounds.find(x => x.id === e.sound_id)),
     steps: steps.filter(s => s.egg_id === e.id).map(s => ({
       id: s.id, label: s.label, caption: s.caption, media_id: s.media_id,
-      media: s.media_id ? { name: s.media_name, url: mediaUrl(s.media_id, s.version), w: s.width, h: s.height, alt: s.alt } : null
+      media: s.media_id ? { name: s.media_name, url: mediaUrl(s.media_id, s.version), w: s.width, h: s.height, alt: s.alt, mime: s.mime } : null
     }))
   }));
 }
@@ -235,8 +244,9 @@ async function eggSave(req, id) {
   const { egg, steps } = validateEgg(body);
   const mediaIds = steps.map(s => s.media_id).filter(Boolean);
   if (mediaIds.length) {
-    const found = await q(`SELECT id FROM media WHERE id = ANY($1::uuid[])`, [mediaIds]);
+    const found = await q(`SELECT id, mime FROM media WHERE id = ANY($1::uuid[])`, [mediaIds]);
     if (found.length !== new Set(mediaIds).size) throw new HttpError(400, 'One of the chosen images was deleted. Pick it again.');
+    if (found.some(f => isAudio(f.mime))) throw new HttpError(400, 'A step needs an image or video. Put sounds under "Sound (optional)".');
   }
   if (egg.sound_id) {
     const [snd] = await q(`SELECT mime FROM media WHERE id = $1`, [egg.sound_id]);
@@ -314,7 +324,7 @@ async function guestbookList(url) {
   const status = url.searchParams.get('status') || 'pending';
   const where = status === 'approved' ? 'approved AND NOT rejected'
     : status === 'rejected' ? 'rejected' : 'NOT approved AND NOT rejected';
-  const rows = await q(`SELECT id, name, message, approved, rejected, featured, created_at
+  const rows = await q(`SELECT id, name, message, approved, rejected, featured, created_at, reply, replied_at
     FROM guestbook_entries WHERE ${where} ORDER BY featured DESC, created_at DESC LIMIT 200`);
   return { entries: rows };
 }
@@ -329,6 +339,13 @@ async function guestbookAction(req) {
     unfeature: `UPDATE guestbook_entries SET featured = false WHERE id = $1`,
     delete: `DELETE FROM guestbook_entries WHERE id = $1`
   };
+  if (b.action === 'reply') {
+    const reply = cleanMultiline(b.reply, 500);
+    const [row] = await q(`UPDATE guestbook_entries SET reply = $2, replied_at = CASE WHEN $2::text IS NULL THEN NULL ELSE now() END
+      WHERE id = $1 RETURNING id`, [id, reply || null]);
+    if (!row) throw new HttpError(404, 'That note no longer exists.');
+    return { ok: true, reply: reply || null };
+  }
   if (!actions[b.action]) throw new HttpError(400, 'Bad action.');
   await q(actions[b.action], [id]);
   return { ok: true };
@@ -403,7 +420,7 @@ async function surpriseSave(req, id) {
 }
 
 // ------------------------------------------------------------------ pages (site content)
-export const PAGE_KEYS = ['home', 'music', 'links', 'projects', 'journal', 'about', 'contact', 'footer'];
+export const PAGE_KEYS = ['home', 'music', 'links', 'projects', 'journal', 'about', 'contact', 'footer', 'arcade'];
 const UUID_G = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Keep page JSON to plain, bounded data: text, numbers, true/false, lists and objects. */
@@ -474,6 +491,32 @@ async function contentReset(key) {
   return contentGet();
 }
 
+// ------------------------------------------------------------------ arcade
+async function scoresList(url) {
+  const game = url.searchParams.get('game');
+  if (!GAMES[game]) throw new HttpError(400, 'Unknown game.');
+  const rows = await q(`SELECT id, initials, score, duration_ms, hidden, created_at FROM arcade_scores
+    WHERE game = $1 ORDER BY score DESC, created_at ASC LIMIT 100`, [game]);
+  return { game, name: GAMES[game].name, scores: rows, games: Object.fromEntries(Object.entries(GAMES).map(([k, g]) => [k, g.name])) };
+}
+async function scoresAction(req) {
+  const b = await readJson(req);
+  if (b.action === 'clear') {
+    if (!GAMES[b.game]) throw new HttpError(400, 'Unknown game.');
+    await q(`DELETE FROM arcade_scores WHERE game = $1`, [b.game]);
+    return { ok: true };
+  }
+  const id = needId(b.id);
+  const sqls = {
+    hide: `UPDATE arcade_scores SET hidden = true WHERE id = $1`,
+    unhide: `UPDATE arcade_scores SET hidden = false WHERE id = $1`,
+    delete: `DELETE FROM arcade_scores WHERE id = $1`
+  };
+  if (!sqls[b.action]) throw new HttpError(400, 'Bad action.');
+  await q(sqls[b.action], [id]);
+  return { ok: true };
+}
+
 // ------------------------------------------------------------------ settings
 const SETTING_KEYS = ['status', 'now_listening'];
 async function settingsGet() {
@@ -506,7 +549,7 @@ export default route(async (req, res) => {
     case 'media':
       if (M === 'GET') return ok(id ? await mediaDetail(needId(id)) : await mediaList(url));
       if (M === 'POST') return send(res, 201, await mediaUpload(req, url));
-      if (M === 'PUT') return ok(await mediaReplace(req, needId(id)));
+      if (M === 'PUT') return ok(await mediaReplace(req, needId(id), url));
       if (M === 'PATCH') return ok(await mediaPatch(req, needId(id)));
       if (M === 'DELETE') return ok(await mediaDelete(needId(id), url));
       break;
@@ -542,6 +585,10 @@ export default route(async (req, res) => {
       if (M === 'DELETE') return ok(await contentReset(key));
       break;
     }
+    case 'scores':
+      if (M === 'GET') return ok(await scoresList(url));
+      if (M === 'POST') return ok(await scoresAction(req));
+      break;
     case 'settings':
       if (M === 'GET') return ok(await settingsGet());
       if (M === 'PUT') return ok(await settingsPut(req));

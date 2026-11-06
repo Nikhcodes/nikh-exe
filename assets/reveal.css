@@ -7,7 +7,7 @@
 .rv-close:hover{background:#241b14;color:var(--cream,#f1e7d3)}
 .rv-title{font-family:var(--disp,Impact,sans-serif);font-weight:400;font-size:1.5rem;line-height:1.05;margin:4px 46px 12px 0}
 .rv-stage{background:#241b14;padding:8px;display:grid;place-items:center;min-height:120px}
-.rv-stage img{display:block;max-width:100%;height:auto;max-height:62vh;width:auto;object-fit:contain}
+.rv-stage img,.rv-stage video{display:block;max-width:100%;height:auto;max-height:62vh;width:auto;object-fit:contain;background:#000}
 .rv-in{animation:rv-in .18s ease-out}
 @keyframes rv-in{from{opacity:0}}
 .rv-cap{font-family:var(--mono,monospace);font-weight:700;margin:10px 0 0;text-align:center}

@@ -1,5 +1,7 @@
 /* NIKH.EXE reveal component — shared by the public site and the admin preview.
- * NikhReveal.show({title, message, style:'card'|'toast', stepMs, sound, steps:[{url,w,h,alt,caption} | {empty:true,label}]}, {preview})
+ * NikhReveal.show({title, message, style:'card'|'toast', stepMs, sound, steps:[{url,w,h,alt,caption,mime} | {empty:true,label}]}, {preview})
+ * - A step can be an image (GIFs animate) or a short video (MP4/WebM). Videos play muted unless the visitor
+ *   switched sound on; with reduced motion they don't autoplay and show controls instead.
  * - Steps play in order (meme first, then the payoff). Images are preloaded; one that fails is skipped.
  * - Empty slots are skipped for visitors. In admin preview they show a labelled placeholder.
  * - Nothing opens if there is nothing to show.
@@ -8,7 +10,23 @@
   const reduce = () => window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text) e.textContent = text; return e; };
 
+  function loadVideo(step) {
+    return new Promise(resolve => {
+      const v = document.createElement('video');
+      v.muted = true; v.playsInline = true; v.preload = 'auto';
+      v.setAttribute('playsinline', ''); v.setAttribute('aria-label', step.alt || 'Video');
+      if (step.w && step.h) { v.width = step.w; v.height = step.h; }
+      let done = false;
+      const finish = ok => { if (!done) { done = true; resolve(ok ? v : null); } };
+      v.addEventListener('loadeddata', () => finish(true), { once: true });
+      v.addEventListener('error', () => finish(false), { once: true });
+      setTimeout(() => finish(v.readyState >= 1), 8000); // slow network: show it anyway once metadata is in
+      v.src = step.url;
+    });
+  }
+
   function load(step) {
+    if (String(step.mime || '').startsWith('video/')) return loadVideo(step);
     return new Promise(resolve => {
       const img = new Image();
       img.decoding = 'async';
@@ -108,6 +126,16 @@
       }
       stage.replaceChildren(node);
       if (!reduce()) { node.classList.add('rv-in'); }
+      const isVid = node.tagName === 'VIDEO';
+      if (isVid) {
+        const lastStep = i === shown.length - 1;
+        node.loop = lastStep;
+        node.currentTime = 0;
+        const S = window.NikhSound;
+        node.muted = !(preview || (S && S.enabled()));
+        if (reduce()) { node.controls = true; }
+        else node.play().catch(() => { node.muted = true; node.play().catch(() => { node.controls = true; }); });
+      }
       cap.textContent = s.caption || '';
       cap.hidden = !s.caption;
       dots.textContent = shown.length > 1 ? shown.map((_, k) => (k === i ? '●' : '○')).join(' ') : '';
@@ -115,7 +143,10 @@
       next.hidden = !more;
       clearTimeout(timer);
       // Auto-advance unless the visitor prefers reduced motion (they get the Next button).
-      if (more && !reduce()) timer = setTimeout(advance, Math.max(500, data.stepMs || 1600));
+      if (more && !reduce()) {
+        if (isVid) { node.onended = () => { if (idx === i) advance(); }; timer = setTimeout(advance, 20000); } // move on when the clip ends
+        else timer = setTimeout(advance, Math.max(500, data.stepMs || 1600));
+      }
     }
     function advance() {
       if (idx < shown.length - 1) { idx++; render(idx); }

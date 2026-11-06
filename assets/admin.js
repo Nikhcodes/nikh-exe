@@ -14,6 +14,7 @@
       else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
       else if (k === 'value') e.value = v;
       else if (k === 'checked') e.checked = !!v;
+      else if (k === 'muted') { e.muted = !!v; e.setAttribute('muted', ''); }
       else e.setAttribute(k, v === true ? '' : v);
     }
     for (const k of kids.flat(Infinity)) if (k !== null && k !== undefined && k !== false) e.append(k instanceof Node ? k : String(k));
@@ -85,41 +86,70 @@
     return blob;
   }
   const isAudioFile = f => /^audio\//.test(f.type) || /\.(mp3|ogg|oga|wav|m4a)$/i.test(f.name);
+  const isVideoFile = f => /^video\//.test(f.type) || /\.(mp4|m4v|webm|mov)$/i.test(f.name);
   const isAudioMedia = m => String(m && m.mime).startsWith('audio/');
+  const isVideoMedia = m => String(m && m.mime).startsWith('video/');
+  /** Read a video's size in the browser (the server can't easily), so the player has the right shape. */
+  function videoSize(file) {
+    return new Promise(resolve => {
+      const v = document.createElement('video'), u = URL.createObjectURL(file);
+      const done = r => { URL.revokeObjectURL(u); resolve(r); };
+      v.preload = 'metadata'; v.muted = true;
+      v.onloadedmetadata = () => done({ w: v.videoWidth, h: v.videoHeight, d: v.duration });
+      v.onerror = () => done(null);
+      setTimeout(() => done(null), 8000);
+      v.src = u;
+    });
+  }
   async function prepareFile(file) {
     if (isAudioFile(file)) {
       if (file.size > MAX_BYTES) throw new Error('Sounds must be under 4 MB. A short clip (a few seconds) is best.');
-      return file;
+      return { blob: file, extra: { as: 'audio' } };
     }
-    return prepareImage(file);
+    if (isVideoFile(file)) {
+      if (/quicktime|\.mov$/i.test(file.type + file.name)) throw new Error('.mov videos don\'t play in most browsers. Export it as MP4 (H.264) first.');
+      if (file.size > MAX_BYTES) throw new Error(`That video is ${fmtBytes(file.size)}; the limit is 4 MB. Trim it to a few seconds or compress it (for example at ezgif.com or with HandBrake), then try again.`);
+      const sz = await videoSize(file);
+      if (!sz) throw new Error('This browser could not read that video. Use MP4 (H.264) or WebM.');
+      return { blob: file, extra: { w: sz.w, h: sz.h } };
+    }
+    return { blob: await prepareImage(file), extra: {} };
   }
   async function uploadFile(file, extra = {}) {
-    const blob = await prepareFile(file);
-    const name = (extra.name || file.name.replace(/\.[^.]+$/, '') || 'Untitled image').slice(0, 120);
-    const qs = new URLSearchParams({ r: 'media', name, tags: (extra.tags || []).join(',') });
+    const { blob, extra: x } = await prepareFile(file);
+    const name = (extra.name || file.name.replace(/\.[^.]+$/, '') || 'Untitled file').slice(0, 120);
+    const qs = new URLSearchParams({ r: 'media', name, tags: (extra.tags || []).join(','), ...x });
     const d = await api('cms?' + qs, { method: 'POST', body: blob, headers: { 'Content-Type': 'application/octet-stream' } });
     if (d.duplicate) toast(`"${d.media.name}" is already in the library, so it was reused.`);
     return d.media;
   }
   async function replaceFile(id, file) {
-    const blob = await prepareFile(file);
-    return api('cms?r=media&id=' + id, { method: 'PUT', body: blob, headers: { 'Content-Type': 'application/octet-stream' } });
+    const { blob, extra: x } = await prepareFile(file);
+    return api('cms?' + new URLSearchParams({ r: 'media', id, ...x }), { method: 'PUT', body: blob, headers: { 'Content-Type': 'application/octet-stream' } });
   }
   const ACCEPT = {
     image: 'image/jpeg,image/png,image/webp,image/gif,image/heic',
-    audio: 'audio/mpeg,audio/ogg,audio/wav,audio/mp4,audio/x-m4a,.mp3,.ogg,.wav,.m4a'
+    audio: 'audio/mpeg,audio/ogg,audio/wav,audio/mp4,audio/x-m4a,.mp3,.ogg,.wav,.m4a',
+    video: 'video/mp4,video/webm,.mp4,.m4v,.webm'
   };
+  ACCEPT.visual = ACCEPT.image + ',' + ACCEPT.video;
+  ACCEPT.any = ACCEPT.visual + ',' + ACCEPT.audio;
   function filePicker(multiple, kind = 'image') {
     return new Promise(resolve => {
-      const i = h('input', { type: 'file', accept: kind === 'any' ? ACCEPT.image + ',' + ACCEPT.audio : ACCEPT[kind], multiple: multiple || null, hidden: true });
+      const i = h('input', { type: 'file', accept: ACCEPT[kind] || ACCEPT.image, multiple: multiple || null, hidden: true });
       i.onchange = () => { resolve([...i.files]); i.remove(); };
       document.body.append(i); i.click();
     });
   }
 
-  /** Small preview for a library item: the image, or a note icon for sounds. */
-  const thumb = m => isAudioMedia(m) ? h('span', { class: 'aud', 'aria-hidden': 'true' }, '♪') : h('img', { src: m.url, alt: '', loading: 'lazy' });
-  const dims = m => isAudioMedia(m) ? `sound · ${fmtBytes(m.bytes)}` : `${m.width}×${m.height}`;
+  /** Small preview for a library item: the image, a still of the video, or a note icon for sounds. */
+  const thumb = m => isAudioMedia(m) ? h('span', { class: 'aud', 'aria-hidden': 'true' }, '♪')
+    : isVideoMedia(m) ? h('span', { class: 'vid' }, h('video', { src: m.url + '#t=0.1', muted: true, preload: 'metadata', 'aria-hidden': 'true' }), h('b', { 'aria-hidden': 'true' }, '▶'))
+    : h('img', { src: m.url, alt: '', loading: 'lazy' });
+  const dims = m => isAudioMedia(m) ? `sound · ${fmtBytes(m.bytes)}` : isVideoMedia(m) ? `video · ${fmtBytes(m.bytes)}` : `${m.width}×${m.height}`;
+  const stepPic = (media, cls) => isVideoMedia(media)
+    ? h('video', { class: cls, src: media.url, muted: true, loop: true, autoplay: true, playsinline: true, 'aria-label': media.alt || media.name })
+    : h('img', { class: cls, src: media.url, alt: media.alt || media.name });
 
   // ---------------------------------------------------------------- modal helper
   function modal(title, body, { wide = true } = {}) {
@@ -146,7 +176,7 @@
 
   /** Media library picker. Resolves with an array of chosen media (or [] if cancelled). */
   function pickMedia({ multiple = false, title = 'Choose an image', kind = 'image' } = {}) {
-    const word = kind === 'audio' ? 'sound' : 'image';
+    const word = { audio: 'sound', video: 'video', visual: 'image or video' }[kind] || 'image';
     return new Promise(resolve => {
       const chosen = new Map();
       let resolved = false;
@@ -226,7 +256,7 @@
 
   // ---------------------------------------------------------------- routing
   const SECTIONS = [['dashboard', 'Dashboard'], ['eggs', 'Easter eggs'], ['media', 'Media'], ['guestbook', 'Guestbook'],
-    ['pages', 'Pages'], ['scrapbook', 'Scrapbook'], ['drawer', 'Junk drawer']];
+    ['pages', 'Pages'], ['scrapbook', 'Scrapbook'], ['drawer', 'Junk drawer'], ['arcade', 'Arcade']];
   let stats = null;
   function renderTabs(cur) {
     $('#tabs').replaceChildren(...SECTIONS.map(([k, label]) => h('a', { href: '#' + k, 'aria-current': k === cur ? 'page' : null },
@@ -269,7 +299,7 @@
       h('div', { class: 'stats', style: 'margin-top:18px' },
         stat(s.eggs_active, 'live Easter eggs', '#eggs'), stat(s.eggs_inactive, 'eggs switched off', '#eggs'),
         stat(s.guestbook_pending, 'notes waiting for you', '#guestbook'), stat(s.media, `images (${fmtBytes(s.media_bytes || 1)})`, '#media'),
-        stat(`${s.scrapbook_published}/${s.scrapbook}`, 'scrapbook entries live', '#scrapbook'), stat(s.surprise_enabled, 'junk drawer items', '#drawer'), stat(s.visits, 'visits counted', '#pages/home')),
+        stat(`${s.scrapbook_published}/${s.scrapbook}`, 'scrapbook entries live', '#scrapbook'), stat(s.surprise_enabled, 'junk drawer items', '#drawer'), stat(s.visits, 'visits counted', '#pages/home'), stat(s.arcade_scores, 'arcade scores', '#arcade')),
       empty.length ? h('div', { class: 'panel' }, h('h2', {}, 'Optional slots not filled yet'),
         h('p', { style: 'margin-top:0' }, 'These reveal steps have no image. Visitors simply skip them, so nothing looks broken. Fill them whenever you are ready.'),
         h('div', { class: 'items' }, empty.map(({ egg, step }) => h('div', { class: 'item' },
@@ -335,7 +365,7 @@
   function previewEgg(e) {
     window.NikhReveal.show({
       title: e.title, message: e.message, style: e.style, stepMs: +e.step_ms || 1600, sound: e.sound ? e.sound.url : null,
-      steps: e.steps.map(s => s.media ? { url: s.media.url, w: s.media.w, h: s.media.h, alt: s.media.alt, caption: s.caption } : { empty: true, label: s.label })
+      steps: e.steps.map(s => s.media ? { url: s.media.url, w: s.media.w, h: s.media.h, alt: s.media.alt, caption: s.caption, mime: s.media.mime } : { empty: true, label: s.label })
     }, { preview: true }) || toast('This egg has nothing to show yet.', true);
   }
 
@@ -437,16 +467,16 @@
     function drawSteps() {
       stepsBox.replaceChildren(...e.steps.map((s, i) => {
         const pic = s.media
-          ? h('img', { class: 'pic', src: s.media.url, alt: s.media.alt || s.media.name })
+          ? stepPic(s.media, 'pic')
           : h('div', { class: 'slot-empty' }, h('b', {}, 'NOT SET YET'), h('span', {}, 'Optional. Visitors skip this step.'));
-        const label = h('input', { type: 'text', value: s.label, placeholder: 'e.g. Girlfriend photo', maxlength: 80 });
+        const label = h('input', { type: 'text', value: s.label, placeholder: 'e.g. Reaction meme', maxlength: 80 });
         label.oninput = () => (s.label = label.value);
         const cap = h('input', { type: 'text', value: s.caption, placeholder: 'Optional line under the image', maxlength: 300 });
         cap.oninput = () => (s.caption = cap.value);
         const choose = h('button', { class: 'btn sm', type: 'button' }, s.media ? 'Change image' : 'Choose or upload image');
         choose.onclick = async () => {
-          const [m] = await pickMedia({ title: `Image for step ${i + 1}${s.label ? ': ' + s.label : ''}` });
-          if (m) { s.media_id = m.id; s.media = { name: m.name, url: m.url, w: m.width, h: m.height, alt: m.alt }; drawSteps(); toast('Image selected. Remember to save.'); }
+          const [m] = await pickMedia({ kind: 'visual', title: `Image, GIF or video for step ${i + 1}${s.label ? ': ' + s.label : ''}` });
+          if (m) { s.media_id = m.id; s.media = { name: m.name, url: m.url, w: m.width, h: m.height, alt: m.alt, mime: m.mime }; drawSteps(); toast('Selected. Remember to save.'); }
         };
         return h('div', { class: 'step' }, pic, h('div', { style: 'display:grid;gap:8px;min-width:0' },
           s.media ? h('div', { class: 'mono small' }, s.media.name) : h('div', { class: 'mono small', style: 'color:var(--amber)' }, 'This slot is empty.'),
@@ -560,9 +590,9 @@
       status.textContent = ok ? `${ok} file(s) uploaded.` : '';
       reload();
     }
-    const drop = h('div', { class: 'drop' }, 'Drop images or sounds here or ', h('button', { class: 'btn sm', type: 'button', onclick: async () => upload(await filePicker(true, 'any')) }, 'choose files'),
+    const drop = h('div', { class: 'drop' }, 'Drop images, GIFs, videos or sounds here or ', h('button', { class: 'btn sm', type: 'button', onclick: async () => upload(await filePicker(true, 'any')) }, 'choose files'),
       h('div', { class: 'muted small', style: 'margin-top:6px' }, 'Images: JPEG, PNG, WebP or GIF. Photos are resized to 1600 px and location data is removed before upload.'),
-      h('div', { class: 'muted small' }, 'Sounds: MP3, OGG, WAV or M4A, up to 4 MB. Short clips work best for Easter eggs.'));
+      h('div', { class: 'muted small' }, 'Videos: MP4 or WebM, up to 4 MB (a few seconds). Sounds: MP3, OGG, WAV or M4A, up to 4 MB.'));
     drop.ondragover = ev => { ev.preventDefault(); drop.classList.add('over'); };
     drop.ondragleave = () => drop.classList.remove('over');
     drop.ondrop = ev => { ev.preventDefault(); drop.classList.remove('over'); upload([...ev.dataTransfer.files]); };
@@ -582,8 +612,8 @@
     const caption = h('textarea', { maxlength: 500 }, m.caption);
     const tags = h('input', { type: 'text', value: m.tags.join(', '), placeholder: 'meme, cat, egg' });
     const saveBtn = h('button', { class: 'btn', type: 'button' }, 'Save details');
-    const aud = isAudioMedia(m);
-    const replBtn = h('button', { class: 'btn ghost', type: 'button' }, aud ? 'Replace sound…' : 'Replace image…');
+    const aud = isAudioMedia(m), vid = isVideoMedia(m);
+    const replBtn = h('button', { class: 'btn ghost', type: 'button' }, aud ? 'Replace sound…' : vid ? 'Replace video…' : 'Replace image…');
     const delBtn = h('button', { class: 'btn danger', type: 'button' }, 'Delete');
     const usage = d.usage.length
       ? h('ul', {}, d.usage.map(u => h('li', {}, u.kind === 'egg' ? h('a', { href: '#eggs/' + u.id }, u.slot === 'sound' && !u.pos ? `Egg "${u.label}" (its sound)` : `Egg "${u.label}", step ${u.pos}${u.slot ? ' (' + u.slot + ')' : ''}`)
@@ -591,9 +621,10 @@
         : u.kind === 'scrapbook' ? h('a', { href: '#scrapbook/' + u.id }, `Scrapbook: ${u.label}`) : h('a', { href: '#drawer' }, `Junk drawer: ${u.label}`))))
       : h('p', { class: 'muted' }, 'Not used anywhere. Visitors cannot load it.');
     const img = aud ? h('audio', { src: m.url, controls: true, preload: 'none', style: 'display:block;width:100%;margin:10px 0' })
+      : vid ? h('video', { src: m.url, controls: true, loop: true, muted: true, playsinline: true, style: 'max-width:100%;max-height:50vh;display:block;margin:0 auto;background:#000' })
       : h('img', { src: m.url, alt: m.alt, style: 'max-width:100%;max-height:50vh;display:block;margin:0 auto;background:#000' });
     const dlg = modal(m.name, [img,
-      h('p', { class: 'mono small muted', style: 'text-align:center' }, `${aud ? 'Sound' : m.width + '×' + m.height} · ${m.mime.split('/')[1].toUpperCase()} · ${fmtBytes(m.bytes)} · added ${fmtDate(m.created_at)}`),
+      h('p', { class: 'mono small muted', style: 'text-align:center' }, `${aud ? 'Sound' : vid ? `Video ${m.width}×${m.height}` : m.width + '×' + m.height} · ${m.mime.split('/')[1].toUpperCase()} · ${fmtBytes(m.bytes)} · added ${fmtDate(m.created_at)}`),
       h('div', { class: 'grid2' }, h('label', { class: 'f' }, 'Name', name), h('label', { class: 'f' }, 'Tags', tags, h('span', { class: 'help' }, 'Comma separated'))),
       h('label', { class: 'f', style: 'margin-top:10px' }, 'Alt text', alt), h('label', { class: 'f', style: 'margin-top:10px' }, 'Caption / notes', caption),
       h('h3', { style: 'margin-top:16px' }, 'Where it is used'), usage,
@@ -603,8 +634,8 @@
       toast('Saved.'); dlg.close(); router();
     });
     replBtn.onclick = async () => {
-      const [f] = await filePicker(false, aud ? 'audio' : 'image'); if (!f) return;
-      await guard(replBtn, async () => { await replaceFile(id, f); toast((aud ? 'Sound' : 'Image') + ' replaced everywhere it is used.'); dlg.close(); router(); });
+      const [f] = await filePicker(false, aud ? 'audio' : vid ? 'video' : 'image'); if (!f) return;
+      await guard(replBtn, async () => { await replaceFile(id, f); toast((aud ? 'Sound' : vid ? 'Video' : 'Image') + ' replaced everywhere it is used.'); dlg.close(); router(); });
     };
     delBtn.onclick = async () => {
       let force = false;
@@ -635,11 +666,33 @@
       router();
     });
     const B = (en, label, action, cls = 'btn sm') => { const b = h('button', { class: cls, type: 'button' }, label); b.onclick = () => act(en, action, b); return b; };
+    // Your reply shows under the note on the board ("↳ nikh ...").
+    function replyBox(en) {
+      const box = h('div', { class: 'gb-reply-admin' });
+      const view = () => box.replaceChildren(
+        en.reply ? h('p', { class: 'mono small', style: 'color:#6b1f2e;margin:0 0 6px' }, h('b', {}, '↳ your reply: '), en.reply) : null,
+        h('button', { class: 'btn ghost sm', type: 'button', onclick: edit }, en.reply ? 'Edit reply' : '↳ Reply'));
+      const edit = () => {
+        const ta = h('textarea', { maxlength: 500, rows: 3, 'aria-label': 'Your reply', style: 'background:#fff;color:#241b14;border-color:#6b1f2e' }, en.reply || '');
+        const save = h('button', { class: 'btn sm', type: 'button' }, 'Save reply');
+        save.onclick = () => guard(save, async () => {
+          const r = await cms('r=guestbook', { method: 'POST', json: { id: en.id, action: 'reply', reply: ta.value } });
+          en.reply = r.reply; toast(r.reply ? (en.approved ? 'Reply posted on the board.' : 'Reply saved. It shows once the note is approved.') : 'Reply removed.'); view();
+        });
+        box.replaceChildren(ta, h('div', { class: 'row', style: 'margin-top:6px' }, save,
+          h('button', { class: 'btn ghost sm', type: 'button', onclick: view }, 'Cancel'),
+          en.reply ? h('span', { class: 'mono small' }, 'Empty it and save to remove the reply.') : null));
+        ta.focus();
+      };
+      view();
+      return box;
+    }
     page('THE BOARD', 'Guestbook', 'New notes wait here until you approve them. Rejected notes stay hidden but are kept, in case you change your mind.',
       h('div', { class: 'panel' }, seg, h('div', { class: 'items', style: 'margin-top:16px' },
         d.entries.length ? d.entries.map(en => h('article', { class: 'gbe' },
           h('div', { class: 'row between' }, h('b', {}, en.name), h('span', {}, en.featured ? h('span', { class: 'badge', style: 'color:#6b1f2e' }, 'PINNED') : null, ' ', h('time', {}, fmtDate(en.created_at)))),
           h('p', {}, en.message),
+          replyBox(en),
           h('div', { class: 'row' },
             status !== 'approved' ? B(en, 'Approve', 'approve') : null,
             !en.featured ? B(en, 'Approve + pin', 'feature', 'btn ghost sm') : B(en, 'Unpin', 'unfeature', 'btn ghost sm'),
@@ -765,6 +818,37 @@
     });
   }
 
+  // ---------------------------------------------------------------- Arcade (leaderboard moderation)
+  VIEWS.arcade = async arg => {
+    const game = ['nightshift', 'snake', 'match'].includes(arg) ? arg : 'nightshift';
+    const d = await cms('r=scores&game=' + game);
+    const seg = h('div', { class: 'seg', role: 'group', 'aria-label': 'Game' }, Object.entries(d.games).map(([k, name]) =>
+      h('button', { type: 'button', 'aria-pressed': k === game ? 'true' : 'false', onclick: () => (location.hash = 'arcade/' + k) }, name)));
+    const act = (sc, action, btn) => guard(btn, async () => {
+      if (action === 'delete' && !(await confirmBox('Delete score', `Delete ${sc.initials} ${sc.score} for good?`, 'Delete'))) return;
+      await cms('r=scores', { method: 'POST', json: { id: sc.id, action } });
+      toast({ hide: 'Hidden from the board.', unhide: 'Back on the board.', delete: 'Deleted.' }[action]); router();
+    });
+    const clear = h('button', { class: 'btn danger sm', type: 'button' }, 'Clear this board');
+    clear.onclick = async () => {
+      if (!(await confirmBox('Clear board', `Delete every ${d.name} score? This can't be undone.`, 'Clear board'))) return;
+      await guard(clear, async () => { await cms('r=scores', { method: 'POST', json: { action: 'clear', game } }); toast('Board cleared.'); router(); });
+    };
+    let rank = 0;
+    page('THE ARCADE', 'Arcade', 'Leaderboards for the three games. Players only pick 3-letter initials, and rude ones (including leetspeak and Dutch) are blocked automatically. If something slips through, hide it here. Change the Arcade page text in Pages → Arcade.',
+      h('div', { class: 'panel' }, h('div', { class: 'row between' }, seg, clear),
+        h('div', { class: 'items', style: 'margin-top:14px' }, d.scores.length ? d.scores.map(sc => {
+          if (!sc.hidden) rank++;
+          const B = (label, action, cls) => { const b = h('button', { class: cls || 'btn ghost sm', type: 'button' }, label); b.onclick = () => act(sc, action, b); return b; };
+          return h('div', { class: 'item' },
+            h('div', { class: 'th empty', style: 'font-size:.9rem' }, sc.hidden ? '—' : '#' + rank),
+            h('div', { class: 'meta' }, h('div', { class: 'row' }, h('b', { class: 'mono', style: 'font-family:var(--mono);letter-spacing:.2em' }, sc.initials), h('span', { class: 'mono' }, String(sc.score)),
+              sc.hidden ? h('span', { class: 'badge b-off' }, 'HIDDEN') : null),
+              h('div', { class: 'mono small muted' }, `${fmtDate(sc.created_at)} · played ${Math.round(sc.duration_ms / 1000)}s`)),
+            h('div', { class: 'acts' }, sc.hidden ? B('Show again', 'unhide') : B('Hide', 'hide'), B('Delete', 'delete', 'btn danger sm')));
+        }) : h('p', { class: 'muted' }, 'No scores yet.'))));
+  };
+
   // ---------------------------------------------------------------- Pages (edit every page of the site)
   // Each page is described once; the form below is built from that description.
   // Field types: text, url, textarea, bool, color, select, image, strings, texts, list.
@@ -787,6 +871,8 @@
       F('updates', 'list', 'Updates', { sum: 'text', of: [F('date', 'text', 'Date'), F('text', 'text', 'Text')] }),
       F('picks', 'strings', "Tonight's pick (the shuffle list)"),
       F('showCounter', 'bool', 'Show the visitor counter'),
+      F('photoDrop', 'select', 'Photo drops', { options: [['off', 'Off'], ['rare', 'Rare (on some visits)'], ['sometimes', 'Once per visit'], ['often', 'A few per visit']],
+        help: 'Now and then a random photo from the junk drawer slides into the corner of the page. Uses the image items in Junk drawer.' }),
       F('awayTitle', 'text', 'Tab title while a visitor looks at another tab', { help: 'Leave empty to turn it off.' }),
       F('lateNight', 'text', 'Late-night message (shown 00:00 to 04:00, visitor time)', { help: 'Leave empty to turn it off.' })
     ] },
@@ -834,7 +920,8 @@
       F('resume', 'url', 'Résumé link (optional)', { help: 'A link to a PDF or page. Adds a Résumé button.' }),
       F('sign', 'text', 'Sign-off line')
     ] },
-    footer: { label: 'Footer', route: '', fields: [F('text', 'text', 'Footer text')] }
+    footer: { label: 'Footer', route: '', fields: [F('text', 'text', 'Footer text')] },
+    arcade: { label: 'Arcade', route: 'arcade', fields: [F('title', 'text', 'Title'), F('intro', 'textarea', 'Intro')] }
   };
 
   const blank = fields => Object.fromEntries(fields.map(f => [f.k, ({ bool: false, image: null, strings: [], texts: [], list: [], color: '#2b3a5c', select: f.options ? f.options[f.options.length - 1][0] : '' })[f.t] ?? '']));

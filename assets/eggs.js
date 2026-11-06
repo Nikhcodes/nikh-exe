@@ -89,6 +89,7 @@
     if (e.ctrlKey || e.metaKey || e.altKey || e.isComposing) return;
     if (e.target instanceof Element && e.target.closest(SKIP)) return;
     if (document.querySelector('dialog[open]')) return;
+    if (document.body.hasAttribute('data-playing')) return; // an arcade game has the keyboard
     if (e.key === 'Backspace') { buf.pop(); return; }
     // Arrow keys count as characters, so a trigger like ↑↑↓↓←→←→ba (the Konami code) works.
     const ARROWS = { ArrowUp: '↑', ArrowDown: '↓', ArrowLeft: '←', ArrowRight: '→' };

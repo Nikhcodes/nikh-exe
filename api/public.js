@@ -51,20 +51,21 @@ async function reveal(req) {
   if (egg.trigger_type === 'keyword' && !egg.phrases.includes(normPhrase(body.phrase)))
     throw new HttpError(404, 'Nothing here.');
   // Only steps that actually have an image. Empty slots are skipped silently.
-  const steps = await q(`SELECT s.caption, m.id AS media_id, m.version, m.width, m.height, m.alt
+  const steps = await q(`SELECT s.caption, m.id AS media_id, m.version, m.width, m.height, m.alt, m.mime
     FROM egg_steps s JOIN media m ON m.id = s.media_id WHERE s.egg_id = $1 ORDER BY s.position`, [egg.id]);
   return {
     id: egg.id, title: egg.title, message: egg.message, style: egg.style, stepMs: egg.step_ms,
     sound: egg.sound_id ? mediaUrl(egg.sound_id, egg.sound_v) : null,
-    steps: steps.map(s => ({ url: mediaUrl(s.media_id, s.version), w: s.width, h: s.height, alt: s.alt, caption: s.caption }))
+    steps: steps.map(s => ({ url: mediaUrl(s.media_id, s.version), w: s.width, h: s.height, alt: s.alt, caption: s.caption, mime: s.mime }))
   };
 }
 
 async function surprise(url) {
   const exclude = (url.searchParams.get('x') || '').split(',').filter(x => UUID.test(x)).slice(0, 20);
+  const kind = url.searchParams.get('kind') === 'image' ? 'image' : '';
   const pick = ex => q(`SELECT si.id, si.kind, si.body, si.caption, m.id AS media_id, m.version, m.width, m.height, m.alt
     FROM surprise_items si LEFT JOIN media m ON m.id = si.media_id
-    WHERE si.enabled AND NOT (si.id = ANY($1::uuid[])) ORDER BY random() LIMIT 1`, [ex]);
+    WHERE si.enabled AND NOT (si.id = ANY($1::uuid[])) AND ($2 = '' OR si.kind = $2) ORDER BY random() LIMIT 1`, [ex, kind]);
   let [it] = await pick(exclude);
   if (!it && exclude.length) [it] = await pick([]);
   if (!it) return { item: null };
