@@ -87,7 +87,7 @@ test('cutie flow: optional empty slot, photo added later, media privacy follows 
   const meme = (await upload(webp(), 'test-meme')).data.media;
   const created = await call('/api/cms?r=eggs', { method: 'POST', json: {
     name: 'test-cutie', trigger_type: 'keyword', phrases: ['  TestCutie  '], enabled: true, style: 'card', force: true,
-    steps: [{ label: 'meme', media_id: meme.id }, { label: 'Girlfriend photo', media_id: null }] } });
+    steps: [{ label: 'meme', media_id: meme.id }, { label: 'Photo (add later)', media_id: null }] } });
   assert.equal(created.status, 201, JSON.stringify(created.data));
   const egg = created.data.egg;
   assert.deepEqual(egg.phrases, ['testcutie']);
