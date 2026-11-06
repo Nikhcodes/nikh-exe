@@ -285,7 +285,7 @@
             el('ol', { class: 'crt-board', 'aria-label': `Top scores for ${gm.name}` }, top3.length
               ? top3.map((r, i) => el('li', {}, `${i + 1} ${r.initials} ${r.score}`))
               : el('li', {}, 'No scores yet')))),
-          el('div', { class: 'deck', 'aria-hidden': 'true' }, el('span', { class: 'stick' }), el('span', { class: 'pbtn' }), el('span', { class: 'pbtn' })),
+          el('div', { class: 'deck', 'aria-hidden': 'true' }, el('span', { class: 'joy' }), el('span', { class: 'pbtn' }), el('span', { class: 'pbtn' })),
           el('p', { class: 'unit-blurb' }, gm.blurb),
           el('button', { class: 'coin', type: 'button', 'aria-label': `Play ${gm.name}`, onclick: () => play(gm.id) }, el('span', { class: 'slot', 'aria-hidden': 'true' }), 'Insert coin'));
       })));
