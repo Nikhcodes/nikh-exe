@@ -21,11 +21,11 @@
   const store = { get: k => { try { return localStorage.getItem(k); } catch { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch { /* ignore */ } } };
 
   const GAMES = [
-    { id: 'nightshift', name: 'Night Shift', tag: 'ON-CALL SIMULATOR', blurb: "It's 3 a.m. Servers start throwing alerts. Acknowledge WARNINGs, firefight CRITICALs, don't touch the healthy ones. Three outages and you're fired.",
+    { id: 'nightshift', color: '#b8343f', name: 'Night Shift', tag: 'ON-CALL SIMULATOR', blurb: "It's 3 a.m. Servers start throwing alerts. Acknowledge WARNINGs, firefight CRITICALs, don't touch the healthy ones. Three outages and you're fired.",
       controls: 'Click or tap a server · keyboard: Q W E / A S D / Z X C' },
-    { id: 'snake', name: 'Packet Snake', tag: 'CABLE MANAGEMENT', blurb: "You're a network cable. Eat packets, grow longer, don't trip over yourself or the rack.",
+    { id: 'snake', color: '#4f9d69', name: 'Packet Snake', tag: 'CABLE MANAGEMENT', blurb: "You're a network cable. Eat packets, grow longer, don't trip over yourself or the rack.",
       controls: 'Arrow keys or WASD · swipe or use the pad on phones' },
-    { id: 'match', name: 'Crate Match', tag: 'MEMORY', blurb: 'Flip two at a time and find the pairs from the junk drawer. Faster and fewer misses means more points.',
+    { id: 'match', color: '#e0a458', name: 'Crate Match', tag: 'MEMORY', blurb: 'Flip two at a time and find the pairs from the junk drawer. Faster and fewer misses means more points.',
       controls: 'Click or tap cards · keyboard: Tab + Enter' }
   ];
 
@@ -245,6 +245,21 @@
 
   const IMPL = { nightshift, snake, match };
 
+  // Little pixel drawings for the cabinet screens in the lobby (static, nothing animates).
+  const px = (x, y, w, h, f) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${f}"/>`;
+  const ART = {
+    nightshift: `<svg viewBox="0 0 120 80" shape-rendering="crispEdges">${[0, 1, 2].flatMap(r => [0, 1, 2].map(c => {
+      const st = r * 3 + c === 4 ? '#b8343f' : r * 3 + c === 2 ? '#e0a458' : '#7ee0a3';
+      return px(10 + c * 35, 6 + r * 24, 30, 20, '#1d2a24') + px(14 + c * 35, 10 + r * 24, 6, 6, st) + px(23 + c * 35, 12 + r * 24, 13, 2, '#3c5a4b');
+    })).join('')}</svg>`,
+    snake: `<svg viewBox="0 0 120 80" shape-rendering="crispEdges">${[[14, 58], [22, 58], [30, 58], [38, 58], [38, 50], [38, 42], [46, 42], [54, 42], [62, 42], [62, 34], [62, 26], [70, 26]].map(([x, y]) => px(x, y, 7, 7, '#7ee0a3')).join('')}${px(94, 26, 7, 7, '#e0a458')}${px(4, 4, 112, 2, '#1d2a24')}${px(4, 74, 112, 2, '#1d2a24')}</svg>`,
+    match: `<svg viewBox="0 0 120 80" shape-rendering="crispEdges">${[0, 1].flatMap(r => [0, 1, 2, 3].map(c => {
+      const up = (r === 0 && c === 1) || (r === 1 && c === 3);
+      return px(10 + c * 26, 8 + r * 34, 22, 30, up ? '#f1e7d3' : '#6b1f2e') + (up ? px(17 + c * 26, 19 + r * 34, 8, 8, '#e0a458') : px(14 + c * 26, 12 + r * 34, 14, 22, '#7a2a3a'));
+    })).join('')}</svg>`
+  };
+
+
   // ------------------------------------------------------------------ the cabinet
   function mount(root) {
     let boards = {}, stopGame = null, destroyed = false;
@@ -260,14 +275,19 @@
     function lobby() {
       if (stopGame) { stopGame(); stopGame = null; }
       document.body.removeAttribute('data-playing');
-      root.replaceChildren(el('div', { class: 'carts' }, GAMES.map(gm => {
-        const top = (boards[gm.id] || [])[0];
-        return el('article', { class: 'cart' },
-          el('span', { class: 'cart-tag' }, gm.tag),
-          el('h2', {}, gm.name),
-          el('p', {}, gm.blurb),
-          el('p', { class: 'cart-top' }, top ? `HI-SCORE ${top.initials} ${top.score}` : 'HI-SCORE ---'),
-          el('button', { class: 'btn', type: 'button', onclick: () => play(gm.id) }, '▶ Play'));
+      root.replaceChildren(el('div', { class: 'floor' }, GAMES.map(gm => {
+        const top3 = (boards[gm.id] || []).slice(0, 3);
+        const art = el('div', { class: 'attract', 'aria-hidden': 'true' });
+        art.innerHTML = ART[gm.id]; // static drawing, no data
+        return el('article', { class: 'unit', style: `--g:${gm.color}` },
+          el('header', { class: 'marquee' }, el('h2', {}, gm.name)),
+          el('div', { class: 'bezel' }, el('div', { class: 'crt' }, art,
+            el('ol', { class: 'crt-board', 'aria-label': `Top scores for ${gm.name}` }, top3.length
+              ? top3.map((r, i) => el('li', {}, `${i + 1} ${r.initials} ${r.score}`))
+              : el('li', {}, 'No scores yet')))),
+          el('div', { class: 'deck', 'aria-hidden': 'true' }, el('span', { class: 'stick' }), el('span', { class: 'pbtn' }), el('span', { class: 'pbtn' })),
+          el('p', { class: 'unit-blurb' }, gm.blurb),
+          el('button', { class: 'coin', type: 'button', 'aria-label': `Play ${gm.name}`, onclick: () => play(gm.id) }, el('span', { class: 'slot', 'aria-hidden': 'true' }), 'Insert coin'));
       })));
     }
     function play(id) {
@@ -277,7 +297,7 @@
       const overlay = el('div', { class: 'overlay' });
       const side = el('aside', { class: 'side-board' }, el('h3', {}, 'HIGH SCORES'), board(id));
       const back = el('button', { class: 'btn ghost', type: 'button', onclick: () => { lobby(); } }, '← All games');
-      root.replaceChildren(el('div', { class: 'cabinet' },
+      root.replaceChildren(el('div', { class: 'cabinet', style: `--g:${gm.color}` },
         el('div', { class: 'cab-head' }, back, el('h2', {}, gm.name), el('span', { class: 'cab-tag' }, gm.tag)),
         el('div', { class: 'cab-body' },
           el('div', { class: 'screen-wrap' },
@@ -346,7 +366,7 @@
       }
       showStart();
     }
-    loadBoards().then(() => { if (!destroyed && !stopGame && root.querySelector('.carts')) lobby(); });
+    loadBoards().then(() => { if (!destroyed && !stopGame && root.querySelector('.floor')) lobby(); });
     lobby();
     return () => { destroyed = true; if (stopGame) stopGame(); document.body.removeAttribute('data-playing'); };
   }
