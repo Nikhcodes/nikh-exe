@@ -119,6 +119,8 @@ window.NIKH_DEFAULTS = {
       "I'm not a ten-year veteran, and I'm not going to pretend. I'm early in my career, learning properly, and building real things along the way. My rule: I don't collect frameworks. I'd rather understand one system all the way down than skim ten tutorials.",
       "Outside the screen, I'm the guy with music on, an anime half-watched and a horror movie queued up. Yes, those can all happen in the same evening. This site is the proof."
     ],
+    badgeRole: 'IT Operator by day',
+    badgeBack: "If found, return to the nearest server room. He's probably still in there.",
     factsTitle: 'FIELD NOTES',
     facts: [
       { label: 'Day job', value: 'IT Operator, fintech banking' },

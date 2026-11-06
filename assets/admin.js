@@ -883,7 +883,8 @@
         F('name', 'text', 'Crate name'), F('color', 'color', 'Card color'),
         F('items', 'list', 'Records in this crate', { sum: 'title', of: [
           F('title', 'text', 'Artist / album / track'), F('label', 'text', 'Small label (genre, year...)'),
-          F('note', 'textarea', 'Your note'), F('cover', 'image', 'Cover art (optional)'),
+          F('note', 'textarea', 'Your note'), F('cover', 'image', 'Cover art (optional)', { help: 'Also shows, darkened, on the record spine.' }),
+          F('spine', 'color', 'Spine color (optional)', { help: 'Leave it alone to use the crate color.' }),
           F('link', 'url', 'Link (optional)', { help: 'Spotify or YouTube links can be played right on the page.' })] })] })
     ] },
     links: { label: 'Links & heroes', route: 'links', fields: [
@@ -909,6 +910,8 @@
     about: { label: 'About', route: 'about', fields: [
       F('tape', 'text', 'Tape label'), F('title', 'text', 'Title'), F('lede', 'textarea', 'Opening line'),
       F('paragraphs', 'texts', 'Paragraphs'),
+      F('badgeRole', 'text', 'Badge: line under your name', { help: 'The badge uses your name and photo from the Home page.' }),
+      F('badgeBack', 'textarea', 'Badge: back side', { help: 'Visitors see this when they flip the badge.' }),
       F('factsTitle', 'text', 'Fact card title'),
       F('facts', 'list', 'Fact card', { sum: 'label', of: [F('label', 'text', 'Label'), F('value', 'text', 'Value')] }),
       F('faq', 'list', 'Questions at the bottom', { sum: 'q', of: [F('q', 'text', 'Question'), F('a', 'textarea', 'Answer')] })
