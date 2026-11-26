@@ -256,7 +256,7 @@
 
   // ---------------------------------------------------------------- routing
   const SECTIONS = [['dashboard', 'Dashboard'], ['eggs', 'Easter eggs'], ['media', 'Media'], ['guestbook', 'Guestbook'],
-    ['pages', 'Pages'], ['scrapbook', 'Scrapbook'], ['drawer', 'Junk drawer'], ['arcade', 'Arcade']];
+    ['pages', 'Pages'], ['scrapbook', 'Scrapbook'], ['drawer', 'Junk drawer'], ['arcade', 'Arcade'], ['traffic', 'Stats']];
   let stats = null;
   function renderTabs(cur) {
     $('#tabs').replaceChildren(...SECTIONS.map(([k, label]) => h('a', { href: '#' + k, 'aria-current': k === cur ? 'page' : null },
@@ -296,6 +296,7 @@
       h('button', { class: s.media ? 'btn ghost' : 'btn', type: 'button', onclick: e => importStarter(e.currentTarget) }, s.media ? 'Re-run import' : 'Import starter pack'),
       h('p', { class: 'mono small', id: 'starter-out' }));
     page('BACK OFFICE', 'Dashboard', null,
+      await quickUpdate(),
       h('div', { class: 'stats', style: 'margin-top:18px' },
         stat(s.eggs_active, 'live Easter eggs', '#eggs'), stat(s.eggs_inactive, 'eggs switched off', '#eggs'),
         stat(s.guestbook_pending, 'notes waiting for you', '#guestbook'), stat(s.media, `images (${fmtBytes(s.media_bytes || 1)})`, '#media'),
@@ -310,6 +311,44 @@
         h('a', { class: 'btn', href: '#media' }, 'Upload images'), h('a', { class: 'btn ghost', href: '#eggs/new' }, 'New Easter egg'),
         h('a', { class: 'btn ghost', href: '#guestbook' }, 'Moderate guestbook'), h('a', { class: 'btn ghost', href: '#scrapbook/new' }, 'New scrapbook entry'), h('a', { class: 'btn ghost', href: '#pages/home' }, 'Edit the home page'))),
       starter);
+  };
+
+  // Quick update: the few things that change often, saved straight into the Home page (the rest of Home stays as it is).
+  async function quickUpdate() {
+    const d = await cms('r=content');
+    const home = Object.assign({}, (window.NIKH_DEFAULTS || {}).home || {}, d.content.home || {});
+    const field = (label, k, extra = {}) => { const i = h('input', { value: home[k] || '', maxlength: '200', ...extra }); return [h('label', {}, label, i), i]; };
+    const [l1, st] = field('Status line (under your photo)', 'status');
+    const [l2, nl] = field('Now listening', 'nowListening');
+    const [l3, link] = field('Song link (Spotify or YouTube)', 'nowListeningLink', { type: 'url', placeholder: 'https://open.spotify.com/track/…' });
+    const save = h('button', { class: 'btn', type: 'button' }, 'Update the site');
+    save.onclick = () => guard(save, async () => {
+      const fresh = await cms('r=content');
+      const data = Object.assign({}, (window.NIKH_DEFAULTS || {}).home || {}, fresh.content.home || {}, { status: st.value.trim(), nowListening: nl.value.trim(), nowListeningLink: link.value.trim() });
+      await cms('r=content&key=home', { method: 'PUT', json: { data } });
+      toast('Updated. It is live now.');
+    });
+    return h('div', { class: 'panel quick' }, h('h2', {}, 'Quick update'),
+      h('p', { class: 'muted small', style: 'margin-top:0' }, 'The three things that change most. Saves into the Home page and goes live immediately.'),
+      h('div', { class: 'quick-grid' }, l1, l2, l3), save);
+  }
+
+  // Stats: page views, outbound clicks and referring sites, counted without cookies.
+  VIEWS.traffic = async arg => {
+    renderTabs('traffic');
+    const days = ['7', '30', '90'].includes(arg) ? +arg : 30;
+    const t = await cms('r=traffic&days=' + days);
+    const max = Math.max(1, ...t.daily.map(d => d.views));
+    const table = (title, rows, empty) => h('div', { class: 'panel' }, h('h2', {}, title), rows.length
+      ? h('table', { class: 'tbl' }, h('tbody', {}, rows.map(r => h('tr', {}, h('td', {}, r.item), h('td', { class: 'num' }, String(r.n))))))
+      : h('p', { class: 'muted' }, empty));
+    page('THE NUMBERS', 'Stats', 'Counted without cookies or tracking scripts: each visitor counts once per page per half hour, and your own visits while logged in are skipped. Visitors with Do Not Track or Global Privacy Control switched on are not counted at all.',
+      h('div', { class: 'row', style: 'margin:16px 0' }, ...[7, 30, 90].map(n => h('a', { class: 'btn sm' + (n === days ? '' : ' ghost'), href: '#traffic/' + n }, `Last ${n} days`))),
+      h('div', { class: 'panel' }, h('h2', {}, `${t.total} page views in the last ${days} days`),
+        h('div', { class: 'spark', role: 'img', 'aria-label': 'Page views per day' }, t.daily.map(d => h('span', { title: `${d.day}: ${d.views}`, style: `height:${Math.max(2, Math.round(d.views / max * 100))}%` }))),
+        h('div', { class: 'spark-axis mono small muted' }, h('span', {}, t.daily[0]?.day || ''), h('span', {}, t.daily[t.daily.length - 1]?.day || ''))),
+      h('div', { class: 'grid2' }, table('Pages', t.pages, 'No visits counted yet.'), table('Where visitors came from', t.refs, 'Nobody arrived from another site yet (direct visits are not listed).')),
+      table('Links people clicked', t.clicks, 'No outbound clicks yet.'));
   };
 
   async function importStarter(btn) {
@@ -870,6 +909,10 @@
       F('into', 'strings', 'Currently into (stickers)'),
       F('updates', 'list', 'Updates', { sum: 'text', of: [F('date', 'text', 'Date'), F('text', 'text', 'Text')] }),
       F('picks', 'strings', "Tonight's pick (the shuffle list)"),
+      F('stripTitle', 'text', 'Comic strip title'),
+      F('strip', 'list', 'Comic strip panels', { sum: 'caption', help: 'Up to 4 panels starring your pixel guy. Pick a scene and write the caption.', of: [
+        F('scene', 'select', 'Scene', { options: [['desk', 'At the desk'], ['bug', 'Found a bug'], ['coffee', 'Coffee run'], ['phones', 'Headphones on'], ['sleep', 'Asleep at the desk'], ['ship', 'It works!']] }),
+        F('caption', 'text', 'Caption')] }),
       F('showCounter', 'bool', 'Show the visitor counter'),
       F('photoDrop', 'select', 'Photo drops', { options: [['off', 'Off'], ['rare', 'Rare (on some visits)'], ['sometimes', 'Once per visit'], ['often', 'A few per visit']],
         help: 'Now and then a random photo from the junk drawer slides into the corner of the page. Uses the image items in Junk drawer.' }),
@@ -899,7 +942,14 @@
         F('name', 'text', 'Name'), F('tagline', 'text', 'Tagline (tape label)'), F('description', 'textarea', 'Description'), F('stack', 'text', 'Stack'),
         F('art', 'select', 'Drawing', { options: [['rig', 'Monitoring states'], ['mj', 'Pinned job notes'], ['led', 'Ledger lines'], ['os', 'Phone app'], ['cam', 'Camera frame'], ['none', 'Plain']] }),
         F('image', 'image', 'Screenshot (optional)', { help: 'Replaces the drawing.' }),
-        F('links', 'list', 'Links', { sum: 'label', of: [F('label', 'text', 'Label'), F('url', 'url', 'Address')] })] })
+        F('links', 'list', 'Links', { sum: 'label', of: [F('label', 'text', 'Label'), F('url', 'url', 'Address')] }),
+        F('status', 'select', 'Status light', { options: [['live', 'Live'], ['building', 'In progress'], ['done', 'Finished'], ['school', 'School project'], ['archived', 'Archived'], ['', 'Automatic (Live if it has a live link)']] }),
+        F('csProblem', 'textarea', 'Case study: the problem', { help: 'Fill this in to give the project its own case study page. Every section below is optional and only shows when filled.', rows: 5 }),
+        F('csFlow', 'strings', 'Case study: how it fits together (one box per step, in order)'),
+        F('csDecisions', 'texts', 'Case study: decisions I made'),
+        F('csBug', 'textarea', 'Case study: the hardest bug', { rows: 5 }),
+        F('csLearned', 'textarea', 'Case study: what I learned', { rows: 4 }),
+        F('csNext', 'textarea', "Case study: what I'd do differently", { rows: 4 })] })
     ] },
     journal: { label: 'Journal', route: 'journal', fields: [
       F('intro', 'textarea', 'Intro'),
@@ -923,8 +973,15 @@
       F('resume', 'url', 'Résumé link (optional)', { help: 'A link to a PDF or page. Adds a Résumé button.' }),
       F('sign', 'text', 'Sign-off line')
     ] },
-    footer: { label: 'Footer', route: '', fields: [F('text', 'text', 'Footer text')] },
-    arcade: { label: 'Arcade', route: 'arcade', fields: [F('title', 'text', 'Title'), F('intro', 'textarea', 'Intro')] }
+    footer: { label: 'Footer & seasons', route: '', fields: [F('text', 'text', 'Footer text'),
+      F('seasons', 'select', 'Seasonal modes', { options: [['off', 'Off for everyone'], ['auto', 'On by date (December, October)']], help: 'December: lights, a Santa hat in the comic strip, festive arcade servers. October: spooky lights and cobwebs. Visitors can still switch it off for themselves.' })] },
+    arcade: { label: 'Arcade', route: 'arcade', fields: [F('title', 'text', 'Title'), F('intro', 'textarea', 'Intro')] },
+    hire: { label: 'Hire page', route: 'hire', fields: [
+      F('title', 'text', 'Title'), F('intro', 'textarea', 'Intro'),
+      F('headline', 'textarea', 'Headline under your name'), F('location', 'text', 'Location'),
+      F('lookingFor', 'textarea', "What I'm looking for"), F('strengths', 'texts', 'What I bring (one point each)'),
+      F('note', 'textarea', 'Closing note', { help: 'Your email, GitHub, LinkedIn and résumé link come from the Contact page. Projects come from the Projects page.' })
+    ] }
   };
 
   const blank = fields => Object.fromEntries(fields.map(f => [f.k, ({ bool: false, image: null, strings: [], texts: [], list: [], color: '#2b3a5c', select: f.options ? f.options[f.options.length - 1][0] : '' })[f.t] ?? '']));
@@ -1016,7 +1073,7 @@
         h('div', { class: 'item' }, h('div', { class: 'th empty' }, pg.label.slice(0, 5).toUpperCase()),
           h('div', { class: 'meta' }, h('div', { class: 'row' }, h('b', {}, pg.label), d.content[k] ? h('span', { class: 'badge b-live' }, 'EDITED') : h('span', { class: 'badge b-off' }, 'DEFAULT')),
             h('div', { class: 'mono small muted' }, d.updated[k] ? 'Saved ' + fmtDate(d.updated[k]) : 'Showing the built-in text')),
-          h('div', { class: 'acts' }, h('a', { class: 'btn ghost sm', href: '/#/' + pg.route, target: '_blank', rel: 'noopener' }, 'View ↗'), h('a', { class: 'btn sm', href: '#pages/' + k }, 'Edit')))))));
+          h('div', { class: 'acts' }, h('a', { class: 'btn ghost sm', href: '/' + pg.route, target: '_blank', rel: 'noopener' }, 'View ↗'), h('a', { class: 'btn sm', href: '#pages/' + k }, 'Edit')))))));
   };
 
   function pageEditor(key, d) {
@@ -1026,6 +1083,12 @@
     if (key === 'home' && !d.content.home) { // carry over the old "Site text" values
       if (d.settings.status) data.status = d.settings.status;
       if (d.settings.now_listening) data.nowListening = d.settings.now_listening;
+    }
+    if (key === 'projects' && Array.isArray(data.projects)) { // starter case studies for projects saved before case studies existed
+      for (const p of data.projects) {
+        const def = (defaults.projects || []).find(x => x.name === p.name);
+        if (def && !p.csProblem && def.csProblem) for (const k of Object.keys(def)) if (k.startsWith('cs') && p[k] == null) p[k] = JSON.parse(JSON.stringify(def[k]));
+      }
     }
     const media = { ...d.media };
     pagesDirty = false;
@@ -1043,7 +1106,7 @@
     page('THE PAGES', 'Edit: ' + pg.label, d.content[key] ? 'Last saved ' + fmtDate(d.updated[key]) + '.' : 'This page shows the built-in text right now. Saving creates your own version.',
       h('p', {}, h('a', { href: '#pages' }, '← All pages')),
       h('div', { class: 'panel pageform' }, pg.fields.map(f => formField(data, f, media))),
-      h('div', { class: 'savebar' }, saveBtn, h('a', { class: 'btn ghost', href: '/#/' + pg.route, target: '_blank', rel: 'noopener' }, 'View page ↗'), resetBtn,
+      h('div', { class: 'savebar' }, saveBtn, h('a', { class: 'btn ghost', href: '/' + pg.route, target: '_blank', rel: 'noopener' }, 'View page ↗'), resetBtn,
         h('span', { id: 'dirty', class: 'mono small', style: 'color:var(--amber)', hidden: true }, '● unsaved changes')));
   }
 

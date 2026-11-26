@@ -25,6 +25,13 @@ window.NIKH_DEFAULTS = {
     picks: ['Cowboy Bebop', 'GTO', 'Initial D-style drifting anime', 'Inuyasha', 'Hunter x Hunter', 'Dragon Ball Super', "Assassin's Creed",
       'Zelda: Breath of the Wild', 'Stardew Valley', 'Super Mario Odyssey', 'Sleeping Dogs', 'The Truman Show', 'Halloween'],
     note: '',
+    stripTitle: 'After hours',
+    strip: [
+      { scene: 'desk', caption: '11:48 p.m. Just one more fix.' },
+      { scene: 'bug', caption: '12:30 a.m. The fix needs a fix.' },
+      { scene: 'coffee', caption: '2:15 a.m. Coffee number three.' },
+      { scene: 'ship', caption: '4:02 a.m. It works. Nobody knows why.' }
+    ],
     showCounter: true,
     photoDrop: 'sometimes',
     awayTitle: 'psst... come back',
@@ -78,14 +85,29 @@ window.NIKH_DEFAULTS = {
       { name: 'RigSight', tagline: 'Flagship backend project', art: 'rig', image: null,
         description: 'A simulated industrial monitoring platform. The question: how does a backend behave when input is a steady stream of equipment data instead of CRUD requests? It explores threshold monitoring, state transitions and alert deduplication, with JWT auth and role-based access.',
         stack: 'Java 21 · Spring Boot · Spring Security · JWT · Hibernate · PostgreSQL · Flyway · Docker',
-        links: [{ label: 'Source', url: 'https://github.com/NikhCodes/rigsight' }] },
+        links: [{ label: 'Source', url: 'https://github.com/NikhCodes/rigsight' }],
+        csProblem: 'Most backend practice is request and response: a user clicks, the server answers. Monitoring is different. Equipment keeps sending readings whether anyone asks or not, and the backend has to decide what matters, when something changed state, and when to stay quiet. RigSight is my way of finding out how a backend behaves under that kind of steady stream.',
+        csFlow: ['Simulated equipment readings', 'Spring Boot API', 'Threshold and state rules', 'Deduplicated alerts', 'PostgreSQL'],
+        csDecisions: ['Repeated threshold breaches become one alert instead of a flood, so the people on call see what changed, not noise.',
+          'Equipment moves between explicit states (normal, warning, critical), so every alert has a clear before and after.',
+          'JWT authentication with role-based access through Spring Security.',
+          'Database changes are versioned with Flyway, and the whole thing runs in Docker.'],
+        csBug: '', csLearned: '', csNext: '' },
       { name: 'Microjobs.sr', tagline: 'Full-stack product for Suriname', art: 'mj', image: null,
         description: 'A local-first micro-jobs and talent marketplace. People build profiles, showcase skills, post jobs, apply and message each other. Covers session auth with bcrypt, role-aware admin, the job and application lifecycle, and relational modeling.',
         stack: 'Next.js · React · TypeScript · Tailwind · Prisma · PostgreSQL (Neon) · Vercel',
         links: [{ label: 'Live app', url: 'https://microjobs-sr.vercel.app/' }, { label: 'Source', url: 'https://github.com/Nikhcodes/microjobs.sr' }] },
       { name: 'AGAS', tagline: 'Academic group accountability system', art: 'led', image: null,
         description: 'Built around trust boundaries: a three-role authorization model, hashed passwords and an append-only audit log, with JSONB metadata, UUID keys and soft deletion. No public demo or repository.',
-        stack: 'Node.js · Express · PostgreSQL · JWT · bcrypt · Helmet · Joi', links: [] },
+        stack: 'Node.js · Express · PostgreSQL · JWT · bcrypt · Helmet · Joi', links: [],
+        csProblem: "Group projects at school run on trust: who did what, who changed what, and who is allowed to. AGAS makes that explicit, so accountability doesn't depend on someone's memory or a chat history.",
+        csFlow: ['Students, group leads and admins', 'Express API', 'Role checks (three roles)', 'PostgreSQL', 'Append-only audit log'],
+        csDecisions: ['A three-role authorization model, checked on the server for every action.',
+          'An append-only audit log: entries are added, never edited or deleted, so the history can be trusted.',
+          'Soft deletion, so removing something never erases the record that it existed.',
+          'Passwords hashed with bcrypt, input validated with Joi, and security headers set with Helmet.',
+          'UUID keys and JSONB metadata in PostgreSQL.'],
+        csBug: '', csLearned: '', csNext: '' },
       { name: 'NikhOS', tagline: 'Student workspace / PWA', art: 'os', image: null,
         description: 'A grade and assignment tracker that feels like a native app: installable and usable offline.',
         stack: 'React · Vite · Tailwind CSS · Framer Motion',
@@ -151,10 +173,25 @@ window.NIKH_DEFAULTS = {
     sign: 'BUILT IN SURINAME. REPLIES SENT WHEN HUMANLY POSSIBLE.'
   },
   footer: {
-    text: 'Built after hours in Suriname.'
+    text: 'Built after hours in Suriname.',
+    seasons: 'auto'
   },
   arcade: {
     title: 'Insert coin.',
-    intro: 'Three tiny games, all made for this site. Beat the board and leave your initials. No accounts, no tracking: just three letters and bragging rights.'
+    intro: 'Five tiny games, all made for this site. Beat the board and leave your initials. No accounts, no tracking: just three letters and bragging rights.'
+  },
+  hire: {
+    title: 'Hiring? Start here.',
+    intro: "The rest of this site is the scenic route. This page is the five-minute version: what I do, what I've built, and how to reach me. It prints cleanly too.",
+    headline: 'Backend-minded software engineering student who already keeps banking systems running.',
+    location: 'Paramaribo, Suriname',
+    lookingFor: 'Backend or full-stack roles and internships where I can work on real systems: APIs, databases, authentication, and the boring parts that have to be right.',
+    strengths: [
+      'I work in production every day as an IT Operator in banking, so I know what breaks at 3 a.m. and why it matters.',
+      'Backend first: Java and Spring Boot, Node.js, PostgreSQL, authentication and access control.',
+      'I finish things. Every project on this page is built, deployed, and documented.',
+      "I'd rather understand one system all the way down than skim ten tutorials."
+    ],
+    note: 'Want the full CV or a call? Email me and I usually answer within a day.'
   }
 };

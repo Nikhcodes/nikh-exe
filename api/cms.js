@@ -32,6 +32,18 @@ const dateOrNull = v => {
 };
 
 // ------------------------------------------------------------------ stats
+// Visitor stats for the last N days (no cookies were involved in collecting these).
+async function traffic(url) {
+  const days = Math.min(90, Math.max(7, parseInt(url.searchParams.get('days'), 10) || 30));
+  const since = `current_date - ($1::int - 1)`;
+  const daily = await q(`SELECT to_char(d, 'YYYY-MM-DD') AS day, COALESCE(sum(s.n), 0)::int AS views
+    FROM generate_series(${since}, current_date, interval '1 day') d
+    LEFT JOIN page_stats s ON s.day = d::date AND s.kind = 'view' GROUP BY d ORDER BY d`, [days]);
+  const top = kind => q(`SELECT item, sum(n)::int AS n FROM page_stats WHERE kind = $2 AND day >= ${since} GROUP BY item ORDER BY n DESC, item LIMIT 15`, [days, kind]);
+  const [pages, clicks, refs] = await Promise.all([top('view'), top('click'), top('ref')]);
+  return { days, daily, total: daily.reduce((a, d) => a + d.views, 0), pages, clicks, refs };
+}
+
 async function stats() {
   const [s] = await q(`SELECT
     (SELECT count(*)::int FROM media) AS media,
@@ -420,7 +432,7 @@ async function surpriseSave(req, id) {
 }
 
 // ------------------------------------------------------------------ pages (site content)
-export const PAGE_KEYS = ['home', 'music', 'links', 'projects', 'journal', 'about', 'contact', 'footer', 'arcade'];
+export const PAGE_KEYS = ['home', 'music', 'links', 'projects', 'journal', 'about', 'contact', 'footer', 'arcade', 'hire'];
 const UUID_G = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Keep page JSON to plain, bounded data: text, numbers, true/false, lists and objects. */
@@ -546,6 +558,7 @@ export default route(async (req, res) => {
 
   switch (r) {
     case 'stats': if (M === 'GET') return ok(await stats()); break;
+    case 'traffic': if (M === 'GET') return ok(await traffic(url)); break;
     case 'media':
       if (M === 'GET') return ok(id ? await mediaDetail(needId(id)) : await mediaList(url));
       if (M === 'POST') return send(res, 201, await mediaUpload(req, url));

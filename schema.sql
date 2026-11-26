@@ -199,3 +199,29 @@ CREATE TABLE IF NOT EXISTS arcade_scores (
   created_at  timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS arcade_scores_board_idx ON arcade_scores (game, hidden, score DESC, created_at ASC);
+
+-- ===== v5: two more arcade games (Terminal Typer, Rack Stack) and an editable Hire page
+ALTER TABLE site_content DROP CONSTRAINT IF EXISTS site_content_key_check;
+ALTER TABLE site_content ADD CONSTRAINT site_content_key_check CHECK (key IN
+  ('home','music','links','projects','journal','about','contact','footer','arcade','hire'));
+ALTER TABLE arcade_scores DROP CONSTRAINT IF EXISTS arcade_scores_game_check;
+ALTER TABLE arcade_scores ADD CONSTRAINT arcade_scores_game_check CHECK (game IN ('nightshift','snake','match','typer','stack'));
+
+-- ===== v6: simple visitor stats without cookies
+-- Counts per day: page views, outbound link clicks and where visitors came from (the referring site's name only).
+CREATE TABLE IF NOT EXISTS page_stats (
+  day   date NOT NULL,
+  kind  text NOT NULL CHECK (kind IN ('view','click','ref')),
+  item  text NOT NULL CHECK (char_length(item) BETWEEN 1 AND 160),
+  n     int  NOT NULL DEFAULT 0,
+  PRIMARY KEY (day, kind, item)
+);
+-- Short-lived dedupe so one visitor reloading a page counts once per 30 minutes. Only a salted hash, deleted after a day.
+CREATE TABLE IF NOT EXISTS page_stats_seen (
+  ip_hash text NOT NULL,
+  kind    text NOT NULL,
+  item    text NOT NULL,
+  at      timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (ip_hash, kind, item)
+);
+CREATE INDEX IF NOT EXISTS page_stats_seen_at_idx ON page_stats_seen (at);

@@ -2,6 +2,7 @@
 //   POST ?r=start  {game}                              -> {run}      a ticket for one game run
 //   POST ?r=score  {run, initials, score, duration}    -> {rank, board}
 //   GET  ?r=boards                                     -> top 10 per game
+//   GET  ?r=week                                       -> this week's champion per game (weeks start on Monday)
 //   GET  ?r=pool                                       -> pictures for Crate Match (junk drawer images)
 import { q } from './_lib/db.js';
 import { route, send, readJson, HttpError, UUID, sameOrigin, ipHash } from './_lib/http.js';
@@ -59,6 +60,14 @@ async function score(req) {
   return { rank, initials, board: (await boards())[run.game] };
 }
 
+async function week() {
+  const rows = await q(`SELECT DISTINCT ON (game) game, initials, score FROM arcade_scores
+    WHERE NOT hidden AND created_at >= date_trunc('week', now())
+    ORDER BY game, score DESC, created_at ASC`);
+  const champs = Object.fromEntries(rows.filter(r => GAMES[r.game]).map(r => [r.game, { initials: r.initials, score: r.score }]));
+  return { games: Object.fromEntries(Object.entries(GAMES).map(([k, g]) => [k, g.name])), champs };
+}
+
 async function pool() {
   const rows = await q(`SELECT m.id, m.version, m.alt FROM surprise_items si JOIN media m ON m.id = si.media_id
     WHERE si.enabled AND si.kind = 'image' AND m.mime LIKE 'image/%' ORDER BY random() LIMIT 12`);
@@ -69,6 +78,7 @@ export default route(async (req, res) => {
   const r = new URL(req.url, 'http://x').searchParams.get('r');
   if (req.method === 'GET' && r === 'boards') return send(res, 200, await boards());
   if (req.method === 'GET' && r === 'pool') return send(res, 200, await pool());
+  if (req.method === 'GET' && r === 'week') return send(res, 200, await week());
   if (req.method === 'POST' && r === 'start') return send(res, 200, await start(req));
   if (req.method === 'POST' && r === 'score') return send(res, 200, await score(req));
   throw new HttpError(404, 'Unknown request.');

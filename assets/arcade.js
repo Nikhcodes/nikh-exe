@@ -2,6 +2,8 @@
  *   Night Shift  - on-call simulator: acknowledge alerts before they turn into outages
  *   Packet Snake - snake, but you're a network cable eating packets
  *   Crate Match  - memory game with photos from the junk drawer
+ *   Terminal Typer - type real commands against the clock
+ *   Rack Stack   - drop servers into a rack; whatever hangs over gets cut off
  * NikhArcade.mount(element) builds the arcade inside element and returns a stop() function.
  * Games run on game time (requestAnimationFrame), so they pause by themselves when the tab is hidden.
  */
@@ -26,7 +28,11 @@
     { id: 'snake', color: '#4f9d69', name: 'Packet Snake', tag: 'CABLE MANAGEMENT', blurb: "You're a network cable. Eat packets, grow longer, don't trip over yourself or the rack.",
       controls: 'Arrow keys or WASD · swipe or use the pad on phones' },
     { id: 'match', color: '#e0a458', name: 'Crate Match', tag: 'MEMORY', blurb: 'Flip two at a time and find the pairs from the junk drawer. Faster and fewer misses means more points.',
-      controls: 'Click or tap cards · keyboard: Tab + Enter' }
+      controls: 'Click or tap cards · keyboard: Tab + Enter' },
+    { id: 'typer', color: '#7fa3d1', name: 'Terminal Typer', tag: 'SPEED RUN', blurb: '45 seconds, one terminal, a queue of real commands. Every command you type out exactly counts. Typos have to be fixed before you can hit Enter.',
+      controls: 'Type the command, then Enter · pasting does nothing' },
+    { id: 'stack', color: '#f1e7d3', name: 'Rack Stack', tag: 'DATACENTER', blurb: 'Drop each server onto the rack. Whatever hangs over the edge gets cut off, so the servers get thinner. Land one exactly on top and it keeps its size.',
+      controls: 'Space, Enter, click or tap to drop' }
   ];
 
   async function post(r, body) {
@@ -243,7 +249,144 @@
     return () => { over = true; stop(); };
   }
 
-  const IMPL = { nightshift, snake, match };
+  // ------------------------------------------------------------------ Terminal Typer
+  const COMMANDS = ['git status', 'git push origin main', 'git commit -m "fix: it works now"', 'npm run dev', 'npm install', 'docker compose up -d',
+    'SELECT * FROM guestbook;', 'ls -la', 'cd ~/projects', 'chmod +x deploy.sh', 'tail -f /var/log/syslog', 'ping 8.8.8.8', 'kubectl get pods',
+    'psql "$DATABASE_URL"', 'mvn spring-boot:run', 'curl -I localhost:3000', 'grep -r "TODO" src/', 'rm -rf node_modules', 'git checkout -b hotfix',
+    'ssh nikh@rack-07', 'df -h', 'export NODE_ENV=production', 'java -jar rigsight.jar', 'echo "hello world"', 'git log --oneline', 'dnf upgrade',
+    'code .', 'systemctl status nginx', 'git stash pop', 'docker ps -a', 'npm test', 'whoami', 'uptime', 'git rebase main', 'EXPLAIN ANALYZE SELECT 1;'];
+  function typer(stage, g) {
+    const ROUND = 45000;
+    const order = COMMANDS.slice().sort(() => Math.random() - 0.5);
+    let k = 0, score = 0, time = 0, over = false, done = 0, chars = 0;
+    const hist = el('ol', { class: 'ty-hist', 'aria-label': 'Typed commands' });
+    const target = el('p', { class: 'ty-target', 'aria-live': 'polite' });
+    const input = el('input', { class: 'ty-input', autocomplete: 'off', autocapitalize: 'off', autocorrect: 'off', spellcheck: 'false', enterkeyhint: 'send', 'aria-label': 'Type the command shown above' });
+    stage.replaceChildren(el('div', { class: 'ty' }, hist, target, el('label', { class: 'ty-line' }, el('span', { class: 'ty-ps', 'aria-hidden': 'true' }, 'nikh@after-hours:~$'), input)));
+    g.setScore(0); g.setLives(null);
+    const cur = () => order[k % order.length];
+    function paint() {
+      const t = cur(), v = input.value;
+      let ok = 0; while (ok < v.length && v[ok] === t[ok]) ok++;
+      const bad = v.length > ok;
+      target.replaceChildren(el('span', { class: 'ty-ok' }, t.slice(0, ok)), el('span', { class: bad ? 'ty-bad' : 'ty-next' }, t.slice(ok, ok + 1) || ''), el('span', {}, t.slice(ok + 1)));
+      input.classList.toggle('typo', bad);
+    }
+    input.addEventListener('paste', e => e.preventDefault());
+    input.addEventListener('drop', e => e.preventDefault());
+    input.addEventListener('input', () => { if (!over) { paint(); if (input.value.length > cur().length + 6) input.value = input.value.slice(0, cur().length + 6); } });
+    input.addEventListener('keydown', e => {
+      if (e.key !== 'Enter' || over) return;
+      e.preventDefault();
+      if (input.value === cur()) {
+        score += cur().length; chars += cur().length; done++;
+        hist.append(el('li', {}, cur()));
+        while (hist.children.length > 4) hist.firstChild.remove();
+        g.setScore(score); sfx(660 + (done % 4) * 110, 0.05, 'square');
+        k++; input.value = ''; paint();
+      } else { sfx(160, 0.08, 'sawtooth'); input.classList.add('shake'); setTimeout(() => input.classList.remove('shake'), 250); }
+    });
+    paint();
+    setTimeout(() => input.focus({ preventScroll: true }), 30);
+    const stop = loop(dt => {
+      if (over) return;
+      time += dt;
+      const left = Math.max(0, ROUND - time);
+      const wpm = time > 3000 ? Math.round((chars / 5) / (time / 60000)) : 0;
+      g.setInfo(`${Math.ceil(left / 1000)}s left${wpm ? ` · ${wpm} wpm` : ''}`);
+      if (left <= 0) { over = true; input.disabled = true; g.over(score); }
+    });
+    return () => { over = true; stop(); };
+  }
+
+  // ------------------------------------------------------------------ Rack Stack
+  function stack(stage, g) {
+    const W = 360, H = 480, U = 20, RAIL = 26;
+    const canvas = el('canvas', { class: 'rs-canvas', width: W, height: H, role: 'img', 'aria-label': 'Rack Stack: a server rack you drop servers into' });
+    const drop = el('button', { class: 'btn rs-drop', type: 'button' }, 'Drop');
+    stage.replaceChildren(canvas, drop);
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    canvas.width = W * dpr; canvas.height = H * dpr;
+    const ctx = canvas.getContext('2d'); ctx.scale(dpr, dpr);
+    const inner = [RAIL, W - RAIL];
+    let units = [{ x: 80, w: 200 }], mover = null, fall = [], score = 0, over = false, cam = 0, wait = 0, time = 0;
+    g.setScore(0); g.setLives(null);
+    const spawn = () => {
+      const top = units[units.length - 1], fromLeft = units.length % 2 === 0;
+      mover = { x: fromLeft ? inner[0] : inner[1] - top.w, w: top.w, dir: fromLeft ? 1 : -1, v: 120 + Math.min(260, units.length * 9) };
+    };
+    spawn();
+    function place() {
+      if (over || !mover || wait > 0) return;
+      const top = units[units.length - 1];
+      const l = Math.max(mover.x, top.x), r = Math.min(mover.x + mover.w, top.x + top.w);
+      const y = units.length;
+      if (r - l <= 0) {
+        fall.push({ x: mover.x, w: mover.w, y, vy: 0 }); mover = null; over = true;
+        sfx(110, 0.4, 'sawtooth'); g.setInfo('It missed the rack.');
+        setTimeout(() => g.over(score), reduce() ? 200 : 900);
+        return;
+      }
+      if (Math.abs(mover.x - top.x) <= 3) {
+        units.push({ x: top.x, w: top.w, perfect: 1 }); score += 2; sfx(988, 0.12, 'square'); g.setInfo('Perfect fit! +2');
+      } else {
+        if (mover.x < l) fall.push({ x: mover.x, w: l - mover.x, y, vy: 0 });
+        if (mover.x + mover.w > r) fall.push({ x: r, w: mover.x + mover.w - r, y, vy: 0 });
+        units.push({ x: l, w: r - l }); score += 1; sfx(523, 0.06, 'square'); g.setInfo(`${units.length - 1} servers racked`);
+      }
+      g.setScore(score);
+      mover = null; wait = 220;
+    }
+    const onKey = e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); place(); } };
+    document.addEventListener('keydown', onKey);
+    canvas.addEventListener('pointerdown', e => { e.preventDefault(); place(); });
+    drop.addEventListener('click', place);
+    const yOf = i => H - 30 - (i + 1) * U + cam;
+    function server(x, y, w, perfect, alpha = 1) {
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = perfect ? '#2d3440' : '#262a33'; ctx.fillRect(x, y, w, U - 2);
+      ctx.fillStyle = '#3a404c'; ctx.fillRect(x, y, w, 2);
+      ctx.fillStyle = '#14171d';
+      for (let vx = x + 8; vx < x + w - 34; vx += 6) ctx.fillRect(vx, y + 6, 3, U - 12);
+      if (w > 30) {
+        const xmas = document.body.dataset.season === 'december', k = Math.round(y / U);
+        ctx.fillStyle = xmas ? ['#ff5a4f', '#7ee0a3', '#e0a458', '#7fb0ff'][(k + 4) % 4] : '#7ee0a3'; ctx.fillRect(x + w - 22, y + 7, 4, 4);
+        ctx.fillStyle = xmas ? ['#7ee0a3', '#ff5a4f', '#7fb0ff', '#e0a458'][(k + 4) % 4] : perfect ? '#e0a458' : '#4f9d69'; ctx.fillRect(x + w - 14, y + 7, 4, 4);
+      }
+      ctx.globalAlpha = 1;
+    }
+    function draw() {
+      ctx.fillStyle = '#0d1018'; ctx.fillRect(0, 0, W, H);
+      for (const x of [4, W - RAIL + 4]) {
+        ctx.fillStyle = '#3b3f48'; ctx.fillRect(x, 0, RAIL - 8, H);
+        ctx.fillStyle = '#0d1018';
+        const off = ((cam % U) + U) % U;
+        for (let y = off - U; y < H; y += U / 2) ctx.fillRect(x + (RAIL - 8) / 2 - 2, y + 4, 4, 4);
+      }
+      ctx.fillStyle = '#6b1f2e'; ctx.fillRect(0, H - 30 + cam, W, 30);
+      units.forEach((u, i) => { const y = yOf(i); if (y > -U && y < H) server(u.x, y, u.w, u.perfect); });
+      if (mover) server(mover.x, yOf(units.length), mover.w, false);
+      for (const f of fall) server(f.x, yOf(f.y) + f.vy, f.w, false, 0.85);
+    }
+    const stop = loop(dt => {
+      time += dt;
+      if (wait > 0) { wait -= dt; if (wait <= 0 && !over) spawn(); }
+      if (mover) {
+        mover.x += mover.dir * mover.v * dt / 1000;
+        if (mover.x <= inner[0]) { mover.x = inner[0]; mover.dir = 1; }
+        if (mover.x + mover.w >= inner[1]) { mover.x = inner[1] - mover.w; mover.dir = -1; }
+      }
+      const want = Math.max(0, (units.length + 2) * U - (H - 30) * 0.65);
+      cam += (want - cam) * Math.min(1, dt / (reduce() ? 1 : 140));
+      for (const f of fall) { f.vy += dt * 0.6; }
+      fall = fall.filter(f => yOf(f.y) + f.vy < H + 40);
+      draw();
+    });
+    draw();
+    return () => { over = true; stop(); document.removeEventListener('keydown', onKey); };
+  }
+
+  const IMPL = { nightshift, snake, match, typer, stack };
 
   // Little pixel drawings for the cabinet screens in the lobby (static, nothing animates).
   const px = (x, y, w, h, f) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${f}"/>`;
@@ -256,7 +399,9 @@
     match: `<svg viewBox="0 0 120 80" shape-rendering="crispEdges">${[0, 1].flatMap(r => [0, 1, 2, 3].map(c => {
       const up = (r === 0 && c === 1) || (r === 1 && c === 3);
       return px(10 + c * 26, 8 + r * 34, 22, 30, up ? '#f1e7d3' : '#6b1f2e') + (up ? px(17 + c * 26, 19 + r * 34, 8, 8, '#e0a458') : px(14 + c * 26, 12 + r * 34, 14, 22, '#7a2a3a'));
-    })).join('')}</svg>`
+    })).join('')}</svg>`,
+    typer: `<svg viewBox="0 0 120 80" shape-rendering="crispEdges">${px(8, 10, 40, 4, '#7ee0a3')}${px(52, 10, 26, 4, '#7ee0a3')}${px(8, 22, 30, 4, '#7ee0a3')}${px(42, 22, 46, 4, '#7ee0a3')}${px(8, 34, 22, 4, '#3c5a4b')}${px(8, 50, 10, 4, '#e0a458')}${px(22, 50, 52, 4, '#f1e7d3')}${px(78, 48, 4, 8, '#7ee0a3')}${px(8, 64, 18, 4, '#3c5a4b')}${px(30, 64, 30, 4, '#3c5a4b')}</svg>`,
+    stack: `<svg viewBox="0 0 120 80" shape-rendering="crispEdges">${px(14, 0, 6, 80, '#3b3f48')}${px(100, 0, 6, 80, '#3b3f48')}${[[30, 66, 60], [34, 57, 52], [34, 48, 50], [38, 39, 44], [38, 30, 44]].map(([x, y, w]) => px(x, y, w, 7, '#262a33') + px(x + w - 9, y + 2, 3, 3, '#7ee0a3')).join('')}${px(52, 12, 44, 7, '#262a33')}${px(87, 14, 3, 3, '#e0a458')}</svg>`
   };
 
 

@@ -117,15 +117,38 @@
     if (text === 'help' || text === '?' || text === 'hint' || text === 'hints') {
       await ready;
       const hints = cfg?.hints || [];
-      out.textContent = hints.length ? 'Clues: ' + hints.map((h, i) => `(${i + 1}) ${h}`).join('  ') : 'No clues today. Keep looking.';
+      out.textContent = 'Commands: ls, cd <page>, whoami, date, echo <text>, snow, clear.  ' + (hints.length ? 'Clues: ' + hints.map((h, i) => `(${i + 1}) ${h}`).join('  ') : 'No clues today. Keep looking.');
       return;
     }
     await ready;
     const hit = await matchKeyword(text, true);
     if (hit) { out.textContent = ''; if (!(await fire(hit.egg, hit.phrase))) out.textContent = 'Already found. Try again in a bit.'; return; }
     if (!cfg && text === 'jam') { fallback('jam'); out.textContent = ''; return; }
+    if (shell(text, out)) return;
     out.textContent = `'${text.slice(0, 24)}' is not recognized as a command. Try: help`;
   });
+
+  // A few real commands for the prompt. Egg phrases are checked first, so these never shadow one.
+  const PAGES = ['home', 'about', 'projects', 'journal', 'scrapbook', 'links', 'guestbook', 'music', 'arcade', 'contact', 'hire', 'status'];
+  function shell(text, out) {
+    const [cmd, ...rest] = text.split(/\s+/), arg = rest.join(' ').replace(/^[#/.~]+/, '').replace(/\/$/, '');
+    const go = p => { out.textContent = ''; const to = p === 'home' ? '/' : '/' + p; if (window.nikhNav) window.nikhNav(to); else location.href = to; return true; };
+    if (cmd === 'ls' || cmd === 'dir') { out.textContent = PAGES.filter(p => p !== 'home').join('   '); return true; }
+    if ((cmd === 'cd' || cmd === 'open' || cmd === 'start') && (PAGES.includes(arg) || arg === '' || arg === '..')) return go(PAGES.includes(arg) ? arg : 'home');
+    if (!rest.length && PAGES.includes(cmd)) return go(cmd);
+    if (cmd === 'whoami') { out.textContent = 'nikh: IT Operator by day, builder by night. Hiring? Type: cd hire'; return true; }
+    if (cmd === 'date' || cmd === 'time') { out.textContent = new Date().toString(); return true; }
+    if (cmd === 'echo') { out.textContent = rest.join(' ').slice(0, 60); return true; }
+    if (cmd === 'pwd') { out.textContent = 'C:\\NIKH\\' + (location.pathname.replace(/^\/+/, '').split('/')[0] || 'home').toUpperCase(); return true; }
+    if (cmd === 'exit' || cmd === 'quit') { out.textContent = 'There is no exit. Only more side projects.'; return true; }
+    if (cmd === 'play') return go('arcade');
+    if (cmd === 'snow' || cmd === 'let-it-snow') {
+      const r = window.nikhSnow ? window.nikhSnow() : false;
+      out.textContent = r === 'reduced' ? 'Snow stays off: your device asks for less motion.' : r ? 'Let it snow. Type snow again to stop it.' : 'Snow stopped.';
+      return true;
+    }
+    return false;
+  }
 
   // ---------------------------------------------------------------- clicks and sequences
   const counts = {};

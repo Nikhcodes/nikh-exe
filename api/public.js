@@ -3,11 +3,17 @@
 //   POST ?r=reveal {id,phrase} the content of one egg, only after its trigger matched
 //   GET  ?r=surprise&x=a,b    one random drawer item, avoiding recently seen ids
 //   GET  ?r=scrapbook         published scrapbook entries
+//   GET  ?r=page&p=/about     the site shell with that page's title and link-preview tags (pages are rewritten here)
+//   GET  ?r=robots / sitemap  robots.txt and sitemap.xml
+//   POST ?r=track {kind,item} counts a page view, an outbound click or a referring site (no cookies, no raw IPs)
+//   GET  ?r=status            live numbers for the Under the hood page (counts, database timing, build)
 import { q } from './_lib/db.js';
-import { route, send, readJson, HttpError, UUID, sameOrigin } from './_lib/http.js';
+import { route, send, readJson, HttpError, UUID, sameOrigin, ipHash } from './_lib/http.js';
+import { isAdmin } from './_lib/auth.js';
 import { ACTIVE_SQL, ORDER_SQL, normPhrase, phraseHash } from './_lib/eggs.js';
 import { mediaUrl } from './_lib/media.js';
 import { mediaMap } from './_lib/content.js';
+import { servePage, caseStudySlugs } from './_lib/page.js';
 
 const HAS_CONTENT = `(e.title <> '' OR e.message <> '' OR EXISTS (SELECT 1 FROM egg_steps s WHERE s.egg_id = e.id AND s.media_id IS NOT NULL))`;
 
@@ -87,6 +93,53 @@ async function hit(req) {
   return { n: r ? Number(r.n) : 0 };
 }
 
+// Visitor stats. Nothing is stored about the visitor except a salted IP hash for 30-minute dedupe, deleted within a day.
+const PAGE_RE = /^\/[a-z0-9-]{0,40}(\/[a-z0-9-]{1,60})?$/;
+async function track(req) {
+  if (!sameOrigin(req)) throw new HttpError(403, 'Not allowed.');
+  const b = await readJson(req, 1024);
+  const kind = ['view', 'click', 'ref'].includes(b.kind) ? b.kind : null;
+  let item = String(b.item || '').trim().slice(0, 160);
+  if (!kind || !item) throw new HttpError(400, 'Nothing to count.');
+  if (kind === 'view' && !PAGE_RE.test(item)) throw new HttpError(400, 'Not a page.');
+  if (kind === 'ref') { item = item.toLowerCase().replace(/^www\./, ''); if (!/^[a-z0-9.-]{3,100}$/.test(item)) throw new HttpError(400, 'Not a site.'); }
+  if (kind === 'click') item = item.replace(/[\u0000-\u001f<>]/g, '');
+  if (await isAdmin(req).catch(() => false)) return { ok: true, counted: false }; // your own visits don't count
+  const ip = ipHash(req);
+  if (Math.random() < 0.02) await q(`DELETE FROM page_stats_seen WHERE at < now() - interval '1 day'`);
+  const [{ n }] = await q(`SELECT count(*)::int AS n FROM page_stats_seen WHERE ip_hash = $1 AND at > now() - interval '1 hour'`, [ip]);
+  if (n > 200) return { ok: true, counted: false };
+  const fresh = await q(`INSERT INTO page_stats_seen (ip_hash, kind, item) VALUES ($1, $2, $3)
+    ON CONFLICT (ip_hash, kind, item) DO UPDATE SET at = now() WHERE page_stats_seen.at < now() - interval '30 minutes'
+    RETURNING 1`, [ip, kind, item]);
+  if (!fresh.length) return { ok: true, counted: false };
+  await q(`INSERT INTO page_stats (day, kind, item, n) VALUES (current_date, $1, $2, 1)
+    ON CONFLICT (day, kind, item) DO UPDATE SET n = page_stats.n + 1`, [kind, item]);
+  return { ok: true, counted: true };
+}
+
+async function status() {
+  const t0 = process.hrtime.bigint();
+  await q('SELECT 1');
+  const dbMs = Number(process.hrtime.bigint() - t0) / 1e6;
+  const t1 = process.hrtime.bigint();
+  const [c] = await q(`SELECT
+      (SELECT count(*)::int FROM guestbook_entries WHERE approved AND NOT rejected) AS notes,
+      (SELECT count(*)::int FROM scrapbook_entries WHERE published) AS memories,
+      (SELECT count(*)::int FROM arcade_scores WHERE NOT hidden) AS scores,
+      (SELECT count(*)::int FROM arcade_runs WHERE started_at > now() - interval '1 day') AS runs_today,
+      (SELECT COALESCE(max(n), 0)::bigint FROM site_counters WHERE key = 'visits') AS visits,
+      (SELECT count(*)::int FROM media) AS files`);
+  const countMs = Number(process.hrtime.bigint() - t1) / 1e6;
+  const sha = process.env.VERCEL_GIT_COMMIT_SHA || '';
+  return {
+    db_ms: Math.round(dbMs * 10) / 10, count_ms: Math.round(countMs * 10) / 10,
+    counts: { notes: c.notes, memories: c.memories, scores: c.scores, runs_today: c.runs_today, visits: Number(c.visits), files: c.files },
+    build: { commit: sha.slice(0, 7), region: process.env.VERCEL_REGION || 'local', env: process.env.VERCEL_ENV || 'development' },
+    node: process.version
+  };
+}
+
 async function scrapbook() {
   const rows = await q(`SELECT se.id, se.title, se.body, to_char(se.entry_date, 'YYYY-MM-DD') AS date,
       COALESCE((SELECT json_agg(json_build_object('id', m.id, 'v', m.version, 'w', m.width, 'h', m.height, 'alt', m.alt, 'caption', m.caption)
@@ -100,13 +153,34 @@ async function scrapbook() {
   })) };
 }
 
-export default route(async (req, res) => {
+async function sitemap(req, res, robots) {
+  const host = String(req.headers['x-forwarded-host'] || req.headers.host || '').split(',')[0].trim();
+  const origin = `https://${host}`;
+  res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=3600');
+  if (robots) { res.setHeader('Content-Type', 'text/plain; charset=utf-8'); return res.end(`User-agent: *\nDisallow: /admin.html\nDisallow: /api/\nSitemap: ${origin}/sitemap.xml\n`); }
+  let paths = ['/', '/about', '/projects', '/journal', '/scrapbook', '/links', '/guestbook', '/music', '/arcade', '/contact', '/hire', '/status'];
+  try { paths = paths.concat((await caseStudySlugs()).map(s => '/projects/' + s)); } catch { /* the main pages are enough */ }
+  res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+  res.end(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${paths.map(p => `<url><loc>${origin}${p}</loc></url>`).join('')}</urlset>`);
+}
+
+export default async function handler(req, res) {
+  const u = new URL(req.url, 'http://x'), r = u.searchParams.get('r');
+  // Pages, robots and sitemap are plain responses (not JSON) and are cached at the edge.
+  if (req.method === 'GET' && r === 'page') return servePage(req, res, (u.searchParams.get('p') || '/').slice(0, 300));
+  if (req.method === 'GET' && (r === 'robots' || r === 'sitemap')) return sitemap(req, res, r === 'robots');
+  return api(req, res);
+}
+
+const api = route(async (req, res) => {
   const url = new URL(req.url, 'http://x');
   const r = url.searchParams.get('r');
   if (req.method === 'GET' && r === 'config') return send(res, 200, await config());
   if (req.method === 'POST' && r === 'reveal') return send(res, 200, await reveal(req));
   if (req.method === 'GET' && r === 'surprise') return send(res, 200, await surprise(url));
   if (req.method === 'GET' && r === 'scrapbook') return send(res, 200, await scrapbook());
+  if (req.method === 'GET' && r === 'status') return send(res, 200, await status());
+  if (req.method === 'POST' && r === 'track') return send(res, 200, await track(req));
   if ((req.method === 'GET' || req.method === 'POST') && r === 'hit') return send(res, 200, await hit(req));
   throw new HttpError(404, 'Unknown request.');
 });

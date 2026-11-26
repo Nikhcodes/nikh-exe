@@ -349,6 +349,61 @@ test('arcade: tickets, plausibility checks, initials filter, moderation', async 
   assert.ok(Array.isArray(pool.images));
 });
 
+test('new games and pages: Typer and Rack Stack scores, Hire page content, status numbers', async () => {
+  const ip = { 'x-forwarded-for': '10.8.' + Math.floor(Math.random() * 250) + '.9' };
+  const start = game => call('/api/arcade?r=start', { method: 'POST', json: { game }, auth: false, headers: ip }).then(r => r.data.run);
+  const submit = (run, score) => call('/api/arcade?r=score', { method: 'POST', json: { run, initials: 'ZZQ', score, duration: 4500 }, auth: false, headers: ip });
+  let run = await start('typer');
+  await new Promise(res => setTimeout(res, 4300));
+  assert.match((await submit(run, 600)).data.error, /humanly/);            // 600 characters in 4 seconds
+  run = await start('typer');
+  await new Promise(res => setTimeout(res, 4300));
+  assert.equal((await submit(run, 40)).status, 200);
+  run = await start('stack');
+  await new Promise(res => setTimeout(res, 1700));
+  assert.equal((await submit(run, 8)).status, 200);
+  const boards = (await call('/api/arcade?r=boards', { auth: false })).data;
+  assert.ok(boards.typer.some(b => b.initials === 'ZZQ') && boards.stack.some(b => b.initials === 'ZZQ'));
+  for (const g of ['typer', 'stack']) for (const x of (await call('/api/cms?r=scores&game=' + g)).data.scores.filter(x => x.initials === 'ZZQ'))
+    await call('/api/cms?r=scores', { method: 'POST', json: { id: x.id, action: 'delete' } });
+  // the Hire page is editable like any other page
+  const saved = await call('/api/cms?r=content&key=hire', { method: 'PUT', json: { data: { title: 'test-hire', strengths: ['a', 'b'] } } });
+  assert.equal(saved.status, 200, JSON.stringify(saved.data));
+  assert.equal((await call('/api/public?r=config', { auth: false })).data.content.hire.title, 'test-hire');
+  assert.equal((await call('/api/cms?r=content&key=hire', { method: 'DELETE' })).status, 200);
+  // status: public numbers only
+  const st = (await call('/api/public?r=status', { auth: false })).data;
+  assert.equal(typeof st.db_ms, 'number');
+  assert.deepEqual(Object.keys(st.counts).sort(), ['files', 'memories', 'notes', 'runs_today', 'scores', 'visits']);
+  assert.equal(JSON.stringify(st).includes('ip_hash'), false);
+});
+
+test('addresses, link previews, stats and the hall of fame', async () => {
+  // pages are served with their own preview tags; unknown pages are marked noindex
+  const about = await call('/about', { auth: false });
+  assert.equal(about.status, 200);
+  assert.match(about.data, /<title>[^<]*\| [^<]*<\/title>/);
+  assert.match(about.data, /og:image" content="https?:\/\/[^"]+\/assets\/og\.png"/);
+  assert.match((await call('/projects/rigsight', { auth: false })).data, /RigSight: case study/);
+  assert.match((await call('/no-such-page', { auth: false })).data, /noindex/);
+  assert.match((await call('/sitemap.xml', { auth: false })).data, /<loc>[^<]+\/projects\/rigsight<\/loc>/);
+  assert.equal((await call('/assets/og.png', { auth: false })).status, 200);
+  // stats: same-origin only, validated, counted once per half hour, never stores raw IPs
+  const ip = { 'x-forwarded-for': '10.9.' + Math.floor(Math.random() * 250) + '.3', origin: BASE };
+  const tr = (item, kind = 'view') => call('/api/public?r=track', { method: 'POST', json: { kind, item }, auth: false, headers: ip });
+  assert.equal((await tr('/test-page')).data.counted, true);
+  assert.equal((await tr('/test-page')).data.counted, false);
+  assert.equal((await tr('/<b>')).status, 400);
+  assert.equal((await call('/api/public?r=track', { method: 'POST', json: { kind: 'view', item: '/x' }, auth: false, headers: { origin: 'https://evil.example' } })).status, 403);
+  assert.equal((await tr('/test-page-2')).data.counted, true);
+  const t = (await call('/api/cms?r=traffic&days=7')).data;
+  assert.ok(t.pages.some(x => x.item === '/test-page' && x.n >= 1) && t.daily.length === 7);
+  assert.equal((await call('/api/cms?r=traffic', { auth: false })).status, 401);
+  // hall of fame
+  const wk = (await call('/api/arcade?r=week', { auth: false })).data;
+  assert.equal(Object.keys(wk.games).length, 5);
+});
+
 test('logout ends the session on the server', async () => {
   const saved = cookie;
   assert.equal((await call('/api/auth', { method: 'POST', json: { action: 'logout' } })).status, 200);

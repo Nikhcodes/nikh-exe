@@ -11,7 +11,9 @@
 export const GAMES = {
   nightshift: { name: 'Night Shift', cap: 6000, perSec: 10, minMs: 3000 },
   snake: { name: 'Packet Snake', cap: 397, perSec: 8, minMs: 1500 },
-  match: { name: 'Crate Match', cap: 5000, minMs: 2500, timeScore: { base: 5000, perSec: 40, slack: 300 } }
+  match: { name: 'Crate Match', cap: 5000, minMs: 2500, timeScore: { base: 5000, perSec: 40, slack: 300 } },
+  typer: { name: 'Terminal Typer', cap: 900, perSec: 16, minMs: 4000 },
+  stack: { name: 'Rack Stack', cap: 400, perSec: 5, minMs: 1500 }
 };
 
 // Three-letter combinations that are not allowed as initials (English, Dutch and common slurs),

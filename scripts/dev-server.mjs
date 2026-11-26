@@ -39,6 +39,16 @@ const server = http.createServer(async (req, res) => {
       const mod = await import(pathToFileURL(file).href);
       return await mod.default(req, res);
     }
+    // Same rewrites as vercel.json: page addresses, robots.txt and sitemap.xml go to /api/public.
+    const rw = url.pathname === '/robots.txt' ? 'robots' : url.pathname === '/sitemap.xml' ? 'sitemap'
+      : (url.pathname !== '/' && !/\.[a-z0-9]+$/i.test(url.pathname) && !(await stat(path.join(root, decodeURIComponent(url.pathname))).catch(() => null))) ? 'page' : null;
+    if (rw) {
+      req.url = '/api/public?r=' + rw + (rw === 'page' ? '&p=' + encodeURIComponent(url.pathname) : '');
+      res.status = c => { res.statusCode = c; return res; };
+      res.json = d => { res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify(d)); return res; };
+      const mod = await import(pathToFileURL(path.join(root, 'api', 'public.js')).href);
+      return await mod.default(req, res);
+    }
     let p = decodeURIComponent(url.pathname);
     if (p.endsWith('/')) p += 'index.html';
     if (BLOCKED.test(p) || p.includes('..')) { res.statusCode = 404; return res.end('Not found'); }
