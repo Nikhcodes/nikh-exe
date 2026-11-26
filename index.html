@@ -224,40 +224,64 @@ h2{font-size:1.6rem;margin-bottom:12px}
 .gb .gb-reply b{font-family:var(--mono);display:inline;font-weight:700}
 .board-more{display:block;margin:26px auto 0}
 @media(max-width:520px){.gf{padding:14px}.gb.featured{grid-column:auto}.guestbook-page h1{font-size:clamp(2.2rem,11vw,4rem)}#gl{grid-template-columns:1fr}}
-/* JOURNAL: a photocopied zine */
-.zine-intro{max-width:55ch;margin-top:10px}
-.zine{display:grid;grid-template-columns:230px minmax(0,1fr);gap:48px;margin-top:34px;align-items:start}
-.zine-toc{position:sticky;top:90px;border-top:3px solid #241b14;padding-top:10px}
-.zine-toc h2{font-size:1.05rem;margin:0 0 10px}
-.zine-toc ol{margin:0;padding:0 0 0 1.4em;font-family:var(--mono);font-size:.85rem}
-.zine-toc li{margin:0 0 10px;padding-left:2px}
-.zine-toc li::marker{font-weight:700;color:var(--burg)}
-.zine-toc a{color:#241b14;text-decoration:none;display:block;line-height:1.35}
-.zine-toc a:hover{text-decoration:underline;text-decoration-color:var(--burg);text-underline-offset:3px}
-.toc-date{display:block;font-size:.72rem;color:var(--burg);font-weight:700}
-.zine-toc li.dim{opacity:.35}
-.toc-file{font-family:var(--mono);font-weight:700;font-size:.8rem;margin:22px 0 8px;color:var(--burg)}
-.zine-tags{display:flex;flex-wrap:wrap;gap:6px}
-.zine-tags button{font-family:var(--mono);font-size:.78rem;background:transparent;color:#241b14;border:1.5px solid #241b14;padding:2px 9px;cursor:pointer}
-.zine-tags button[aria-pressed=true]{background:#241b14;color:var(--cream)}
-.zentry{max-width:64ch;scroll-margin-top:90px}
-.zentry.here{border-left:4px solid var(--amber);padding-left:16px;margin-left:-20px}
-.zhead{margin-bottom:14px}
-.stamp{display:inline-block;font-family:var(--mono);font-weight:700;font-size:.85rem;color:var(--burg);border:2px solid var(--burg);border-radius:3px;padding:1px 10px;transform:rotate(-3deg);box-shadow:0 0 0 2px var(--paper),0 0 0 3.5px rgba(107,31,46,.55);opacity:.88}
-.zentry h2{font-size:clamp(1.6rem,3.6vw,2.3rem);line-height:1.05;margin:12px 0 4px}
-.zentry h2 a{color:#241b14;text-decoration:none}
-.zentry h2 a:hover{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px}
-.zmeta{font-family:var(--mono);font-size:.78rem;margin:0;opacity:.7}
+/* JOURNAL: a spiral notebook with sticky page flags */
+.stamp{display:inline-block;font-family:var(--mono);font-weight:700;font-size:.85rem;color:var(--burg);border:2px solid var(--burg);border-radius:3px;padding:1px 10px;transform:rotate(-3deg);box-shadow:0 0 0 2px #fffdf6,0 0 0 3.5px rgba(107,31,46,.55);opacity:.88}
 .zbody{font-size:1.14rem;line-height:1.72}
 .zbody p{margin:0 0 1em}
 .zbody ul{margin:0 0 1em;padding:0;list-style:none}
 .zbody li{margin-bottom:.3em}
 .zbody li::before{content:"– ";color:var(--burg)}
-.zfoot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 16px;align-items:center;font-family:var(--mono);font-size:.8rem;border-top:1px dashed rgba(36,27,20,.4);padding-top:10px;margin-top:6px}
 .zcopy{font-family:var(--mono);font-size:.8rem;background:transparent;border:0;color:var(--burg);text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:4px 0}
-.cut{position:relative;max-width:64ch;height:1px;border-top:2px dashed rgba(36,27,20,.45);margin:44px 0}
-.cut span{position:absolute;left:-6px;top:-.85em;background:var(--paper);padding:0 6px;font-size:1.1rem;color:#241b14}
-@media(max-width:820px){.zine{grid-template-columns:1fr;gap:26px}.zine-toc{position:static}}
+
+.zine-intro{max-width:55ch;margin-top:10px}
+.nb-filter{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:22px;font-family:var(--mono);font-size:.82rem}
+.nb-filter span{font-weight:700;color:var(--burg)}
+.nb-filter button{font-family:var(--mono);font-weight:700;font-size:.78rem;background:#fffdf6;color:#241b14;border:2px solid #241b14;border-radius:999px;padding:4px 12px;cursor:pointer;box-shadow:1px 2px 0 rgba(36,27,20,.3)}
+.nb-filter button:nth-child(3n){transform:rotate(-2deg)}.nb-filter button:nth-child(3n+1){transform:rotate(1.5deg)}
+.nb-filter button[aria-pressed=true]{background:#241b14;color:var(--cream)}
+.nb{position:relative;display:grid;grid-template-columns:minmax(0,760px) 170px;align-items:start;margin-top:30px}
+.nb-book{position:relative;perspective:1800px;grid-column:1;grid-row:1}
+.nb-rings{position:absolute;left:-14px;top:18px;bottom:18px;width:34px;z-index:3}
+.nb-rings::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(180deg,transparent 0 9px,#2b2b2b 9px 11px,#cfcfcf 11px 16px,#7d7d7d 16px 18px,transparent 18px 30px);-webkit-mask:linear-gradient(90deg,#000 0 26px,transparent 26px);mask:linear-gradient(90deg,#000 0 26px,transparent 26px);border-radius:8px}
+.nb-sheet,.nb-turn{position:relative;background:#fffdf6 repeating-linear-gradient(180deg,transparent 0 29px,rgba(80,110,160,.22) 29px 30px);background-position:0 18px;min-height:470px;padding:34px 40px 26px 74px;box-shadow:0 1px 0 rgba(0,0,0,.08),6px 8px 0 rgba(36,27,20,.22);border-radius:2px 6px 6px 2px;color:#241b14}
+.nb-sheet::before,.nb-turn::before{content:"";position:absolute;top:0;bottom:0;left:56px;width:2px;background:rgba(184,52,63,.45)}
+.nb-sheet::after,.nb-turn::after{content:"";position:absolute;top:0;bottom:0;left:0;width:30px;background:radial-gradient(circle at 15px 15px,var(--paper) 0 6px,transparent 7px) 0 0/30px 30px repeat-y}
+.nb-sheet:focus-visible{outline:3px solid var(--burg);outline-offset:4px}
+.nb-turn{position:absolute;inset:0 0 auto 0;z-index:4;transform-origin:left center;backface-visibility:hidden;overflow:hidden;box-shadow:-10px 10px 30px rgba(0,0,0,.25)}
+.nb-date{display:flex;align-items:center;gap:14px;margin:0 0 10px;font-family:var(--mono);font-size:.78rem}
+.nb-mins{opacity:.7}
+.nb-sheet h2,.nb-turn h2{font-size:clamp(1.6rem,3.6vw,2.3rem);line-height:1.05;margin:6px 0 14px}
+.nb-sheet .zbody,.nb-turn .zbody{font-size:1.12rem;line-height:30px}
+.nb-sheet .zbody p,.nb-turn .zbody p{margin:0 0 30px}
+.nb-sheet .zbody ul,.nb-turn .zbody ul{margin:0 0 30px}.nb-sheet .zbody li,.nb-turn .zbody li{margin:0}
+.nb-foot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 16px;align-items:center;font-family:var(--mono);font-size:.8rem;padding-top:6px}
+.nb-nav{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:26px;font-family:var(--mono);font-size:.8rem}.nb-nav span{white-space:nowrap}
+.nb-nav button{font-family:var(--mono);font-weight:700;font-size:.82rem;background:none;border:2px solid #241b14;color:#241b14;padding:7px 12px;cursor:pointer}
+.nb-nav button:disabled{opacity:.3;cursor:default}
+.nb-nav button:not(:disabled):hover{background:#241b14;color:var(--cream)}
+/* the sticky page flags */
+.nb-tabs{grid-column:2;grid-row:1;display:flex;flex-direction:column;gap:6px;padding-top:40px;margin-left:-6px;position:relative;z-index:1}
+.flag{display:block;text-align:left;font:inherit;width:100%;border:0;cursor:pointer;padding:8px 10px 8px 18px;color:#241b14;background:var(--fc);border-radius:0 4px 4px 0;box-shadow:2px 2px 0 rgba(36,27,20,.25);transform:translateX(-8px);transition:transform .2s;position:relative;opacity:.92}
+.flag::before{content:"";position:absolute;left:0;top:0;bottom:0;width:10px;background:rgba(255,255,255,.35)}
+.flag small{display:block;font-family:var(--mono);font-weight:700;font-size:.68rem;opacity:.75}
+.flag span{display:block;font-family:var(--mono);font-weight:700;font-size:.78rem;line-height:1.25;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.flag:hover{transform:translateX(0)}
+.flag[aria-selected=true]{transform:translateX(6px);opacity:1;box-shadow:3px 3px 0 rgba(36,27,20,.35)}
+.flag:focus-visible{outline:3px solid #241b14;outline-offset:2px}
+.f0{--fc:#f3c46f}.f1{--fc:#9fd8b4}.f2{--fc:#f2a1a8}.f3{--fc:#a9c3e8}.f4{--fc:#f1e7d3}
+@media(max-width:900px){
+ .nb{grid-template-columns:1fr}
+ .nb-tabs{grid-column:1;grid-row:1;flex-direction:row;overflow-x:auto;padding:0 6px 0 30px;margin:0 0 -4px;scrollbar-width:none;gap:5px}
+ .nb-tabs::-webkit-scrollbar{display:none}
+ .flag{flex:0 0 140px;border-radius:4px 4px 0 0;transform:translateY(6px);padding:8px 10px 12px}
+ .flag::before{left:0;right:0;top:auto;bottom:0;width:auto;height:6px}
+ .flag:hover{transform:translateY(2px)}.flag[aria-selected=true]{transform:translateY(0)}
+ .nb-book{grid-row:2}
+ .nb-sheet,.nb-turn{padding:26px 18px 22px 52px;min-height:420px}
+ .nb-sheet::before,.nb-turn::before{left:40px}
+ .nb-rings{left:-10px}
+}
+@media(prefers-reduced-motion:reduce){.flag{transition:none}}
 /* ABOUT: the interview */
 .ab{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(240px,1fr);gap:48px;margin-top:26px;align-items:start}
 .ab-text p{margin-bottom:16px;max-width:60ch;font-size:1.1rem;line-height:1.7}
@@ -678,7 +702,7 @@ footer{padding:20px 22px calc(30px + env(safe-area-inset-bottom));font-family:va
 .dock.mini .dock-frame{position:absolute;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none}
 body.has-dock footer{padding-bottom:calc(150px + env(safe-area-inset-bottom))}
 @media(max-width:620px){.dock{right:8px;left:8px;bottom:8px;width:auto}}
-@media(pointer:coarse){.zine-tags button,.zcopy,.linkish,.dock-btn,.foot-links a,.tt-out,.sw-links a,.sheet-contact a:not(.btn),.hire-actions a{min-height:40px;display:inline-flex;align-items:center}.zine-tags button{padding:4px 12px}.foot-links{gap:20px}}
+@media(pointer:coarse){.nb-filter button,.nb-nav button,.zcopy,.linkish,.dock-btn,.foot-links a,.tt-out,.sw-links a,.sheet-contact a:not(.btn),.hire-actions a{min-height:40px;display:inline-flex;align-items:center}.nb-filter button{padding:6px 14px}.foot-links{gap:20px}}
 @media(prefers-reduced-motion:reduce){.dock-disc{animation:none}}
 @media print{.dock{display:none!important}}
 /* MENU: the phone menu is a directory listing */
@@ -714,6 +738,30 @@ body.has-dock footer{padding-bottom:calc(150px + env(safe-area-inset-bottom))}
  .menu-btn{display:inline-flex}.here-tag{display:block}
 }
 @media(prefers-reduced-motion:reduce){.menu-in{transition:none;transform:none}}
+/* CONTACT: the on-call pager */
+.ct.ct-grid{max-width:1100px;display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:48px;align-items:start}
+.ct-text{min-width:0}
+.pager-wrap{position:sticky;top:100px;padding-top:30px}
+.pager-wrap h2{font-family:var(--mono);font-size:.9rem;color:var(--burg);margin:0 0 14px}
+.pager{position:relative;background:#2b2e35 linear-gradient(165deg,rgba(255,255,255,.12),transparent 40%);border-radius:18px 18px 22px 22px;padding:16px 16px 18px;box-shadow:inset 0 -5px 0 #1c1e23,inset 0 0 0 2px #1c1e23,6px 8px 0 rgba(36,27,20,.25);transform:rotate(-3deg)}
+.pg-brand{display:block;font-family:var(--mono);font-weight:700;font-size:.62rem;letter-spacing:.2em;color:#a9adb6;margin-bottom:8px}
+.pg-clip{position:absolute;right:-8px;top:24px;width:10px;height:60px;background:#1c1e23;border-radius:0 6px 6px 0}
+.pg-lcd{background:#a9bd8e linear-gradient(180deg,rgba(0,0,0,.08),transparent 30%);border:3px solid #1c1e23;border-radius:6px;padding:10px 12px;min-height:104px;color:#1f2a16;font-family:var(--mono);font-weight:700;box-shadow:inset 0 2px 6px rgba(0,0,0,.35)}
+.pg-l1{display:flex;justify-content:space-between;margin:0 0 6px;font-size:1.35rem;letter-spacing:.05em}
+.pg-l1 span:last-child{font-size:.7rem;align-self:flex-start;margin-top:4px}
+.pg-l2{margin:0;font-size:.82rem;line-height:1.35;min-height:2.7em}
+.pg-keys{display:flex;gap:10px;justify-content:center;margin-top:14px}
+.pg-keys i{display:block;width:34px;height:12px;border-radius:6px;background:#1c1e23;box-shadow:inset 0 2px 0 rgba(255,255,255,.12)}
+.pg-keys i:nth-child(2){background:#b8343f}
+.pager.busy{animation:buzz .12s linear 0s 8 alternate}
+.pager.busy .pg-lcd{background-color:#c9de9f}
+@keyframes buzz{from{transform:rotate(-5deg) translateX(-3px)}to{transform:rotate(-1deg) translateX(3px)}}
+.pg-actions{display:flex;flex-wrap:wrap;align-items:center;gap:10px 6px;margin-top:22px}
+.pg-actions .btn{margin:0}
+.paper .linkish{color:#241b14}
+.pg-note{font-family:var(--mono);font-size:.75rem;opacity:.7;margin-top:10px}
+@media(max-width:900px){.ct.ct-grid{grid-template-columns:1fr;gap:10px}.pager-wrap{position:static;max-width:340px}}
+@media(prefers-reduced-motion:reduce){.pager.busy{animation:none}}
 </style>
 </head>
 <body>
@@ -874,10 +922,10 @@ const pages={
  scrapbook(){return `<div class="paper"><div class="wrap"><span class="tape">THE SHOEBOX</span><h1>Scrapbook</h1><p style="max-width:52ch;margin-top:10px">Photos, small memories and other things worth keeping. Added whenever something deserves a spot.</p>
  <div class="shoebox"><div class="sb" id="sb" aria-live="polite"><p class="sb-empty">Opening the shoebox...</p></div></div></div></div>
  <dialog class="sbv" id="sbv" aria-label="Scrapbook photo"><button class="sbv-x" type="button" aria-label="Close">×</button><div class="sbv-body" id="sbv-body"></div></dialog>`},
- journal(){const J=S('journal'),E=jEntries(),tags=[...new Set(E.flatMap(j=>j.tags||[]))];return `<div class="paper zine-page"><div class="wrap"><span class="tape">THE ZINE</span><h1>Journal</h1><p class="zine-intro">${esc(J.intro)}</p>
- <div class="zine"><aside class="zine-toc"><h2>In this issue</h2><ol>${E.map(e=>`<li data-slug="${e.slug}"><a href="#/journal/${e.slug}"><span class="toc-date">${esc(e.date)}</span>${esc(e.title)}</a></li>`).join('')}</ol>
- ${tags.length?`<p class="toc-file">File under</p><div class="zine-tags" role="group" aria-label="Filter by topic"><button data-t="" aria-pressed="true">everything</button>${tags.map(t=>`<button data-t="${esc(t)}" aria-pressed="false">${esc(t)}</button>`).join('')}</div>`:''}</aside>
- <div class="zine-entries" id="jn"></div></div></div></div>`},
+ journal(){const J=S('journal'),E=jEntries(),tags=[...new Set(E.flatMap(j=>j.tags||[]))];return `<div class="paper nb-page"><div class="wrap"><span class="tape">THE NOTEBOOK</span><h1>Journal</h1><p class="zine-intro">${esc(J.intro)}</p>
+ ${tags.length?`<div class="nb-filter" role="group" aria-label="Show entries about"><span>Flip to:</span><button data-t="" aria-pressed="true">everything</button>${tags.map(t=>`<button data-t="${esc(t)}" aria-pressed="false">${esc(t)}</button>`).join('')}</div>`:''}
+ ${E.length?`<div class="nb" id="nb"><div class="nb-tabs" role="tablist" aria-label="Entries">${E.map((e,i)=>`<button role="tab" id="tab-${e.slug}" aria-controls="nb-sheet" aria-selected="false" tabindex="-1" data-i="${i}" class="flag f${i%5}"><small>${esc(e.date)}</small><span>${esc(e.title)}</span></button>`).join('')}</div>
+ <div class="nb-book" id="nb-book"><div class="nb-rings" aria-hidden="true"></div><article class="nb-sheet" id="nb-sheet" role="tabpanel" tabindex="0"></article></div></div>`:'<p>No entries yet.</p>'}</div></div>`},
  about(){const A=S('about'),H=S('home'),me=M(H.avatar);return `<div class="paper about-page"><div class="wrap"><span class="tape">${esc(A.tape)}</span><h1>${esc(A.title)}</h1>
  <div class="ab"><div class="ab-text">
  <p class="lede">${esc(A.lede)}</p>${(A.paragraphs||[]).map(x=>`<p>${esc(x)}</p>`).join('')}</div>
@@ -887,7 +935,7 @@ const pages={
  <span class="bface back"><span class="b-back">${esc(A.badgeBack||'')}</span><span class="b-hint">Tap to flip back</span></span></span></button></div>
  <div class="icard"><h3>${esc(A.factsTitle)}</h3><dl>${(A.facts||[]).map(f=>`<div><dt>${esc(f.label)}</dt><dd>${esc(f.value)}</dd></div>`).join('')}</dl></div></aside></div>
  ${(A.faq||[]).length?`<section class="transcript" aria-labelledby="otr"><h2 id="otr">On the record</h2>${(A.faq||[]).map(f=>`<div class="qa"><p class="q"><b aria-hidden="true">Q.</b> ${esc(f.q)}</p><p class="a"><b aria-hidden="true">N.</b> ${esc(f.a)}</p></div>`).join('')}</section>`:''}</div></div>`},
- contact(){const K=S('contact'),opt=(u,t,s)=>safeUrl(u)?`<a class="contact-option" href="${esc(safeUrl(u))}" target="_blank" rel="noopener"><b>${t} ↗</b><small>${s}</small></a>`:'';return `<div class="paper"><div class="wrap ct">
+ contact(){const K=S('contact'),opt=(u,t,s)=>safeUrl(u)?`<a class="contact-option" href="${esc(safeUrl(u))}" target="_blank" rel="noopener"><b>${t} ↗</b><small>${s}</small></a>`:'';return `<div class="paper"><div class="wrap ct ct-grid"><div class="ct-text">
  <span class="tape">OPEN CHANNEL</span><h1>${esc(K.title)}</h1>
  <p class="contact-intro" style="margin:16px 0 12px">${esc(K.intro)}</p>
  <p style="max-width:58ch">${esc(K.line2)}</p>
@@ -898,7 +946,13 @@ const pages={
  <div class="contact-options">
  ${opt(K.github,'GitHub',"Things I've built, broken, and fixed.")}${opt(K.linkedin,'LinkedIn','The professional side of the operation.')}${opt(K.site,'My website','In case you took a wrong turn getting here.')}${opt(K.resume,'Résumé','The one-page version of all this.')}
  </div>
- <p class="mono" style="font-size:.85rem">${esc(K.sign)}</p>
+ <p class="mono" style="font-size:.85rem">${esc(K.sign)}</p></div>
+ <aside class="pager-wrap" aria-labelledby="pg-h"><h2 id="pg-h">Or page me</h2>
+  <div class="pager" id="pager"><span class="pg-brand" aria-hidden="true">NIKH-COM 3000</span><span class="pg-clip" aria-hidden="true"></span>
+   <div class="pg-lcd" role="status" aria-live="polite"><p class="pg-l1"><span id="pg-clock">--:--</span><span>SRT</span></p><p class="pg-l2" id="pg-msg">&nbsp;</p></div>
+   <div class="pg-keys" aria-hidden="true"><i></i><i></i><i></i></div></div>
+  <div class="pg-actions"><button class="btn" type="button" id="page-me">Page Nikh</button>${K.email?`<button class="linkish" type="button" id="copy-mail">Copy my email instead</button>`:''}</div>
+  <p class="pg-note">The screen shows the time in Suriname and what I'm probably doing.</p></aside>
  </div></div>`},
  arcade(){const A=S('arcade');return `<div class="wrap arcade"><span class="tape">THE ARCADE</span><h1>${esc(A.title)}</h1><p style="max-width:58ch;margin-top:10px">${esc(A.intro)}</p><div id="arcade-root"></div></div>`},
  hire(){const R=S('hire'),H=S('home'),K=S('contact'),A=S('about'),P=S('projects').projects||[];
@@ -1036,22 +1090,64 @@ function render(keepScroll){
   const swap=()=>{b.setAttribute('aria-pressed',b.getAttribute('aria-pressed')!='true');b.classList.remove('turning')};
   if(matchMedia('(prefers-reduced-motion: reduce)').matches)return swap();
   b.classList.add('turning');setTimeout(swap,160);window.NikhSound&&NikhSound.drawer&&NikhSound.drawer()}}
+ if(k=='contact'){
+  const K=S('contact'),msg=$('#pg-msg'),clock=$('#pg-clock'),pager=$('#pager');
+  /* What Nikh is probably doing, by the time in Paramaribo. */
+  const guess=()=>{let h=0,m=0,wd='Mon';try{const f=new Intl.DateTimeFormat('en-GB',{timeZone:'America/Paramaribo',hour:'2-digit',minute:'2-digit',weekday:'short',hourCycle:'h23'}).formatToParts(new Date());
+    h=+f.find(x=>x.type=='hour').value;m=+f.find(x=>x.type=='minute').value;wd=f.find(x=>x.type=='weekday').value}catch{}
+   clock.textContent=String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');const wkend=wd=='Sat'||wd=='Sun';
+   return h<5?'UP LATE. PROBABLY DEBUGGING.':h<8?'ASLEEP. OR PRETENDING.':h<17?(wkend?'OFF DUTY. PROBABLY GAMING.':'ON SHIFT. KEEPING SYSTEMS UP.'):h<19?'STUCK IN TRAFFIC OR IN CLASS.':h<23?'BUILDING SOMETHING. MUSIC ON.':'ONE MORE COMMIT, THEN BED.'};
+  const idle=()=>{msg.textContent=guess()};idle();
+  const tick=setInterval(()=>{if(!document.body.contains(clock))return clearInterval(tick);if(!pager.classList.contains('busy'))idle()},30000);
+  const say=(t,ms)=>new Promise(r=>{msg.textContent=t;setTimeout(r,ms)});
+  $('#page-me').onclick=async ev=>{if(pager.classList.contains('busy'))return;const b=ev.currentTarget;b.disabled=true;pager.classList.add('busy');
+   window.NikhSound&&NikhSound.pager&&NikhSound.pager();
+   await say('PAGING NIKH...',900);await say('NO ANSWER. HE IS IN THE ZONE.',1300);
+   if(K.email){await say('OPENING YOUR EMAIL INSTEAD.',900);location.href='mailto:'+K.email}else await say('TRY THE LINKS ON THE LEFT.',1400);
+   pager.classList.remove('busy');b.disabled=false;setTimeout(idle,2500)};
+  const cm=$('#copy-mail');if(cm)cm.onclick=async()=>{try{await navigator.clipboard.writeText(K.email);msg.textContent='COPIED. PASTE IT SOMEWHERE NICE.';window.NikhSound&&NikhSound.ok()}catch{msg.textContent=K.email}setTimeout(idle,3500)};
+ }
  if(k=='journal'){
-  const E=jEntries();
-  const show=t=>{
-   const list=E.filter(j=>!t||(j.tags||[]).includes(t));
-   $('#jn').innerHTML=list.length?list.map(j=>`<article class="zentry" id="j-${j.slug}"><div class="zhead"><span class="stamp">${esc(j.date)}</span><h2><a href="#/journal/${j.slug}">${esc(j.title)}</a></h2><p class="zmeta">${j.mins} min read</p></div>
-    <div class="zbody">${textHtml(j.body)}</div>
-    <div class="zfoot">${(j.tags||[]).length?`<span>Filed under ${(j.tags||[]).map(esc).join(', ')}</span>`:'<span></span>'}<button class="zcopy" type="button" data-slug="${j.slug}">Copy link</button></div></article>`).join('<div class="cut" aria-hidden="true"><span>✂</span></div>'):'<p class="zbody">Nothing filed under that yet.</p>';
-   document.querySelectorAll('.zine-toc li').forEach(li=>li.classList.toggle('dim',!list.some(j=>j.slug==li.dataset.slug)));
-   document.querySelectorAll('.zine-tags button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.t==t));
-   document.querySelectorAll('.zcopy').forEach(b=>b.onclick=async()=>{const u=location.origin+location.pathname+'#/journal/'+b.dataset.slug;
-    try{await navigator.clipboard.writeText(u);b.textContent='Link copied'}catch{b.textContent=u}setTimeout(()=>{b.textContent='Copy link'},2500)})
+  const E=jEntries(),book=$('#nb-book'),sheet=$('#nb-sheet');if(!sheet)return;
+  const tabs=[...document.querySelectorAll('.nb-tabs [role=tab]')];
+  let cur=-1,filter='';
+  const visible=()=>E.map((e,i)=>i).filter(i=>!filter||(E[i].tags||[]).includes(filter));
+  const pageHtml=i=>{const j=E[i],vis=visible(),n=vis.indexOf(i);return `<p class="nb-date"><span class="stamp">${esc(j.date)}</span><span class="nb-mins">${j.mins} min read</span></p><h2>${esc(j.title)}</h2>
+   <div class="zbody">${textHtml(j.body)}</div>
+   <div class="nb-foot">${(j.tags||[]).length?`<span>Filed under ${(j.tags||[]).map(esc).join(', ')}</span>`:'<span></span>'}<button class="zcopy" type="button">Copy link</button></div>
+   <div class="nb-nav"><button class="nb-prev" type="button" ${n<=0?'disabled':''}>Previous</button><span>page ${n+1} of ${vis.length}</span><button class="nb-next" type="button" ${n>=vis.length-1?'disabled':''}>Next</button></div>`};
+  const wire=i=>{
+   sheet.querySelector('.zcopy').onclick=async ev=>{const b=ev.currentTarget,u=location.origin+location.pathname+'#/journal/'+E[i].slug;
+    try{await navigator.clipboard.writeText(u);b.textContent='Link copied'}catch{b.textContent=u}setTimeout(()=>{b.textContent='Copy link'},2500)};
+   const vis=visible(),n=vis.indexOf(i);
+   sheet.querySelector('.nb-prev').onclick=()=>go(vis[n-1]);sheet.querySelector('.nb-next').onclick=()=>go(vis[n+1]);
   };
-  show('');
-  document.querySelectorAll('.zine-tags button').forEach(b=>b.onclick=()=>show(b.dataset.t));
-  const want=subRoute();
-  if(want){const a=document.getElementById('j-'+want);if(a){a.classList.add('here');requestAnimationFrame(()=>a.scrollIntoView({block:'start'}))}}
+  /* Turn the page: the old page swings away (forward) or the new one swings in (back). */
+  const go=(i,first)=>{
+   if(i==null||i===cur||!E[i])return;
+   const fwd=i>cur,reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+   if(!first&&!reduce&&sheet.animate){
+    const ghost=sheet.cloneNode(true);ghost.removeAttribute('id');ghost.classList.add('nb-turn');ghost.setAttribute('aria-hidden','true');
+    if(fwd){ghost.style.height=sheet.offsetHeight+'px';book.append(ghost);sheet.innerHTML=pageHtml(i);
+     ghost.animate([{transform:'rotateY(0deg)'},{transform:'rotateY(-100deg)',opacity:.6}],{duration:520,easing:'cubic-bezier(.4,.1,.3,1)'}).onfinish=()=>ghost.remove()}
+    else{ghost.innerHTML=pageHtml(i);book.append(ghost);
+     ghost.animate([{transform:'rotateY(-100deg)',opacity:.6},{transform:'rotateY(0deg)',opacity:1}],{duration:520,easing:'cubic-bezier(.4,.1,.3,1)'}).onfinish=()=>{sheet.innerHTML=pageHtml(i);wire(i);ghost.remove()}}
+    window.NikhSound&&NikhSound.flip&&NikhSound.flip();
+   } else sheet.innerHTML=pageHtml(i);
+   cur=i;if(fwd||first||reduce||!sheet.animate)wire(i);
+   tabs.forEach((t,k)=>{t.setAttribute('aria-selected',k===i);t.tabIndex=k===i?0:-1});
+   sheet.setAttribute('aria-labelledby','tab-'+E[i].slug);
+   if(!first)history.replaceState(null,'','#/journal/'+E[i].slug);
+   if(!first&&book.getBoundingClientRect().top<0)book.scrollIntoView({block:'start',behavior:reduce?'auto':'smooth'});
+  };
+  tabs.forEach((t,k)=>{t.onclick=()=>go(k);t.onkeydown=e=>{const vis=visible(),n=vis.indexOf(k),d={ArrowDown:1,ArrowRight:1,ArrowUp:-1,ArrowLeft:-1}[e.key];
+   if(d&&vis[n+d]!=null){e.preventDefault();go(vis[n+d]);tabs[vis[n+d]].focus()}}});
+  document.querySelectorAll('.nb-filter button').forEach(b=>b.onclick=()=>{filter=b.dataset.t;
+   document.querySelectorAll('.nb-filter button').forEach(x=>x.setAttribute('aria-pressed',x===b));
+   const vis=visible();tabs.forEach((t,k)=>{t.hidden=!vis.includes(k)});
+   if(!vis.includes(cur))go(vis[0]);else{sheet.innerHTML=pageHtml(cur);wire(cur)}});
+  const want=E.findIndex(e=>e.slug===subRoute());
+  go(want>=0?want:0,true);
  }
  if(k=='music'){
   const cr=S('music').crates||[];

@@ -71,6 +71,10 @@
     pin() { if (!on) return; noise(0, 0.05, 0.25, 1400, 2); tone(220, 0.01, 0.08, 'triangle', 0.1); },
     /** Something copied or saved. */
     ok() { if (!on) return; tone(1046, 0, 0.07, 'square', 0.04); tone(1568, 0.06, 0.12, 'square', 0.04); },
+    /** A notebook page turning. */
+    flip() { if (!on) return; noise(0, 0.22, 0.09, 2200, 0.5); noise(0.08, 0.12, 0.05, 4000, 0.7); },
+    /** An old pager going off. */
+    pager() { if (!on) return; for (let i = 0; i < 3; i++) { tone(2093, i * 0.16, 0.08, 'square', 0.05); tone(2637, i * 0.16 + 0.07, 0.06, 'square', 0.05); } },
     /** A short game sound effect (arcade). */
     blip(freq, dur = 0.08, type = 'square') { if (!on) return; tone(freq, 0, dur, type, 0.06); }
   };
