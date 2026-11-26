@@ -25,6 +25,13 @@ window.NIKH_DEFAULTS = {
     picks: ['Cowboy Bebop', 'GTO', 'Initial D-style drifting anime', 'Inuyasha', 'Hunter x Hunter', 'Dragon Ball Super', "Assassin's Creed",
       'Zelda: Breath of the Wild', 'Stardew Valley', 'Super Mario Odyssey', 'Sleeping Dogs', 'The Truman Show', 'Halloween'],
     note: '',
+    stripTitle: 'After hours',
+    strip: [
+      { scene: 'desk', caption: '11:48 p.m. Just one more fix.' },
+      { scene: 'bug', caption: '12:30 a.m. The fix needs a fix.' },
+      { scene: 'coffee', caption: '2:15 a.m. Coffee number three.' },
+      { scene: 'ship', caption: '4:02 a.m. It works. Nobody knows why.' }
+    ],
     showCounter: true,
     photoDrop: 'sometimes',
     awayTitle: 'psst... come back',

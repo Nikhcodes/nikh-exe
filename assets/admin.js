@@ -870,6 +870,10 @@
       F('into', 'strings', 'Currently into (stickers)'),
       F('updates', 'list', 'Updates', { sum: 'text', of: [F('date', 'text', 'Date'), F('text', 'text', 'Text')] }),
       F('picks', 'strings', "Tonight's pick (the shuffle list)"),
+      F('stripTitle', 'text', 'Comic strip title'),
+      F('strip', 'list', 'Comic strip panels', { sum: 'caption', help: 'Up to 4 panels starring your pixel guy. Pick a scene and write the caption.', of: [
+        F('scene', 'select', 'Scene', { options: [['desk', 'At the desk'], ['bug', 'Found a bug'], ['coffee', 'Coffee run'], ['phones', 'Headphones on'], ['sleep', 'Asleep at the desk'], ['ship', 'It works!']] }),
+        F('caption', 'text', 'Caption')] }),
       F('showCounter', 'bool', 'Show the visitor counter'),
       F('photoDrop', 'select', 'Photo drops', { options: [['off', 'Off'], ['rare', 'Rare (on some visits)'], ['sometimes', 'Once per visit'], ['often', 'A few per visit']],
         help: 'Now and then a random photo from the junk drawer slides into the corner of the page. Uses the image items in Junk drawer.' }),
