@@ -4,11 +4,11 @@ Nikh's personal website. Hand-built, no framework, no build step. Read this befo
 
 ## Stack and layout
 - **Frontend:** `index.html` (all pages, real paths like `/music`, `/journal/<entry>`, `/projects/<slug>`; old `#/` links are converted), plus `assets/*.js`. Plain ES2020, no bundler.
-  - Every path except `/` is rewritten (vercel.json) to `/api/public?r=page`, which serves `index.html` with that page's title and link-preview tags (`api/_lib/page.js`). It falls back to the plain shell on any error. `<base href="/">` keeps relative asset paths working on deep pages.
+  - Every path except `/` is rewritten (vercel.json) to `/api/public?r=page`, which serves `index.html` with that page's title and link-preview tags (`api/_lib/page.js`). It falls back to the plain shell on any error. `<base href="/">` keeps relative asset paths working on deep pages. `/` itself is a static file, so its preview tags in index.html use the full address (https://nikh-exe.vercel.app).
   - Top-level `let`/`const` used during the first `render()` must be declared before it (or use `var`), or the first render throws.
   - `assets/content.js` holds the default content for every page. The admin's saved JSON (`site_content` table) overrides it.
   - `assets/eggs.js` is the Easter egg engine (public side). `assets/reveal.js` + `.css` is the reveal card (also used by the admin preview).
-  - `assets/sound.js` is sound, **off by default**. `assets/drops.js` does photo drops. `assets/arcade.js` holds the three games.
+  - `assets/sound.js` is sound, **off by default**. `assets/drops.js` does photo drops. `assets/arcade.js` holds the five games.
   - `assets/admin.js` + `admin.html` is the admin panel. Page editors are generated from the `PAGES` schema in admin.js.
 - **Backend:** Vercel Node functions in `api/` (`public`, `guestbook`, `media`, `auth`, `cms`, `arcade`, plus the legacy `admin`).
   Shared code is in `api/_lib/` (underscore = not a route). `api/public.js` also serves pages, robots.txt, sitemap.xml and cookie-free stats (`?r=track`). The Vercel Hobby plan allows max 12 functions, so prefer adding a `?r=` route to an existing function.
