@@ -23,6 +23,16 @@
     o.connect(g).connect(c.destination); o.start(t); o.stop(t + dur + 0.02);
   }
 
+  // A short burst of filtered noise: vinyl crackle, a pin going in, a click.
+  function noise(start, dur, vol = 0.08, freq = 2500, q = 0.8) {
+    const c = ac(); if (!c) return;
+    const n = Math.max(1, Math.floor(c.sampleRate * dur)), buf = c.createBuffer(1, n, c.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 2);
+    const src = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain(), t = c.currentTime + start;
+    src.buffer = buf; f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = q; g.gain.value = vol;
+    src.connect(f).connect(g).connect(c.destination); src.start(t);
+  }
+
   let current = null;
   const api = {
     enabled: () => on,
@@ -46,19 +56,42 @@
       current.play().catch(() => api.chime());
     },
     stop() { if (current) { current.pause(); current = null; } },
+    /** A soft click for buttons. */
+    click() { if (!on) return; tone(1800, 0, 0.025, 'square', 0.025); },
+    /** Two quick notes when a page opens, like an old menu cursor. */
+    page() { if (!on) return; tone(660, 0, 0.05, 'square', 0.03); tone(990, 0.045, 0.06, 'square', 0.03); },
+    /** The phone menu opening (up) or closing (down). */
+    menu(open) { if (!on) return; tone(open ? 440 : 660, 0, 0.06, 'triangle', 0.08); tone(open ? 660 : 440, 0.05, 0.08, 'triangle', 0.08); },
+    /** The needle landing on a record: a thump, then crackle. */
+    needle() {
+      if (!on) return; tone(70, 0, 0.18, 'sine', 0.25); noise(0.03, 0.12, 0.12, 900, 1.5);
+      for (let i = 0; i < 7; i++) noise(0.18 + Math.random() * 1.2, 0.015, 0.06 + Math.random() * 0.05, 3000 + Math.random() * 2500, 2);
+    },
+    /** A pushpin going into cork. */
+    pin() { if (!on) return; noise(0, 0.05, 0.25, 1400, 2); tone(220, 0.01, 0.08, 'triangle', 0.1); },
+    /** Something copied or saved. */
+    ok() { if (!on) return; tone(1046, 0, 0.07, 'square', 0.04); tone(1568, 0.06, 0.12, 'square', 0.04); },
     /** A short game sound effect (arcade). */
     blip(freq, dur = 0.08, type = 'square') { if (!on) return; tone(freq, 0, dur, type, 0.06); }
   };
 
   function sync() {
-    const b = document.getElementById('snd');
-    if (!b) return;
-    b.setAttribute('aria-pressed', on ? 'true' : 'false');
-    b.textContent = on ? '🔊 sound on' : '🔇 sound off';
+    document.querySelectorAll('[data-snd]').forEach(b => {
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      b.textContent = on ? '🔊 sound on' : '🔇 sound off';
+    });
   }
+  // Small sounds for the whole site. Games make their own, so nothing extra inside the arcade cabinet.
   document.addEventListener('click', e => {
-    if (e.target instanceof Element && e.target.closest('#snd')) api.set(!on);
+    if (!(e.target instanceof Element)) return;
+    if (e.target.closest('[data-snd]')) return api.set(!on);
+    if (!on || e.target.closest('.cabinet, #menu-btn, #menu-x')) return;
+    const t = e.target.closest('[data-play]');
+    if (t) return api.needle();
+    if (e.target.closest('.zcopy, #copy88')) return api.ok();
+    if (e.target.closest('button, .btn, nav a, .menu-list a')) api.click();
   });
+  addEventListener('hashchange', () => api.page());
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', sync); else sync();
   window.NikhSound = api;
 })();
