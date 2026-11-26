@@ -420,7 +420,7 @@ async function surpriseSave(req, id) {
 }
 
 // ------------------------------------------------------------------ pages (site content)
-export const PAGE_KEYS = ['home', 'music', 'links', 'projects', 'journal', 'about', 'contact', 'footer', 'arcade'];
+export const PAGE_KEYS = ['home', 'music', 'links', 'projects', 'journal', 'about', 'contact', 'footer', 'arcade', 'hire'];
 const UUID_G = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Keep page JSON to plain, bounded data: text, numbers, true/false, lists and objects. */

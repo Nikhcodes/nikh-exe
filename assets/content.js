@@ -155,6 +155,20 @@ window.NIKH_DEFAULTS = {
   },
   arcade: {
     title: 'Insert coin.',
-    intro: 'Three tiny games, all made for this site. Beat the board and leave your initials. No accounts, no tracking: just three letters and bragging rights.'
+    intro: 'Five tiny games, all made for this site. Beat the board and leave your initials. No accounts, no tracking: just three letters and bragging rights.'
+  },
+  hire: {
+    title: 'Hiring? Start here.',
+    intro: "The rest of this site is the scenic route. This page is the five-minute version: what I do, what I've built, and how to reach me. It prints cleanly too.",
+    headline: 'Backend-minded software engineering student who already keeps banking systems running.',
+    location: 'Paramaribo, Suriname',
+    lookingFor: 'Backend or full-stack roles and internships where I can work on real systems: APIs, databases, authentication, and the boring parts that have to be right.',
+    strengths: [
+      'I work in production every day as an IT Operator in banking, so I know what breaks at 3 a.m. and why it matters.',
+      'Backend first: Java and Spring Boot, Node.js, PostgreSQL, authentication and access control.',
+      'I finish things. Every project on this page is built, deployed, and documented.',
+      "I'd rather understand one system all the way down than skim ten tutorials."
+    ],
+    note: 'Want the full CV or a call? Email me and I usually answer within a day.'
   }
 };

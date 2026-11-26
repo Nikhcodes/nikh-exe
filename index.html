@@ -140,8 +140,6 @@ h2{font-size:1.6rem;margin-bottom:12px}
 .bk a:hover{transform:rotate(-1.5deg) translateY(-3px);border-color:var(--amber)}
 .bk b{font-family:var(--disp);font-weight:400;font-size:1.25rem;color:var(--amber);display:block}
 .bk small{font-family:var(--mono);font-size:.8rem}
-.btn88{display:inline-block;width:88px;height:31px;line-height:27px;text-align:center;font-family:var(--mono);font-weight:700;font-size:.72rem;border:2px outset var(--amber);color:var(--ink);background:var(--amber);text-decoration:none;margin:0 6px 8px 0}
-.btn88:hover{background:var(--cream)}
 .heroes{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px;margin-top:18px}
 .card{--mx:50%;--my:50%;position:relative;background:var(--cream);color:#241b14;padding:12px 12px 14px;border:3px solid #241b14;outline:4px solid var(--cream);outline-offset:-10px;box-shadow:5px 5px 0 rgba(0,0,0,.5);min-height:170px;display:flex;flex-direction:column;gap:6px;transition:transform .25s ease-out;overflow:hidden;min-width:0}
 .card:nth-child(odd){transform:rotate(-1.2deg)}
@@ -182,7 +180,7 @@ h2{font-size:1.6rem;margin-bottom:12px}
 .bw-status{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 16px;background:#15171d;color:#999;font-family:var(--mono);font-size:.72rem;padding:5px 12px}
 .grab{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px}
 .grab .btn{margin:0;padding:6px 12px;font-size:.85rem}
-.btn88-img{image-rendering:pixelated;box-shadow:3px 3px 0 rgba(0,0,0,.4)}
+.b88{display:inline-block;line-height:0;margin-right:10px;box-shadow:3px 3px 0 rgba(0,0,0,.45)}.b88 img{image-rendering:pixelated;width:132px;height:auto}.b88:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 rgba(0,0,0,.45)}.b88:focus-visible{outline:3px solid var(--amber);outline-offset:3px}
 #copy88-out{font-size:.78rem;overflow-wrap:anywhere;max-width:100%}
 @media(prefers-reduced-motion:reduce){.card.holo::after{transition:none}}
 /* GUESTBOOK */
@@ -418,8 +416,8 @@ h2{font-size:1.6rem;margin-bottom:12px}
 @media(prefers-reduced-motion:reduce){.drop-card{transition:none}}
 /* ARCADE */
 /* lobby: a row of cabinets standing on the arcade floor */
-.floor{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:30px;align-items:end;margin-top:34px;padding:0 6px;border-bottom:8px solid #05070b;box-shadow:0 14px 0 -6px #1a1430}
-.unit{position:relative;display:flex;flex-direction:column;background:#1b1d23;border:3px solid #05070b;border-bottom:0;border-radius:12px 12px 0 0;padding:0 18px 18px;box-shadow:inset 7px 0 0 var(--g),inset -7px 0 0 var(--g),inset 10px 0 0 #05070b,inset -10px 0 0 #05070b}
+.floor{display:flex;flex-wrap:wrap;justify-content:center;align-items:flex-end;gap:44px 28px;margin-top:34px;padding:0 6px}
+.unit{flex:0 1 300px;position:relative;display:flex;flex-direction:column;background:#1b1d23;border:3px solid #05070b;border-bottom:10px solid #05070b;border-radius:12px 12px 0 0;padding:0 18px 18px;box-shadow:inset 7px 0 0 var(--g),inset -7px 0 0 var(--g),inset 10px 0 0 #05070b,inset -10px 0 0 #05070b}
 .unit:nth-child(2){margin-bottom:0;padding-top:0}
 .marquee{margin:0 -18px 16px;padding:16px 14px 14px;background:var(--g) radial-gradient(ellipse at 50% -20%,rgba(255,255,255,.55),transparent 65%);border-bottom:3px solid #05070b;border-radius:9px 9px 0 0;text-align:center}
 .marquee h2{margin:0;font-size:1.45rem;line-height:1;color:#0d1018;text-shadow:0 1px 0 rgba(255,255,255,.3)}
@@ -439,7 +437,26 @@ h2{font-size:1.6rem;margin-bottom:12px}
 .coin:hover,.coin:focus-visible{border-color:var(--amber);color:var(--amber)}
 .coin:hover .slot,.coin:focus-visible .slot{box-shadow:0 0 0 2px var(--amber),0 0 12px 3px rgba(224,164,88,.8)}
 .coin:focus-visible{outline:3px solid var(--amber);outline-offset:3px}
-@media(max-width:860px){.floor{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:minmax(250px,78%);overflow-x:auto;scroll-snap-type:x mandatory;padding-top:4px;scrollbar-width:thin}.unit{scroll-snap-align:center}}
+@media(max-width:860px){.floor{flex-wrap:nowrap;justify-content:flex-start;overflow-x:auto;scroll-snap-type:x mandatory;padding:4px 6px 10px;scrollbar-width:thin}.unit{flex:0 0 min(280px,80%);scroll-snap-align:center}}
+/* Terminal Typer */
+.ty{font-family:var(--mono);background:#0a0f0c;border:1px solid #2f323b;padding:18px;max-width:640px;margin:0 auto;min-height:300px;display:flex;flex-direction:column;justify-content:flex-end;gap:10px}
+.ty-hist{list-style:none;margin:0;padding:0;color:#3c5a4b;font-size:.9rem}
+.ty-hist li::before{content:"✓ ";color:#4f9d69}
+.ty-target{margin:8px 0 0;font-size:clamp(1rem,3.4vw,1.35rem);line-height:1.4;color:#5d7a6b;overflow-wrap:anywhere;min-height:1.4em}
+.ty-ok{color:#7ee0a3}
+.ty-next{color:var(--cream);text-decoration:underline;text-decoration-color:var(--amber);text-underline-offset:4px}
+.ty-bad{color:#0d1018;background:#b8343f}
+.ty-line{display:flex;align-items:center;gap:10px;border-top:1px dashed #2f323b;padding-top:12px}
+.ty-ps{color:var(--amber);font-weight:700;font-size:.85rem;white-space:nowrap}
+.ty-input{flex:1;min-width:0;background:transparent;border:0;border-bottom:2px solid #4f9d69;color:var(--cream);font:inherit;font-size:1.05rem;padding:4px 2px;outline:none;caret-color:var(--amber)}
+.ty-input.typo{border-bottom-color:#b8343f}
+.ty-input.shake{animation:tyshake .25s}
+@keyframes tyshake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+@media(max-width:520px){.ty-ps{display:none}}
+/* Rack Stack */
+.rs-canvas{display:block;width:100%;max-width:360px;height:auto;aspect-ratio:3/4;margin:0 auto;border:1px solid #2f323b;touch-action:manipulation;cursor:pointer}
+.rs-drop{display:block;margin:12px auto 0}
+@media(prefers-reduced-motion:reduce){.ty-input.shake{animation:none}}
 .cab-tag{font-family:var(--mono);font-weight:700;font-size:.78rem;color:var(--g,var(--amber))}
 .cabinet{margin-top:24px;border:3px solid var(--g,var(--amber));background:var(--char);box-shadow:8px 8px 0 rgba(0,0,0,.4)}
 .cab-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding:10px 14px;border-bottom:3px solid var(--g,var(--burg));background:linear-gradient(180deg,color-mix(in srgb,var(--g,#000) 22%,transparent),transparent)}
@@ -504,14 +521,97 @@ footer{padding:20px 22px calc(30px + env(safe-area-inset-bottom));font-family:va
 #found{color:var(--amber)}
 @media(max-width:820px){.home,.pj{grid-template-columns:1fr}.pj:nth-of-type(even){direction:ltr}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+/* HIRE: the one-page version */
+.hire-link{display:block;flex-basis:100%;margin-top:14px;font-family:var(--mono);font-size:.85rem;color:var(--amber);text-underline-offset:3px}
+.hire-intro{max-width:58ch;margin-top:10px}
+.sheet{background:#fffdf7;color:#241b14;margin-top:30px;padding:40px clamp(20px,5vw,56px) 34px;box-shadow:0 1px 0 rgba(0,0,0,.08),8px 10px 0 rgba(36,27,20,.2);max-width:900px;position:relative}
+.sheet::before{content:"";position:absolute;top:-12px;left:50%;width:120px;height:26px;margin-left:-60px;background:rgba(224,164,88,.75);transform:rotate(-2deg)}
+.sheet-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:18px 30px;padding-bottom:22px;border-bottom:3px solid #241b14}
+.sheet-head h2{font-size:clamp(2rem,5vw,3rem);line-height:.95;margin:0 0 10px}
+.sheet-line{font-size:1.2rem;font-style:italic;line-height:1.4;max-width:42ch;margin:0}
+.sheet-loc{font-family:var(--mono);font-size:.85rem;color:var(--burg);font-weight:700;margin:8px 0 0}
+.sheet-contact{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;font-family:var(--mono);font-weight:700}
+.sheet-contact .btn{margin:0}
+.sheet-contact a:not(.btn){color:#241b14;text-underline-offset:3px}
+.sheet-cols{display:grid;grid-template-columns:1fr 1fr;gap:34px;padding:24px 0;border-bottom:1px solid rgba(36,27,20,.25)}
+.sheet h3{font-family:var(--mono);font-weight:700;font-size:.95rem;color:var(--burg);margin:0 0 10px}
+.sheet h3:not(:first-child){margin-top:22px}
+.sheet-list{margin:0;padding:0;list-style:none}
+.sheet-list li{position:relative;padding-left:18px;margin-bottom:10px;line-height:1.5}
+.sheet-list li::before{content:"";position:absolute;left:0;top:.62em;width:8px;height:8px;background:var(--amber)}
+.sheet-small{font-size:.9rem;opacity:.75;margin:-4px 0 10px}
+.tally{list-style:none;margin:0;padding:0;font-family:var(--mono);font-size:.82rem}
+.tally li{display:grid;grid-template-columns:minmax(0,9.5em) 1fr auto;align-items:center;gap:10px;margin-bottom:5px}
+.tally span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tally i{display:block;height:9px;background:linear-gradient(90deg,#241b14 calc(var(--n)*100%),rgba(36,27,20,.1) 0)}
+.tally b{font-weight:400;opacity:.7;font-size:.75rem}
+.sheet-facts{margin:0}
+.sheet-facts div{display:grid;grid-template-columns:8.5em 1fr;gap:10px;padding:4px 0;border-bottom:1px dotted rgba(36,27,20,.3)}
+.sheet-facts dt{font-family:var(--mono);font-weight:700;font-size:.8rem}
+.sheet-facts dd{margin:0;font-size:.95rem}
+.sheet-work{padding-top:24px}
+.sw{display:grid;grid-template-columns:minmax(0,1fr);padding:12px 0;border-bottom:1px dotted rgba(36,27,20,.3)}
+.sw p{margin:0 0 4px;line-height:1.5}
+.sw-name b{font-family:var(--disp);font-weight:400;font-size:1.15rem}
+.sw-name span{font-family:var(--mono);font-size:.8rem;color:var(--burg);margin-left:6px}
+.sw-stack{font-family:var(--mono);font-size:.78rem;opacity:.75}
+.sw-links{display:flex;gap:14px;font-family:var(--mono);font-weight:700;font-size:.85rem}
+.sw-links a{color:#241b14;text-underline-offset:3px}
+.sheet-note{margin:24px 0 0;font-style:italic}
+.hire-actions{display:flex;flex-wrap:wrap;align-items:center;gap:12px 22px;margin-top:28px;font-family:var(--mono);font-weight:700}
+.hire-actions .btn{margin:0}
+.hire-actions a{color:#241b14;text-underline-offset:3px}
+@media(max-width:720px){.sheet-cols{grid-template-columns:1fr;gap:6px}.sheet-cols section+section h3:first-child{margin-top:22px}}
+@media print{
+ header,nav,footer,.tape,.hire-intro,.hire-actions,.drop-photo,#found{display:none!important}
+ body,.paper,.hire-page{background:#fff!important}
+ .hire-page h1{display:none}
+ .sheet{box-shadow:none;margin:0;padding:0;max-width:none}.sheet::before{display:none}
+ .sheet .btn{background:none;border:0;padding:0;color:#241b14;text-decoration:underline}
+ .sheet-contact a[href^="mailto:"]::after{content:" (" attr(href) ")";font-weight:400}
+ .sw{break-inside:avoid}
+}
+/* STATUS: under the hood */
+.st-intro{max-width:60ch;margin-top:10px}
+.console{margin-top:30px;max-width:780px;background:#0a0f0c;border:1px solid #2f323b;box-shadow:6px 6px 0 rgba(0,0,0,.35)}
+.console-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;border-bottom:1px solid #2f323b;background:#141a17}
+.console-bar h2{font-size:1rem;margin:0}
+.console-bar .btn{margin:0;padding:5px 12px;font-size:.8rem}
+.checks{list-style:none;margin:0;padding:14px 16px 16px;font-family:var(--mono);font-size:.9rem;color:#9fb8aa}
+.checks li{display:flex;align-items:baseline;gap:8px;padding:5px 0}
+.ck-l{flex:0 1 auto}
+.ck-dots{flex:1;min-width:20px;border-bottom:2px dotted #2f3d35;transform:translateY(-4px)}
+.ck-v{color:var(--cream);font-weight:700;white-space:nowrap}
+.checks li.ok .ck-v{color:#7ee0a3}
+.checks li.ok .ck-v::before{content:"● ";color:#4f9d69}
+.checks li.bad .ck-v{color:#ff8f8f}
+.checks li.wait .ck-v{color:var(--amber)}
+.arch{margin-top:44px;max-width:780px}
+.arch-svg{display:block;width:100%;height:auto;margin-top:14px}
+.arch-svg .box rect{fill:#1b1d23;stroke:#3a3d46;stroke-width:2}
+.arch-svg .box.hot rect{stroke:var(--amber)}
+.arch-svg text{fill:var(--cream);font-family:var(--mono);font-weight:700;font-size:15px;text-anchor:middle}
+.arch-svg text.sub{fill:#9a9a9a;font-weight:400;font-size:12.5px}
+.arch-svg path{stroke:var(--amber);stroke-width:2;fill:none;stroke-dasharray:6 5}
+.decisions{margin-top:44px;max-width:780px}
+.decisions dl{margin:16px 0 0;display:grid;grid-template-columns:1fr 1fr;gap:22px 34px}
+.decisions dt{font-family:var(--disp);font-size:1.05rem;color:var(--amber);margin-bottom:6px}
+.decisions dd{margin:0;line-height:1.6}
+.st-src{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;margin-top:30px}
+.st-src .btn{margin:0}
+.st-src .mono{font-size:.8rem;opacity:.7}
+.foot-links{display:flex;gap:16px}
+.foot-links a{color:#bbb;text-underline-offset:3px}
+@media(max-width:720px){.decisions dl{grid-template-columns:1fr}.checks{font-size:.8rem}.ck-l{max-width:70%}}
 </style>
 </head>
 <body>
 <header><a class="logo" href="#/" data-egg-target="logo">NIKH.EXE</a><nav aria-label="Main" id="nav"></nav></header>
 <main id="view"></main>
-<footer><span data-egg-target="footer" id="foot-text">Built after hours in Suriname.</span>
+<footer><span data-egg-target="footer" id="foot-text">Built after hours in Suriname.</span><span class="foot-links"><a href="#/hire">Hire me</a><a href="#/status">Under the hood</a></span>
 <form class="prompt" id="prompt" autocomplete="off"><label for="cmd">C:\NIKH&gt;</label><input id="cmd" name="cmd" maxlength="60" autocapitalize="off" spellcheck="false" enterkeyhint="go"></form>
 <span id="found" aria-live="polite"></span><button class="snd" id="snd" type="button" aria-pressed="false">🔇 sound off</button><p id="cmd-out" role="status" aria-live="polite"></p></footer>
+<script>try{console.log('%cNIKH.EXE%c hand-built, no framework.\nCurious how it works? %s\nHiring? %s','background:#e0a458;color:#0d1018;font:700 14px monospace;padding:2px 6px','font:12px monospace',location.origin+'/#/status',location.origin+'/#/hire')}catch(e){}</script>
 <script src="assets/content.js"></script>
 <script src="assets/sound.js"></script>
 <script src="assets/reveal.js"></script>
@@ -611,7 +711,7 @@ const pages={
  <div class="box drawer" id="drawer" ${SITE.counts.surprise?'':'hidden'}><h3>The junk drawer</h3><div class="dr-out" id="dr-out" aria-live="polite"></div><button class="btn ghost" id="dr">Surprise me</button></div>
  ${h.showCounter?`<div class="box counter" id="counter" ${SITE.hits?'':'hidden'}><h3>Visitors</h3><p class="odo" id="odo" aria-label="${SITE.hits} visits">${odo(SITE.hits)}</p><p class="mono odo-note">since the last rebuild. Hi, you.</p></div>`:''}</aside>
  <section class="hero"><span class="tape" data-egg-target="welcome-tape">${esc(h.tape)}</span><h1>${esc(h.headline)}</h1><p class="big">${esc(h.blurb)}</p>
- <a class="btn" href="#/projects">See what I build</a><a class="btn ghost" href="#/music">Flip through the crate</a>
+ <a class="btn" href="#/projects">See what I build</a><a class="btn ghost" href="#/music">Flip through the crate</a><a class="hire-link" href="#/hire">Hiring? Here's the short version.</a>
  <div class="picks"><div class="box"><h3>Tonight's pick</h3><div id="pick">Press shuffle</div><button class="btn ghost" id="sh">Shuffle</button></div>
  <div class="box updates"><h3>Updates</h3><ul>${(h.updates||[]).map(u=>`<li><b>${esc(u.date)}</b> ${esc(u.text)}</li>`).join('')}</ul></div></div></section></div>`},
  projects(){const P=S('projects');return `<div class="paper"><div class="wrap"><span class="tape">THE WORKBENCH</span><h1>Things I've built</h1><p style="max-width:50ch;margin-top:10px">${esc(P.intro)}</p>
@@ -631,7 +731,7 @@ const pages={
  <h2>Heroes</h2><div class="heroes">${(L.heroes||[]).map((h,i,all)=>{const hi=M(h.image)||(h.img?{url:h.img,alt:h.alt,w:h.w,h:h.h}:null);const n=[...String(h.name||'')].length;
   return `<article class="card holo" tabindex="0" aria-label="${esc(h.name)}, ${esc(h.category)}"><div class="card-top"><small>${esc(h.category)}</small><span class="card-no">No. ${String(i+1).padStart(3,'0')}/${String(all.length).padStart(3,'0')}</span></div>${hi?img(hi,'hero-img'):''}<b class="${n>16?'xlong':n>11?'long':''}">${esc(h.name)}</b><p class="flavor">${esc(h.note)}</p><span class="card-rare" aria-hidden="true">★ HERO</span></article>`}).join('')}</div>
  <h2 style="margin-top:40px">Grab my button</h2><p class="mono" style="margin-bottom:10px">88x31, because some traditions deserve to live. Put it on your site and we're officially web neighbours.</p>
- <div class="grab"><a class="btn88" href="#/" data-egg-target="button88">NIKH.EXE</a><img src="assets/88x31.png" width="88" height="31" alt="NIKH.EXE 88x31 button" class="btn88-img">
+ <div class="grab"><a class="b88" href="#/" data-egg-target="button88"><img src="assets/88x31.png?v=2" width="88" height="31" alt="NIKH.EXE, after hours"></a>
  <button class="btn ghost" type="button" id="copy88">Copy the code</button><span class="mono" id="copy88-out" role="status"></span></div></div>`},
  guestbook(){return `<div class="wrap"><section class="guestbook-page board-page"><span class="tape">SIGN HERE</span><h1>Guestbook</h1><p class="guestbook-intro">Pin a note to the board. Leave a message, recommend something, or prove that a real human made it this far. I approve notes by hand before they go up.</p>
  <form class="gf" id="gf"><label for="gn">Name</label><input id="gn" name="nm" maxlength="40" required autocomplete="nickname" placeholder="What should I call you?">
@@ -669,6 +769,49 @@ const pages={
  <p class="mono" style="font-size:.85rem">${esc(K.sign)}</p>
  </div></div>`},
  arcade(){const A=S('arcade');return `<div class="wrap arcade"><span class="tape">THE ARCADE</span><h1>${esc(A.title)}</h1><p style="max-width:58ch;margin-top:10px">${esc(A.intro)}</p><div id="arcade-root"></div></div>`},
+ hire(){const R=S('hire'),H=S('home'),K=S('contact'),A=S('about'),P=S('projects').projects||[];
+ const split=t=>String(t||'').split(/\s*[·•|,]\s*/).filter(Boolean);
+ /* "Stack I use" is counted from the projects themselves, so it can't drift into a wishlist. */
+ const tally={};P.forEach(p=>new Set(split(p.stack).map(x=>x.replace(/\s+\d+(\.\d+)*$/,''))).forEach(x=>{tally[x]=(tally[x]||0)+1}));
+ const top=Object.entries(tally).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])).slice(0,10),most=top.length?top[0][1]:1;
+ const first=t=>{const m=String(t||'').match(/^.*?[.!?](\s|$)/);return m?m[0].trim():String(t||'')};
+ const links=[[K.github,'GitHub'],[K.linkedin,'LinkedIn'],[K.resume,'Résumé']].filter(x=>safeUrl(x[0]));
+ return `<div class="paper hire-page"><div class="wrap"><span class="tape">THE SHORT VERSION</span><h1>${esc(R.title)}</h1><p class="hire-intro">${esc(R.intro)}</p>
+ <article class="sheet" aria-label="One-page summary">
+  <div class="sheet-head"><div><h2>${esc(H.name)}</h2><p class="sheet-line">${esc(R.headline)}</p>${R.location?`<p class="sheet-loc">${esc(R.location)}</p>`:''}</div>
+  <div class="sheet-contact">${K.email?`<a class="btn" href="mailto:${esc(K.email)}">Email me</a>`:''}${links.map(([u,t])=>`<a href="${esc(safeUrl(u))}" target="_blank" rel="noopener">${t}</a>`).join('')}</div></div>
+  <div class="sheet-cols"><section><h3>What I bring</h3><ul class="sheet-list">${(R.strengths||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
+   ${R.lookingFor?`<h3>Looking for</h3><p>${esc(R.lookingFor)}</p>`:''}</section>
+   <section>${top.length?`<h3>Stack I actually use</h3><p class="sheet-small">Counted from the projects below, not a wishlist.</p><ol class="tally">${top.map(([n,c])=>`<li><span>${esc(n)}</span><i style="--n:${c/most}" aria-hidden="true"></i><b>${c} of ${P.length}</b></li>`).join('')}</ol>`:''}
+   ${(A.facts||[]).length?`<h3>Quick facts</h3><dl class="sheet-facts">${(A.facts||[]).slice(0,5).map(f=>`<div><dt>${esc(f.label)}</dt><dd>${esc(f.value)}</dd></div>`).join('')}</dl>`:''}</section></div>
+  ${P.length?`<section class="sheet-work"><h3>Selected work</h3>${P.map(p=>{const l=(p.links||[]).filter(x=>safeUrl(x.url));return `<div class="sw"><p class="sw-name"><b>${esc(p.name)}</b> <span>${esc(p.tagline)}</span></p><p>${esc(first(p.description))}</p><p class="sw-stack">${split(p.stack).map(esc).join(', ')}</p>${l.length?`<p class="sw-links">${l.map(x=>`<a href="${esc(safeUrl(x.url))}" target="_blank" rel="noopener">${esc(x.label)}</a>`).join('')}</p>`:''}</div>`}).join('')}</section>`:''}
+  ${R.note?`<p class="sheet-note">${esc(R.note)}</p>`:''}
+ </article>
+ <p class="hire-actions"><button class="btn" type="button" id="hire-print">Save as PDF</button><a href="#/projects">See the projects in full</a><a href="#/status">See how this site is built</a></p></div></div>`},
+ status(){return `<div class="wrap status-page"><span class="tape">UNDER THE HOOD</span><h1>How this site runs</h1>
+ <p class="st-intro">No framework, no page builder, no template. Every page, the admin panel behind it and the five games are hand-written. The checks below hit the real backend while you watch.</p>
+ <section class="console" aria-labelledby="st-live"><div class="console-bar"><h2 id="st-live">Live checks</h2><button class="btn ghost" type="button" id="st-run">Run again</button></div>
+  <ol class="checks" id="checks" aria-live="polite"></ol></section>
+ <section class="console" aria-labelledby="st-num"><div class="console-bar"><h2 id="st-num">By the numbers</h2></div><ol class="checks" id="counts"></ol></section>
+ <section class="arch" aria-labelledby="st-arch"><h2 id="st-arch">How it fits together</h2>
+ <svg viewBox="0 0 760 300" role="img" aria-labelledby="arch-t" class="arch-svg"><title id="arch-t">Your browser loads static files from Vercel and talks to seven serverless functions, which use one Postgres database on Neon.</title>
+  <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#e0a458"/></marker></defs>
+  <g class="box"><rect x="10" y="110" width="150" height="80"/><text x="85" y="145">Your browser</text><text x="85" y="166" class="sub">HTML + scripts</text></g>
+  <g class="box"><rect x="250" y="20" width="230" height="90"/><text x="365" y="55">Vercel CDN</text><text x="365" y="78" class="sub">index.html, CSS, JS, fonts</text></g>
+  <g class="box hot"><rect x="250" y="160" width="230" height="120"/><text x="365" y="190">7 serverless functions</text><text x="365" y="214" class="sub">public, guestbook, media,</text><text x="365" y="234" class="sub">auth, cms, arcade, admin</text><text x="365" y="258" class="sub">Node.js, no framework</text></g>
+  <g class="box"><rect x="570" y="160" width="180" height="120"/><text x="660" y="190">Postgres (Neon)</text><text x="660" y="214" class="sub">content as JSON</text><text x="660" y="234" class="sub">images and video bytes</text><text x="660" y="254" class="sub">sessions, scores, notes</text></g>
+  <path d="M160 135 L248 70" marker-end="url(#ah)"/><path d="M160 165 L248 215" marker-end="url(#ah)"/><path d="M480 220 L568 220" marker-end="url(#ah)"/>
+ </svg></section>
+ <section class="decisions" aria-labelledby="st-dec"><h2 id="st-dec">Decisions I made on purpose</h2><dl>
+  <div><dt>No framework, no build step</dt><dd>The whole front end is one HTML file and a few small scripts. Nothing to compile, nothing to keep updated, and it loads fast on a phone in Suriname.</dd></div>
+  <div><dt>My own CMS</dt><dd>Every page is editable from an admin panel I built. Content is stored as JSON in Postgres and falls back to defaults if anything is missing.</dd></div>
+  <div><dt>Locked-down admin</dt><dd>A scrypt-hashed password, sessions stored in the database, HttpOnly cookies, a CSRF header and a same-origin check on every write. Too many wrong passwords and the login locks itself.</dd></div>
+  <div><dt>Uploads are checked by their bytes</dt><dd>Files are identified by their actual contents, not their names. SVG is never accepted. An image only becomes public while something published uses it.</dd></div>
+  <div><dt>Privacy by default</dt><dd>The guestbook and arcade are rate-limited by a salted hash of the visitor's IP. Raw IP addresses are never stored.</dd></div>
+  <div><dt>The arcade trusts nothing</dt><dd>Every game run gets a ticket from the server, and a score only counts if it makes sense for the time the server saw. Initials go through a blocklist that also understands leetspeak.</dd></div>
+  <div><dt>Migrations that can't hurt</dt><dd>The database schema only ever grows. The migration file can be run again at any time without breaking or deleting anything.</dd></div>
+  <div><dt>Built for everyone</dt><dd>Works with a keyboard, respects reduced-motion settings, and every piece of content is escaped before it reaches the page.</dd></div>
+ </dl><p class="st-src"><a class="btn ghost" href="https://github.com/Nikhcodes/nikh-exe" target="_blank" rel="noopener">Read the source on GitHub</a><span class="mono" id="st-build"></span></p></section></div>`},
  lost(){return `<div class="wrap lost"><span class="tape">ERROR 404</span><h1>You fell off the map.</h1><img src="seed/pixel-fall.webp" alt="A pixel-art man falling backwards" width="368" height="368"><p class="big">This page doesn't exist. Or it did, and I deleted it at 2 a.m.</p><a class="btn" href="#/">Climb back home</a></div>`}
 };
 const nav=[["home","Home"],["about","About"],["projects","Projects"],["journal","Journal"],["scrapbook","Scrapbook"],["links","Links"],["guestbook","Guestbook"],["music","Music"],["arcade","Arcade"],["contact","Contact"]];
@@ -689,7 +832,7 @@ function render(keepScroll){
  const k=route();
  if(stopArcade){if(k=='arcade'&&keepScroll&&$('#arcade-root'))return drawNav(k);stopArcade();stopArcade=null}
  v.innerHTML=pages[k]();
- document.title=(k=='home'?"NIKH.EXE | Under Construction Forever":k=='lost'?"404 · NIKH.EXE":nav.find(n=>n[0]==k)[1]+" · NIKH.EXE");
+ document.title=(k=='home'?"NIKH.EXE | Under Construction Forever":k=='lost'?"404 · NIKH.EXE":({hire:'Hire me',status:'Under the hood'}[k]||nav.find(n=>n[0]==k)[1])+" · NIKH.EXE");
  baseTitle=document.title;
  if(!keepScroll)window.scrollTo(0,0);
  drawNav(k);
@@ -697,6 +840,8 @@ function render(keepScroll){
  if(k=='home'){const h=S('home');$('#sh').onclick=()=>{const p=h.picks||[];if(p.length)$('#pick').textContent=p[Math.floor(Math.random()*p.length)]};$('#dr').onclick=openDrawer;
   const sw=$('.avatar.swap');if(sw)sw.onkeydown=e=>{if(e.key=='Enter'||e.key==' '){e.preventDefault();sw.classList.toggle('on')}}}
  if(k=='scrapbook')loadScrapbook();
+ if(k=='hire')$('#hire-print').onclick=()=>window.print();
+ if(k=='status')runChecks();
  if(k=='links'){wireBrowser();wireHolo();wireGrab()}
  if(k=='arcade'&&window.NikhArcade)stopArcade=NikhArcade.mount($('#arcade-root'));
  if(k=='guestbook'){
@@ -839,6 +984,26 @@ async function openDrawer(){
   btn.textContent='Another one'
  }catch(e){out.innerHTML='<p class="mono">The drawer is stuck. Try again later.</p>'}
  finally{btn.disabled=false}
+}
+/* Under the hood: run real requests and show what came back. */
+async function runChecks(){
+ const C=$('#checks'),N=$('#counts');if(!C)return;
+ const row=(label,val,state)=>`<li class="${state||''}"><span class="ck-l">${esc(label)}</span><span class="ck-dots" aria-hidden="true"></span><span class="ck-v">${esc(val)}</span></li>`;
+ C.innerHTML=row('GET /api/public?r=status','running','wait');
+ const btn=$('#st-run');btn.disabled=true;
+ const times=[];let d=null;
+ try{for(let i=0;i<3;i++){const t=performance.now();const r=await fetch('/api/public?r=status',{cache:'no-store'});if(!r.ok)throw 0;d=await r.json();times.push(performance.now()-t)}}
+ catch(e){C.innerHTML=row('GET /api/public?r=status','no answer','bad')+row('Note','the backend only runs on the deployed site','');btn.disabled=false;return}
+ times.sort((a,b)=>a-b);
+ const nav=performance.getEntriesByType('navigation')[0],res=performance.getEntriesByType('resource');
+ const kb=Math.round(((nav&&nav.transferSize)||0)+res.reduce((a,r)=>a+(r.transferSize||0),0))/1024;
+ const ms=x=>x<10?x.toFixed(1)+' ms':Math.round(x)+' ms';
+ C.innerHTML=[row('Round trip to the API (median of 3)',ms(times[1]),'ok'),row('Postgres answered a ping in',ms(d.db_ms),'ok'),row('Counted rows across 6 tables in',ms(d.count_ms),'ok'),
+  row('This page loaded in',nav?ms(nav.duration||nav.loadEventEnd):'n/a','ok'),row('Transferred so far',kb>=1?Math.round(kb)+' KB':'cached','ok'),row('Frameworks loaded','0','ok')].join('');
+ const c=d.counts||{},n=x=>Number(x||0).toLocaleString();
+ N.innerHTML=[row('Visits counted',n(c.visits)),row('Notes on the guestbook board',n(c.notes)),row('Memories in the scrapbook',n(c.memories)),row('High scores saved',n(c.scores)),row('Arcade games started today',n(c.runs_today)),row('Files served from the database',n(c.files))].join('');
+ const b=d.build||{};$('#st-build').textContent=b.commit?`Running commit ${b.commit} in region ${b.region}, Node ${d.node}.`:`Running locally on Node ${d.node}.`;
+ btn.disabled=false;btn.onclick=runChecks
 }
 async function loadScrapbook(){
  const box=$('#sb');

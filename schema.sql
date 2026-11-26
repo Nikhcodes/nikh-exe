@@ -199,3 +199,10 @@ CREATE TABLE IF NOT EXISTS arcade_scores (
   created_at  timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS arcade_scores_board_idx ON arcade_scores (game, hidden, score DESC, created_at ASC);
+
+-- ===== v5: two more arcade games (Terminal Typer, Rack Stack) and an editable Hire page
+ALTER TABLE site_content DROP CONSTRAINT IF EXISTS site_content_key_check;
+ALTER TABLE site_content ADD CONSTRAINT site_content_key_check CHECK (key IN
+  ('home','music','links','projects','journal','about','contact','footer','arcade','hire'));
+ALTER TABLE arcade_scores DROP CONSTRAINT IF EXISTS arcade_scores_game_check;
+ALTER TABLE arcade_scores ADD CONSTRAINT arcade_scores_game_check CHECK (game IN ('nightshift','snake','match','typer','stack'));

@@ -3,6 +3,7 @@
 //   POST ?r=reveal {id,phrase} the content of one egg, only after its trigger matched
 //   GET  ?r=surprise&x=a,b    one random drawer item, avoiding recently seen ids
 //   GET  ?r=scrapbook         published scrapbook entries
+//   GET  ?r=status            live numbers for the Under the hood page (counts, database timing, build)
 import { q } from './_lib/db.js';
 import { route, send, readJson, HttpError, UUID, sameOrigin } from './_lib/http.js';
 import { ACTIVE_SQL, ORDER_SQL, normPhrase, phraseHash } from './_lib/eggs.js';
@@ -87,6 +88,28 @@ async function hit(req) {
   return { n: r ? Number(r.n) : 0 };
 }
 
+async function status() {
+  const t0 = process.hrtime.bigint();
+  await q('SELECT 1');
+  const dbMs = Number(process.hrtime.bigint() - t0) / 1e6;
+  const t1 = process.hrtime.bigint();
+  const [c] = await q(`SELECT
+      (SELECT count(*)::int FROM guestbook_entries WHERE approved AND NOT rejected) AS notes,
+      (SELECT count(*)::int FROM scrapbook_entries WHERE published) AS memories,
+      (SELECT count(*)::int FROM arcade_scores WHERE NOT hidden) AS scores,
+      (SELECT count(*)::int FROM arcade_runs WHERE started_at > now() - interval '1 day') AS runs_today,
+      (SELECT COALESCE(max(n), 0)::bigint FROM site_counters WHERE key = 'visits') AS visits,
+      (SELECT count(*)::int FROM media) AS files`);
+  const countMs = Number(process.hrtime.bigint() - t1) / 1e6;
+  const sha = process.env.VERCEL_GIT_COMMIT_SHA || '';
+  return {
+    db_ms: Math.round(dbMs * 10) / 10, count_ms: Math.round(countMs * 10) / 10,
+    counts: { notes: c.notes, memories: c.memories, scores: c.scores, runs_today: c.runs_today, visits: Number(c.visits), files: c.files },
+    build: { commit: sha.slice(0, 7), region: process.env.VERCEL_REGION || 'local', env: process.env.VERCEL_ENV || 'development' },
+    node: process.version
+  };
+}
+
 async function scrapbook() {
   const rows = await q(`SELECT se.id, se.title, se.body, to_char(se.entry_date, 'YYYY-MM-DD') AS date,
       COALESCE((SELECT json_agg(json_build_object('id', m.id, 'v', m.version, 'w', m.width, 'h', m.height, 'alt', m.alt, 'caption', m.caption)
@@ -107,6 +130,7 @@ export default route(async (req, res) => {
   if (req.method === 'POST' && r === 'reveal') return send(res, 200, await reveal(req));
   if (req.method === 'GET' && r === 'surprise') return send(res, 200, await surprise(url));
   if (req.method === 'GET' && r === 'scrapbook') return send(res, 200, await scrapbook());
+  if (req.method === 'GET' && r === 'status') return send(res, 200, await status());
   if ((req.method === 'GET' || req.method === 'POST') && r === 'hit') return send(res, 200, await hit(req));
   throw new HttpError(404, 'Unknown request.');
 });

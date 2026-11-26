@@ -924,7 +924,13 @@
       F('sign', 'text', 'Sign-off line')
     ] },
     footer: { label: 'Footer', route: '', fields: [F('text', 'text', 'Footer text')] },
-    arcade: { label: 'Arcade', route: 'arcade', fields: [F('title', 'text', 'Title'), F('intro', 'textarea', 'Intro')] }
+    arcade: { label: 'Arcade', route: 'arcade', fields: [F('title', 'text', 'Title'), F('intro', 'textarea', 'Intro')] },
+    hire: { label: 'Hire page', route: 'hire', fields: [
+      F('title', 'text', 'Title'), F('intro', 'textarea', 'Intro'),
+      F('headline', 'textarea', 'Headline under your name'), F('location', 'text', 'Location'),
+      F('lookingFor', 'textarea', "What I'm looking for"), F('strengths', 'texts', 'What I bring (one point each)'),
+      F('note', 'textarea', 'Closing note', { help: 'Your email, GitHub, LinkedIn and résumé link come from the Contact page. Projects come from the Projects page.' })
+    ] }
   };
 
   const blank = fields => Object.fromEntries(fields.map(f => [f.k, ({ bool: false, image: null, strings: [], texts: [], list: [], color: '#2b3a5c', select: f.options ? f.options[f.options.length - 1][0] : '' })[f.t] ?? '']));
