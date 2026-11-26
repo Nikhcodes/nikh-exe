@@ -45,6 +45,13 @@ async function imageFor(id) {
   catch { return null; }
 }
 
+/** Slugs of projects that have a case study (saved ones, plus starter case studies matched by name). */
+export async function caseStudySlugs() {
+  load();
+  const S = await content(), D = (defaults.projects || {}).projects || [];
+  return (S('projects').projects || []).filter(p => p.csProblem || D.some(d => d.name === p.name && d.csProblem)).map(p => slugify(p.name));
+}
+
 /** Works out the meta tags for a path. Returns { title, description, image, noindex }. */
 export async function metaFor(p) {
   load();

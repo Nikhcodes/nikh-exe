@@ -256,7 +256,7 @@
 
   // ---------------------------------------------------------------- routing
   const SECTIONS = [['dashboard', 'Dashboard'], ['eggs', 'Easter eggs'], ['media', 'Media'], ['guestbook', 'Guestbook'],
-    ['pages', 'Pages'], ['scrapbook', 'Scrapbook'], ['drawer', 'Junk drawer'], ['arcade', 'Arcade']];
+    ['pages', 'Pages'], ['scrapbook', 'Scrapbook'], ['drawer', 'Junk drawer'], ['arcade', 'Arcade'], ['traffic', 'Stats']];
   let stats = null;
   function renderTabs(cur) {
     $('#tabs').replaceChildren(...SECTIONS.map(([k, label]) => h('a', { href: '#' + k, 'aria-current': k === cur ? 'page' : null },
@@ -296,6 +296,7 @@
       h('button', { class: s.media ? 'btn ghost' : 'btn', type: 'button', onclick: e => importStarter(e.currentTarget) }, s.media ? 'Re-run import' : 'Import starter pack'),
       h('p', { class: 'mono small', id: 'starter-out' }));
     page('BACK OFFICE', 'Dashboard', null,
+      await quickUpdate(),
       h('div', { class: 'stats', style: 'margin-top:18px' },
         stat(s.eggs_active, 'live Easter eggs', '#eggs'), stat(s.eggs_inactive, 'eggs switched off', '#eggs'),
         stat(s.guestbook_pending, 'notes waiting for you', '#guestbook'), stat(s.media, `images (${fmtBytes(s.media_bytes || 1)})`, '#media'),
@@ -310,6 +311,44 @@
         h('a', { class: 'btn', href: '#media' }, 'Upload images'), h('a', { class: 'btn ghost', href: '#eggs/new' }, 'New Easter egg'),
         h('a', { class: 'btn ghost', href: '#guestbook' }, 'Moderate guestbook'), h('a', { class: 'btn ghost', href: '#scrapbook/new' }, 'New scrapbook entry'), h('a', { class: 'btn ghost', href: '#pages/home' }, 'Edit the home page'))),
       starter);
+  };
+
+  // Quick update: the few things that change often, saved straight into the Home page (the rest of Home stays as it is).
+  async function quickUpdate() {
+    const d = await cms('r=content');
+    const home = Object.assign({}, (window.NIKH_DEFAULTS || {}).home || {}, d.content.home || {});
+    const field = (label, k, extra = {}) => { const i = h('input', { value: home[k] || '', maxlength: '200', ...extra }); return [h('label', {}, label, i), i]; };
+    const [l1, st] = field('Status line (under your photo)', 'status');
+    const [l2, nl] = field('Now listening', 'nowListening');
+    const [l3, link] = field('Song link (Spotify or YouTube)', 'nowListeningLink', { type: 'url', placeholder: 'https://open.spotify.com/track/…' });
+    const save = h('button', { class: 'btn', type: 'button' }, 'Update the site');
+    save.onclick = () => guard(save, async () => {
+      const fresh = await cms('r=content');
+      const data = Object.assign({}, (window.NIKH_DEFAULTS || {}).home || {}, fresh.content.home || {}, { status: st.value.trim(), nowListening: nl.value.trim(), nowListeningLink: link.value.trim() });
+      await cms('r=content&key=home', { method: 'PUT', json: { data } });
+      toast('Updated. It is live now.');
+    });
+    return h('div', { class: 'panel quick' }, h('h2', {}, 'Quick update'),
+      h('p', { class: 'muted small', style: 'margin-top:0' }, 'The three things that change most. Saves into the Home page and goes live immediately.'),
+      h('div', { class: 'quick-grid' }, l1, l2, l3), save);
+  }
+
+  // Stats: page views, outbound clicks and referring sites, counted without cookies.
+  VIEWS.traffic = async arg => {
+    renderTabs('traffic');
+    const days = ['7', '30', '90'].includes(arg) ? +arg : 30;
+    const t = await cms('r=traffic&days=' + days);
+    const max = Math.max(1, ...t.daily.map(d => d.views));
+    const table = (title, rows, empty) => h('div', { class: 'panel' }, h('h2', {}, title), rows.length
+      ? h('table', { class: 'tbl' }, h('tbody', {}, rows.map(r => h('tr', {}, h('td', {}, r.item), h('td', { class: 'num' }, String(r.n))))))
+      : h('p', { class: 'muted' }, empty));
+    page('THE NUMBERS', 'Stats', 'Counted without cookies or tracking scripts: each visitor counts once per page per half hour, and your own visits while logged in are skipped. Visitors with Do Not Track or Global Privacy Control switched on are not counted at all.',
+      h('div', { class: 'row', style: 'margin:16px 0' }, ...[7, 30, 90].map(n => h('a', { class: 'btn sm' + (n === days ? '' : ' ghost'), href: '#traffic/' + n }, `Last ${n} days`))),
+      h('div', { class: 'panel' }, h('h2', {}, `${t.total} page views in the last ${days} days`),
+        h('div', { class: 'spark', role: 'img', 'aria-label': 'Page views per day' }, t.daily.map(d => h('span', { title: `${d.day}: ${d.views}`, style: `height:${Math.max(2, Math.round(d.views / max * 100))}%` }))),
+        h('div', { class: 'spark-axis mono small muted' }, h('span', {}, t.daily[0]?.day || ''), h('span', {}, t.daily[t.daily.length - 1]?.day || ''))),
+      h('div', { class: 'grid2' }, table('Pages', t.pages, 'No visits counted yet.'), table('Where visitors came from', t.refs, 'Nobody arrived from another site yet (direct visits are not listed).')),
+      table('Links people clicked', t.clicks, 'No outbound clicks yet.'));
   };
 
   async function importStarter(btn) {

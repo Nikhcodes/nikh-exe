@@ -1172,6 +1172,7 @@ function render(keepScroll){
   if(window.NikhStrip)document.querySelectorAll('.panel canvas').forEach(c=>NikhStrip.draw(c,c.dataset.scene));
   syncDeck();$('#dr').onclick=openDrawer;
   const sw=$('.avatar.swap');if(sw)sw.onkeydown=e=>{if(e.key=='Enter'||e.key==' '){e.preventDefault();sw.classList.toggle('on')}}}
+ trackView(k);
  if(k=='scrapbook')loadScrapbook();
  if(k=='home'||k=='arcade')loadFame();
  if(k=='hire')$('#hire-print').onclick=()=>window.print();
@@ -1452,6 +1453,16 @@ async function loadFame(){
   if((k==='['||k===']')&&route()==='journal'){const b=document.querySelector(k==='['?'.nb-prev':'.nb-next');if(b&&!b.disabled){e.preventDefault();b.click()}}
  });
 })();
+/* Cookie-free stats: which pages get visited, which outbound links get clicked, which sites send people here.
+ * No cookies, no identifiers; the server keeps only daily counts. Do Not Track and Global Privacy Control are respected. */
+var trackOff=navigator.doNotTrack==='1'||window.doNotTrack==='1'||navigator.globalPrivacyControl===true||/^(localhost|127\.)/.test(location.hostname)&&!/[?&]track/.test(location.search);
+function track(kind,item){if(trackOff||!item)return;try{fetch('/api/public?r=track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({kind,item}),keepalive:true}).catch(()=>{})}catch{}}
+var lastTracked='';
+function trackView(k){const p=decodeURI(location.pathname).toLowerCase().replace(/\/+$/,'')||'/';if(k==='lost'||p===lastTracked)return;lastTracked=p;track('view',p)}
+try{const r=document.referrer&&new URL(document.referrer);if(r&&r.host&&r.host!==location.host)track('ref',r.hostname)}catch{}
+document.addEventListener('click',e=>{const a=e.target instanceof Element&&e.target.closest('a[href]');if(!a)return;const h=a.getAttribute('href');
+ if(/^mailto:/i.test(h))return track('click','Email');
+ if(!/^https?:/i.test(h))return;try{const u=new URL(h);if(u.host===location.host)return;track('click',(a.textContent.replace(/[↗\s]+/g,' ').trim().slice(0,50)||'Link')+' → '+u.hostname.replace(/^www\./,''))}catch{}},true);
 async function loadScrapbook(){
  const box=$('#sb');
  const fmt=d=>new Date(d+'T12:00:00').toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'});
