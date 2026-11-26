@@ -2,7 +2,7 @@
 //   POST ?r=start  {game}                              -> {run}      a ticket for one game run
 //   POST ?r=score  {run, initials, score, duration}    -> {rank, board}
 //   GET  ?r=boards                                     -> top 10 per game
-//   GET  ?r=week                                       -> this week's champion per game (weeks start on Monday)
+//   GET  ?r=week                                       -> top 3 per game this week and all time (weeks start on Monday)
 //   GET  ?r=pool                                       -> pictures for Crate Match (junk drawer images)
 import { q } from './_lib/db.js';
 import { route, send, readJson, HttpError, UUID, sameOrigin, ipHash } from './_lib/http.js';
@@ -61,11 +61,17 @@ async function score(req) {
 }
 
 async function week() {
-  const rows = await q(`SELECT DISTINCT ON (game) game, initials, score FROM arcade_scores
-    WHERE NOT hidden AND created_at >= date_trunc('week', now())
-    ORDER BY game, score DESC, created_at ASC`);
-  const champs = Object.fromEntries(rows.filter(r => GAMES[r.game]).map(r => [r.game, { initials: r.initials, score: r.score }]));
-  return { games: Object.fromEntries(Object.entries(GAMES).map(([k, g]) => [k, g.name])), champs };
+  const top3 = async since => {
+    const rows = await q(`SELECT game, initials, score FROM (
+        SELECT game, initials, score, row_number() OVER (PARTITION BY game ORDER BY score DESC, created_at ASC) AS rn
+        FROM arcade_scores WHERE NOT hidden ${since ? `AND created_at >= date_trunc('week', now())` : ''}) t
+      WHERE rn <= 3 ORDER BY game, rn`);
+    const out = Object.fromEntries(Object.keys(GAMES).map(g => [g, []]));
+    for (const r of rows) if (out[r.game]) out[r.game].push({ initials: r.initials, score: r.score });
+    return out;
+  };
+  const [thisWeek, allTime] = await Promise.all([top3(true), top3(false)]);
+  return { games: Object.fromEntries(Object.entries(GAMES).map(([k, g]) => [k, g.name])), week: thisWeek, all: allTime };
 }
 
 async function pool() {
