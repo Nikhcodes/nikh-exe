@@ -3,12 +3,15 @@
 //   POST ?r=reveal {id,phrase} the content of one egg, only after its trigger matched
 //   GET  ?r=surprise&x=a,b    one random drawer item, avoiding recently seen ids
 //   GET  ?r=scrapbook         published scrapbook entries
+//   GET  ?r=page&p=/about     the site shell with that page's title and link-preview tags (pages are rewritten here)
+//   GET  ?r=robots / sitemap  robots.txt and sitemap.xml
 //   GET  ?r=status            live numbers for the Under the hood page (counts, database timing, build)
 import { q } from './_lib/db.js';
 import { route, send, readJson, HttpError, UUID, sameOrigin } from './_lib/http.js';
 import { ACTIVE_SQL, ORDER_SQL, normPhrase, phraseHash } from './_lib/eggs.js';
 import { mediaUrl } from './_lib/media.js';
 import { mediaMap } from './_lib/content.js';
+import { servePage, metaFor, slugify } from './_lib/page.js';
 
 const HAS_CONTENT = `(e.title <> '' OR e.message <> '' OR EXISTS (SELECT 1 FROM egg_steps s WHERE s.egg_id = e.id AND s.media_id IS NOT NULL))`;
 
@@ -123,7 +126,30 @@ async function scrapbook() {
   })) };
 }
 
-export default route(async (req, res) => {
+async function sitemap(req, res, robots) {
+  const host = String(req.headers['x-forwarded-host'] || req.headers.host || '').split(',')[0].trim();
+  const origin = `https://${host}`;
+  res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=3600');
+  if (robots) { res.setHeader('Content-Type', 'text/plain; charset=utf-8'); return res.end(`User-agent: *\nDisallow: /admin.html\nDisallow: /api/\nSitemap: ${origin}/sitemap.xml\n`); }
+  let paths = ['/', '/about', '/projects', '/journal', '/scrapbook', '/links', '/guestbook', '/music', '/arcade', '/contact', '/hire', '/status'];
+  try {
+    const rows = await q(`SELECT data FROM site_content WHERE key = 'projects'`);
+    const list = rows[0]?.data?.projects;
+    if (Array.isArray(list)) paths = paths.concat(list.filter(p => p.csProblem).map(p => '/projects/' + slugify(p.name)));
+  } catch { /* defaults are fine */ }
+  res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+  res.end(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${paths.map(p => `<url><loc>${origin}${p}</loc></url>`).join('')}</urlset>`);
+}
+
+export default async function handler(req, res) {
+  const u = new URL(req.url, 'http://x'), r = u.searchParams.get('r');
+  // Pages, robots and sitemap are plain responses (not JSON) and are cached at the edge.
+  if (req.method === 'GET' && r === 'page') return servePage(req, res, (u.searchParams.get('p') || '/').slice(0, 300));
+  if (req.method === 'GET' && (r === 'robots' || r === 'sitemap')) return sitemap(req, res, r === 'robots');
+  return api(req, res);
+}
+
+const api = route(async (req, res) => {
   const url = new URL(req.url, 'http://x');
   const r = url.searchParams.get('r');
   if (req.method === 'GET' && r === 'config') return send(res, 200, await config());

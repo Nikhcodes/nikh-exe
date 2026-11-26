@@ -47,5 +47,24 @@
         }
       ]
     }
-  ]
+  ],
+  "rewrites": [
+    {
+      "source": "/robots.txt",
+      "destination": "/api/public?r=robots"
+    },
+    {
+      "source": "/sitemap.xml",
+      "destination": "/api/public?r=sitemap"
+    },
+    {
+      "source": "/((?!api/)[^.]*)",
+      "destination": "/api/public?r=page&p=/$1"
+    }
+  ],
+  "functions": {
+    "api/public.js": {
+      "includeFiles": "{index.html,assets/content.js}"
+    }
+  }
 }

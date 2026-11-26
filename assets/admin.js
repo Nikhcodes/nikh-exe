@@ -903,7 +903,14 @@
         F('name', 'text', 'Name'), F('tagline', 'text', 'Tagline (tape label)'), F('description', 'textarea', 'Description'), F('stack', 'text', 'Stack'),
         F('art', 'select', 'Drawing', { options: [['rig', 'Monitoring states'], ['mj', 'Pinned job notes'], ['led', 'Ledger lines'], ['os', 'Phone app'], ['cam', 'Camera frame'], ['none', 'Plain']] }),
         F('image', 'image', 'Screenshot (optional)', { help: 'Replaces the drawing.' }),
-        F('links', 'list', 'Links', { sum: 'label', of: [F('label', 'text', 'Label'), F('url', 'url', 'Address')] })] })
+        F('links', 'list', 'Links', { sum: 'label', of: [F('label', 'text', 'Label'), F('url', 'url', 'Address')] }),
+        F('status', 'select', 'Status light', { options: [['live', 'Live'], ['building', 'In progress'], ['done', 'Finished'], ['school', 'School project'], ['archived', 'Archived'], ['', 'Automatic (Live if it has a live link)']] }),
+        F('csProblem', 'textarea', 'Case study: the problem', { help: 'Fill this in to give the project its own case study page. Every section below is optional and only shows when filled.', rows: 5 }),
+        F('csFlow', 'strings', 'Case study: how it fits together (one box per step, in order)'),
+        F('csDecisions', 'texts', 'Case study: decisions I made'),
+        F('csBug', 'textarea', 'Case study: the hardest bug', { rows: 5 }),
+        F('csLearned', 'textarea', 'Case study: what I learned', { rows: 4 }),
+        F('csNext', 'textarea', "Case study: what I'd do differently", { rows: 4 })] })
     ] },
     journal: { label: 'Journal', route: 'journal', fields: [
       F('intro', 'textarea', 'Intro'),
@@ -1026,7 +1033,7 @@
         h('div', { class: 'item' }, h('div', { class: 'th empty' }, pg.label.slice(0, 5).toUpperCase()),
           h('div', { class: 'meta' }, h('div', { class: 'row' }, h('b', {}, pg.label), d.content[k] ? h('span', { class: 'badge b-live' }, 'EDITED') : h('span', { class: 'badge b-off' }, 'DEFAULT')),
             h('div', { class: 'mono small muted' }, d.updated[k] ? 'Saved ' + fmtDate(d.updated[k]) : 'Showing the built-in text')),
-          h('div', { class: 'acts' }, h('a', { class: 'btn ghost sm', href: '/#/' + pg.route, target: '_blank', rel: 'noopener' }, 'View ↗'), h('a', { class: 'btn sm', href: '#pages/' + k }, 'Edit')))))));
+          h('div', { class: 'acts' }, h('a', { class: 'btn ghost sm', href: '/' + pg.route, target: '_blank', rel: 'noopener' }, 'View ↗'), h('a', { class: 'btn sm', href: '#pages/' + k }, 'Edit')))))));
   };
 
   function pageEditor(key, d) {
@@ -1036,6 +1043,12 @@
     if (key === 'home' && !d.content.home) { // carry over the old "Site text" values
       if (d.settings.status) data.status = d.settings.status;
       if (d.settings.now_listening) data.nowListening = d.settings.now_listening;
+    }
+    if (key === 'projects' && Array.isArray(data.projects)) { // starter case studies for projects saved before case studies existed
+      for (const p of data.projects) {
+        const def = (defaults.projects || []).find(x => x.name === p.name);
+        if (def && !p.csProblem && def.csProblem) for (const k of Object.keys(def)) if (k.startsWith('cs') && p[k] == null) p[k] = JSON.parse(JSON.stringify(def[k]));
+      }
     }
     const media = { ...d.media };
     pagesDirty = false;
@@ -1053,7 +1066,7 @@
     page('THE PAGES', 'Edit: ' + pg.label, d.content[key] ? 'Last saved ' + fmtDate(d.updated[key]) + '.' : 'This page shows the built-in text right now. Saving creates your own version.',
       h('p', {}, h('a', { href: '#pages' }, '← All pages')),
       h('div', { class: 'panel pageform' }, pg.fields.map(f => formField(data, f, media))),
-      h('div', { class: 'savebar' }, saveBtn, h('a', { class: 'btn ghost', href: '/#/' + pg.route, target: '_blank', rel: 'noopener' }, 'View page ↗'), resetBtn,
+      h('div', { class: 'savebar' }, saveBtn, h('a', { class: 'btn ghost', href: '/' + pg.route, target: '_blank', rel: 'noopener' }, 'View page ↗'), resetBtn,
         h('span', { id: 'dirty', class: 'mono small', style: 'color:var(--amber)', hidden: true }, '● unsaved changes')));
   }
 

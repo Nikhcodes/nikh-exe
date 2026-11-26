@@ -132,14 +132,14 @@
   const PAGES = ['home', 'about', 'projects', 'journal', 'scrapbook', 'links', 'guestbook', 'music', 'arcade', 'contact', 'hire', 'status'];
   function shell(text, out) {
     const [cmd, ...rest] = text.split(/\s+/), arg = rest.join(' ').replace(/^[#/.~]+/, '').replace(/\/$/, '');
-    const go = p => { out.textContent = ''; location.hash = p === 'home' ? '#/' : '#/' + p; return true; };
+    const go = p => { out.textContent = ''; const to = p === 'home' ? '/' : '/' + p; if (window.nikhNav) window.nikhNav(to); else location.href = to; return true; };
     if (cmd === 'ls' || cmd === 'dir') { out.textContent = PAGES.filter(p => p !== 'home').join('   '); return true; }
     if ((cmd === 'cd' || cmd === 'open' || cmd === 'start') && (PAGES.includes(arg) || arg === '' || arg === '..')) return go(PAGES.includes(arg) ? arg : 'home');
     if (!rest.length && PAGES.includes(cmd)) return go(cmd);
     if (cmd === 'whoami') { out.textContent = 'nikh: IT Operator by day, builder by night. Hiring? Type: cd hire'; return true; }
     if (cmd === 'date' || cmd === 'time') { out.textContent = new Date().toString(); return true; }
     if (cmd === 'echo') { out.textContent = rest.join(' ').slice(0, 60); return true; }
-    if (cmd === 'pwd') { out.textContent = 'C:\\NIKH\\' + (location.hash.replace(/^#\/?/, '').split('/')[0] || 'home').toUpperCase(); return true; }
+    if (cmd === 'pwd') { out.textContent = 'C:\\NIKH\\' + (location.pathname.replace(/^\/+/, '').split('/')[0] || 'home').toUpperCase(); return true; }
     if (cmd === 'exit' || cmd === 'quit') { out.textContent = 'There is no exit. Only more side projects.'; return true; }
     if (cmd === 'play') return go('arcade');
     return false;

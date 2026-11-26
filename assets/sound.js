@@ -95,7 +95,7 @@
     if (e.target.closest('.zcopy, #copy88')) return api.ok();
     if (e.target.closest('button, .btn, nav a, .menu-list a')) api.click();
   });
-  addEventListener('hashchange', () => api.page());
+  document.addEventListener('nikh:route', () => api.page());
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', sync); else sync();
   window.NikhSound = api;
 })();
