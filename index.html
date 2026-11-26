@@ -838,6 +838,22 @@ body.has-dock footer{padding-bottom:calc(150px + env(safe-area-inset-bottom))}
 .plq-t span{font-family:var(--mono);font-size:.75rem;font-weight:700;display:block}
 .plaque .fame-list li{border-bottom-color:rgba(42,29,8,.3)}
 .plaque .fame-list b{color:#2a1d08}.plaque .fame-list i{color:#5a3d0a}
+/* KEYBOARD SHORTCUTS */
+.keys{margin:auto;border:0;padding:0;background:#0a0f0c;color:#cfe3d6;width:min(560px,92vw);max-height:90vh;box-shadow:8px 8px 0 rgba(0,0,0,.5);outline:2px solid #2f3d35}
+.keys::backdrop{background:rgba(13,16,24,.75)}
+.keys-in{padding:22px 24px 20px}
+.keys-cmd{font-family:var(--mono);font-weight:700;color:var(--amber);margin:0 0 10px;font-size:.85rem}
+.keys h2{font-size:1.4rem;color:var(--cream);margin:0 0 14px}
+.keys-list{margin:0;display:grid;grid-template-columns:1fr 1fr;gap:2px 22px}
+.keys-list div{display:flex;align-items:baseline;gap:12px;padding:4px 0;border-bottom:1px dotted #22302a}
+.keys-list dt{flex:0 0 72px;font-family:var(--mono)}
+.keys-list dd{margin:0;font-family:var(--mono);font-size:.82rem}
+kbd{display:inline-block;min-width:1.6em;text-align:center;font-family:var(--mono);font-weight:700;font-size:.78rem;padding:1px 5px;border:1px solid #4a5a50;border-bottom-width:3px;border-radius:4px;background:#141a17;color:var(--cream)}
+.keys-note{font-family:var(--mono);font-size:.75rem;color:#7d8f84;margin:14px 0}
+.keys .btn{margin:0}
+.keys-hint kbd{font-size:.7rem;padding:0 4px;margin-left:4px}
+@media(pointer:coarse){.keys-hint{display:none!important}}
+@media(max-width:560px){.keys-list{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -846,8 +862,10 @@ body.has-dock footer{padding-bottom:calc(150px + env(safe-area-inset-bottom))}
 <ol class="menu-list" id="menu-list"></ol>
 <div class="menu-foot"><a href="/hire">Hire me</a><a href="/status">Under the hood</a><button class="snd" type="button" data-snd aria-pressed="false">🔇 sound off</button></div></div></dialog>
 <main id="view"></main>
+<dialog class="keys" id="keys" aria-labelledby="keys-t"><div class="keys-in"><p class="keys-cmd">C:\NIKH&gt; help shortcuts</p><h2 id="keys-t">Keyboard shortcuts</h2>
+<dl class="keys-list" id="keys-list"></dl><p class="keys-note">They switch off while you type, while a game runs, or when a window like this one is open.</p><button class="btn" type="button" id="keys-x">Close</button></div></dialog>
 <aside class="dock" id="dock" aria-label="Music player" hidden></aside>
-<footer><span data-egg-target="footer" id="foot-text">Built after hours in Suriname.</span><span class="foot-links"><a href="/hire">Hire me</a><a href="/status">Under the hood</a></span>
+<footer><span data-egg-target="footer" id="foot-text">Built after hours in Suriname.</span><span class="foot-links"><a href="/hire">Hire me</a><a href="/status">Under the hood</a><button class="linkish keys-hint" type="button" id="keys-open">Shortcuts <kbd>?</kbd></button></span>
 <form class="prompt" id="prompt" autocomplete="off"><label for="cmd">C:\NIKH&gt;</label><input id="cmd" name="cmd" maxlength="60" autocapitalize="off" spellcheck="false" enterkeyhint="go"></form>
 <span id="found" aria-live="polite"></span><button class="snd season-btn" type="button" id="season-btn" hidden></button><button class="snd" id="snd" type="button" data-snd aria-pressed="false">🔇 sound off</button><p id="cmd-out" role="status" aria-live="polite"></p></footer>
 <script>try{console.log('%cNIKH.EXE%c hand-built, no framework.\nCurious how it works? %s\nHiring? %s','background:#e0a458;color:#0d1018;font:700 14px monospace;padding:2px 6px','font:12px monospace',location.origin+'/status',location.origin+'/hire')}catch(e){}</script>
@@ -1409,6 +1427,31 @@ async function loadFame(){
  if(box&&document.body.contains(box)){$('#fame-list').innerHTML=list+(any?'<a class="fame-go" href="/arcade">Think you can beat them?</a>':'<a class="fame-go" href="/arcade">Nobody has claimed this week yet. Insert coin.</a>');box.hidden=false}
  if(plq&&document.body.contains(plq)){plq.innerHTML=`<p class="plq-t">Hall of fame <span>this week</span></p>${list}`;plq.hidden=false}
 }
+/* Keyboard shortcuts for people who live in their editor. Press ? to see them. */
+(function(){
+ const GO={h:'/',a:'/about',p:'/projects',j:'/journal',s:'/scrapbook',l:'/links',b:'/guestbook',m:'/music',r:'/arcade',c:'/contact',i:'/hire',u:'/status'};
+ const NAMES={h:'Home',a:'About',p:'Projects',j:'Journal',s:'Scrapbook',l:'Links',b:'Guestbook (the board)',m:'Music',r:'Arcade (r for retro)',c:'Contact',i:'Hire me',u:'Under the hood'};
+ const K=$('#keys'),list=$('#keys-list');if(!K)return;
+ list.innerHTML=`<div><dt><kbd>?</kbd></dt><dd>Show this list</dd></div>`+Object.keys(GO).map(k=>`<div><dt><kbd>g</kbd> <kbd>${k}</kbd></dt><dd>${NAMES[k]}</dd></div>`).join('')+
+  `<div><dt><kbd>/</kbd></dt><dd>Jump to the command prompt</dd></div><div><dt><kbd>[</kbd> <kbd>]</kbd></dt><dd>Previous or next journal page</dd></div><div><dt><kbd>Esc</kbd></dt><dd>Close windows and menus</dd></div>`;
+ const open=()=>{if(!K.open)K.showModal()};$('#keys-x').onclick=()=>K.close();K.addEventListener('click',e=>{if(e.target===K)K.close()});
+ const ko=$('#keys-open');if(ko)ko.onclick=open;
+ let lead=0,lastKey=0;
+ document.addEventListener('keydown',e=>{
+  const t=e.target,now=Date.now(),prev=lastKey;lastKey=now;
+  if(e.ctrlKey||e.metaKey||e.altKey||e.isComposing)return;
+  if(t instanceof Element&&t.closest('input,textarea,select,[contenteditable],dialog'))return;
+  if(document.querySelector('dialog[open]')||document.body.hasAttribute('data-playing'))return;
+  const k=e.key;
+  if(k==='?'){e.preventDefault();lead=0;return open()}
+  if(k==='/'){const c=$('#cmd');if(c){e.preventDefault();c.focus()}return}
+  if(lead&&now-lead<1200){lead=0;const to=GO[k.toLowerCase()];if(to){e.preventDefault();nikhNav(to)}return}
+  /* "g" only starts a shortcut after a short pause, so typing words (and secret phrases) never jumps pages. */
+  if(k==='g'&&now-prev>700){lead=now;return}
+  lead=0;
+  if((k==='['||k===']')&&route()==='journal'){const b=document.querySelector(k==='['?'.nb-prev':'.nb-next');if(b&&!b.disabled){e.preventDefault();b.click()}}
+ });
+})();
 async function loadScrapbook(){
  const box=$('#sb');
  const fmt=d=>new Date(d+'T12:00:00').toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'});
