@@ -348,7 +348,11 @@
       ctx.fillStyle = '#3a404c'; ctx.fillRect(x, y, w, 2);
       ctx.fillStyle = '#14171d';
       for (let vx = x + 8; vx < x + w - 34; vx += 6) ctx.fillRect(vx, y + 6, 3, U - 12);
-      if (w > 30) { ctx.fillStyle = '#7ee0a3'; ctx.fillRect(x + w - 22, y + 7, 4, 4); ctx.fillStyle = perfect ? '#e0a458' : '#4f9d69'; ctx.fillRect(x + w - 14, y + 7, 4, 4); }
+      if (w > 30) {
+        const xmas = document.body.dataset.season === 'december', k = Math.round(y / U);
+        ctx.fillStyle = xmas ? ['#ff5a4f', '#7ee0a3', '#e0a458', '#7fb0ff'][(k + 4) % 4] : '#7ee0a3'; ctx.fillRect(x + w - 22, y + 7, 4, 4);
+        ctx.fillStyle = xmas ? ['#7ee0a3', '#ff5a4f', '#7fb0ff', '#e0a458'][(k + 4) % 4] : perfect ? '#e0a458' : '#4f9d69'; ctx.fillRect(x + w - 14, y + 7, 4, 4);
+      }
       ctx.globalAlpha = 1;
     }
     function draw() {

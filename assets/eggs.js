@@ -117,7 +117,7 @@
     if (text === 'help' || text === '?' || text === 'hint' || text === 'hints') {
       await ready;
       const hints = cfg?.hints || [];
-      out.textContent = 'Commands: ls, cd <page>, whoami, date, echo <text>, clear.  ' + (hints.length ? 'Clues: ' + hints.map((h, i) => `(${i + 1}) ${h}`).join('  ') : 'No clues today. Keep looking.');
+      out.textContent = 'Commands: ls, cd <page>, whoami, date, echo <text>, snow, clear.  ' + (hints.length ? 'Clues: ' + hints.map((h, i) => `(${i + 1}) ${h}`).join('  ') : 'No clues today. Keep looking.');
       return;
     }
     await ready;
@@ -142,6 +142,11 @@
     if (cmd === 'pwd') { out.textContent = 'C:\\NIKH\\' + (location.pathname.replace(/^\/+/, '').split('/')[0] || 'home').toUpperCase(); return true; }
     if (cmd === 'exit' || cmd === 'quit') { out.textContent = 'There is no exit. Only more side projects.'; return true; }
     if (cmd === 'play') return go('arcade');
+    if (cmd === 'snow' || cmd === 'let-it-snow') {
+      const r = window.nikhSnow ? window.nikhSnow() : false;
+      out.textContent = r === 'reduced' ? 'Snow stays off: your device asks for less motion.' : r ? 'Let it snow. Type snow again to stop it.' : 'Snow stopped.';
+      return true;
+    }
     return false;
   }
 

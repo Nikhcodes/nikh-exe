@@ -173,7 +173,8 @@ window.NIKH_DEFAULTS = {
     sign: 'BUILT IN SURINAME. REPLIES SENT WHEN HUMANLY POSSIBLE.'
   },
   footer: {
-    text: 'Built after hours in Suriname.'
+    text: 'Built after hours in Suriname.',
+    seasons: 'auto'
   },
   arcade: {
     title: 'Insert coin.',

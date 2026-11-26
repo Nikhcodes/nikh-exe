@@ -93,10 +93,18 @@
     }
   };
 
+  // Seasonal extras: a Santa hat in December, a pumpkin in October. The hat sits on wherever the head was drawn.
+  const HEAD = { desk: [14, 11], bug: [14, 11], coffee: [20, 11], ship: [26, 11], phones: [26, 11], sleep: [26, 21] };
+  function hat(x, y) { r(x + 2, y - 3, 7, 3, C.red); r(x + 4, y - 5, 4, 2, C.red); r(x + 7, y - 6, 2, 2, C.red); r(x + 9, y - 6, 2, 2, C.white); r(x + 1, y - 1, 9, 2, C.white); }
+  function pumpkin(x, y) { r(x, y - 5, 7, 5, '#c96a1b'); r(x + 1, y - 6, 5, 1, '#c96a1b'); r(x + 3, y - 8, 1, 2, C.k); r(x + 1, y - 4, 1, 1, C.k); r(x + 4, y - 4, 1, 1, C.k); r(x + 2, y - 2, 3, 1, C.k); }
   function draw(canvas, scene) {
     canvas.width = W; canvas.height = H;
     ctx = canvas.getContext('2d');
-    (SCENES[scene] || SCENES.desk)();
+    const key = SCENES[scene] ? scene : 'desk';
+    SCENES[key]();
+    const season = document.body.dataset.season;
+    if (season === 'december' && HEAD[key]) hat(...HEAD[key]);
+    if (season === 'october') pumpkin(key === 'desk' || key === 'bug' || key === 'sleep' ? 44 : 50, key === 'desk' || key === 'bug' || key === 'sleep' ? 29 : 42);
   }
   window.NikhStrip = { draw, SCENES: Object.keys(SCENES) };
 })();

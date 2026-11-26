@@ -934,7 +934,8 @@
       F('resume', 'url', 'Résumé link (optional)', { help: 'A link to a PDF or page. Adds a Résumé button.' }),
       F('sign', 'text', 'Sign-off line')
     ] },
-    footer: { label: 'Footer', route: '', fields: [F('text', 'text', 'Footer text')] },
+    footer: { label: 'Footer & seasons', route: '', fields: [F('text', 'text', 'Footer text'),
+      F('seasons', 'select', 'Seasonal modes', { options: [['off', 'Off for everyone'], ['auto', 'On by date (December, October)']], help: 'December: lights, a Santa hat in the comic strip, festive arcade servers. October: spooky lights and cobwebs. Visitors can still switch it off for themselves.' })] },
     arcade: { label: 'Arcade', route: 'arcade', fields: [F('title', 'text', 'Title'), F('intro', 'textarea', 'Intro')] },
     hire: { label: 'Hire page', route: 'hire', fields: [
       F('title', 'text', 'Title'), F('intro', 'textarea', 'Intro'),
