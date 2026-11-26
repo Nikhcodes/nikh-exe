@@ -854,6 +854,33 @@ kbd{display:inline-block;min-width:1.6em;text-align:center;font-family:var(--mon
 .keys-hint kbd{font-size:.7rem;padding:0 4px;margin-left:4px}
 @media(pointer:coarse){.keys-hint{display:none!important}}
 @media(max-width:560px){.keys-list{grid-template-columns:1fr}}
+/* GUESTBOOK: a sticky-note pad and a corkboard */
+.gb-layout{display:grid;grid-template-columns:300px minmax(0,1fr);gap:34px;align-items:start;margin-top:30px}
+.pad-wrap{position:sticky;top:100px}
+.gf.pad{position:relative;z-index:1;max-width:none;margin:0;gap:4px;border:0;background:#f3dca8 repeating-linear-gradient(180deg,transparent 0 27px,rgba(107,31,46,.18) 27px 28px);background-position:0 12px;color:#241b14;padding:16px 18px 18px;box-shadow:0 2px 0 rgba(0,0,0,.15);transform:rotate(-1.5deg)}
+.pad-top{font-family:var(--disp);font-size:1.15rem;margin:0 0 6px;color:var(--burg)}
+.gf.pad label{font-family:var(--mono);font-size:.75rem;color:var(--burg);margin-top:6px}
+.gf.pad input,.gf.pad textarea{background:transparent;border:0;border-bottom:2px solid rgba(36,27,20,.35);color:#241b14;padding:6px 2px;font-size:1.05rem}
+.gf.pad textarea{min-height:140px;line-height:28px;border-bottom:0}
+.gf.pad input::placeholder,.gf.pad textarea::placeholder{color:rgba(36,27,20,.45)}
+.gf.pad input:focus,.gf.pad textarea:focus{outline:2px dashed var(--burg);outline-offset:2px}
+.pad-count{font-size:.72rem;margin:0;opacity:.7;text-align:right}
+.pad-count.low{color:#b8343f;opacity:1;font-weight:700}
+.gf.pad .btn{margin-top:8px;background:#241b14;color:var(--cream);border-color:#241b14}
+.gf.pad #gm{font-size:.8rem;min-height:1.2em}
+.pad-sheets{position:absolute;inset:0;z-index:0;background:#e9cf95;transform:rotate(1.5deg) translate(4px,5px);box-shadow:4px 5px 0 rgba(0,0,0,.35),inset 0 0 0 1px rgba(0,0,0,.05)}
+.pad-sheets::before{content:"";position:absolute;inset:0;background:#dcc283;transform:rotate(1.4deg) translate(3px,4px);z-index:-1}
+.cork{border:14px solid #5a3b22;border-image:none;background:radial-gradient(#8f633b 1px,transparent 1.6px) 0 0/7px 7px,radial-gradient(#d4a676 1px,transparent 1.6px) 3px 4px/11px 11px,radial-gradient(#a27348 1.5px,transparent 2px) 5px 2px/13px 13px,#b8875a;box-shadow:inset 0 0 26px rgba(0,0,0,.45),0 0 0 2px #2f1e10,8px 9px 0 rgba(0,0,0,.4)}
+.cork .board-head{color:#2f1e10;background:rgba(243,220,168,.85);display:inline-flex;gap:14px;padding:3px 12px;transform:rotate(-1deg);margin-bottom:20px}
+.cork .board-empty{color:#2f1e10;background:rgba(243,220,168,.85);padding:12px;max-width:340px;margin:0 auto}
+.gb{box-shadow:2px 3px 0 rgba(0,0,0,.25),6px 10px 14px -6px rgba(0,0,0,.5)}
+.gb::before{background:var(--pin,var(--red));box-shadow:inset -2px -2px 0 rgba(0,0,0,.3),inset 2px 2px 0 rgba(255,255,255,.35),1px 3px 3px rgba(0,0,0,.45)}
+.gb:nth-child(4n+1){--pin:#b8343f}.gb:nth-child(4n+2){--pin:#3d6fb6}.gb:nth-child(4n+3){--pin:#e0a458}.gb:nth-child(4n){--pin:#3f8f5a}
+.gb:hover{transform:rotate(0) translateY(-3px);box-shadow:2px 3px 0 rgba(0,0,0,.25),10px 16px 18px -6px rgba(0,0,0,.55)}
+.gb.pending{outline:2px dashed rgba(36,27,20,.55);outline-offset:-6px}
+.wait-stamp{position:absolute;right:10px;top:10px;font-family:var(--mono);font-weight:700;font-size:.68rem;color:var(--burg);border:2px solid var(--burg);padding:1px 7px;transform:rotate(6deg);opacity:.85}
+@media(max-width:900px){.gb-layout{grid-template-columns:1fr}.pad-wrap{position:relative;top:0;max-width:420px;width:100%;margin:0 auto}.cork{border-width:10px}}
+@media(prefers-reduced-motion:reduce){.gb:hover{transform:rotate(var(--rot))}}
 </style>
 </head>
 <body>
@@ -1010,11 +1037,13 @@ const pages={
  <div class="grab"><a class="b88" href="/" data-egg-target="button88"><img src="assets/88x31.png?v=2" width="88" height="31" alt="NIKH.EXE, after hours"></a>
  <button class="btn ghost" type="button" id="copy88">Copy the code</button><span class="mono" id="copy88-out" role="status"></span></div></div>`},
  guestbook(){return `<div class="wrap"><section class="guestbook-page board-page"><span class="tape">SIGN HERE</span><h1>Guestbook</h1><p class="guestbook-intro">Pin a note to the board. Leave a message, recommend something, or prove that a real human made it this far. I approve notes by hand before they go up.</p>
- <form class="gf" id="gf"><label for="gn">Name</label><input id="gn" name="nm" maxlength="40" required autocomplete="nickname" placeholder="What should I call you?">
- <label for="gmsg">Message (500 characters max)</label><textarea id="gmsg" name="msg" maxlength="500" required placeholder="Say something nice. Or weird. Ideally both."></textarea>
+ <div class="gb-layout"><div class="pad-wrap"><form class="gf pad" id="gf"><p class="pad-top" aria-hidden="true">Note to Nikh</p>
+ <label for="gn">From</label><input id="gn" name="nm" maxlength="40" required autocomplete="nickname" placeholder="your name">
+ <label for="gmsg">Message</label><textarea id="gmsg" name="msg" maxlength="500" required placeholder="Say something nice. Or weird. Ideally both."></textarea>
+ <p class="pad-count mono" id="gcount-left" aria-live="polite">500 characters left</p>
  <div class="hp" aria-hidden="true"><label>Leave this empty<input name="website" tabindex="-1" autocomplete="off"></label></div>
- <button class="btn" type="submit">Pin it to the board ↗</button><p class="mono" id="gm" role="status" aria-live="polite"></p></form>
- <div class="board-wrap"><div class="board-head"><span>The board</span><span id="gcount"></span></div><div id="gl" aria-live="polite"><p class="board-empty">Loading notes...</p></div><button class="btn ghost board-more" id="gmore" hidden>Load older notes</button></div></section></div>`},
+ <button class="btn" type="submit">Pin it to the board</button><p class="mono" id="gm" role="status" aria-live="polite"></p></form><span class="pad-sheets" aria-hidden="true"></span></div>
+ <div class="board-wrap cork"><div class="board-head"><span>The board</span><span id="gcount"></span></div><div id="gl" aria-live="polite"><p class="board-empty">Loading notes...</p></div><button class="btn ghost board-more" id="gmore" hidden>Load older notes</button></div></div></section></div>`},
  scrapbook(){return `<div class="paper"><div class="wrap"><span class="tape">THE SHOEBOX</span><h1>Scrapbook</h1><p style="max-width:52ch;margin-top:10px">Photos, small memories and other things worth keeping. Added whenever something deserves a spot.</p>
  <div class="shoebox"><div class="sb" id="sb" aria-live="polite"><p class="sb-empty">Opening the shoebox...</p></div></div></div></div>
  <dialog class="sbv" id="sbv" aria-label="Scrapbook photo"><button class="sbv-x" type="button" aria-label="Close">×</button><div class="sbv-body" id="sbv-body"></div></dialog>`},
@@ -1215,13 +1244,25 @@ function render(keepScroll){
    $('#gf').hidden=true
   });
   more.onclick=()=>{more.disabled=true;page().catch(()=>{}).finally(()=>{more.disabled=false})};
+  const ta=$('#gmsg'),left=$('#gcount-left');ta.oninput=()=>{const n=500-ta.value.length;left.textContent=n+(n===1?' character left':' characters left');left.classList.toggle('low',n<40)};
   $('#gf').onsubmit=async ev=>{
    ev.preventDefault();
    const f=ev.target;M.textContent='Sending...';
    try{
     const r=await fetch('/api/guestbook',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nm:f.elements.nm.value,msg:f.elements.msg.value,website:f.elements.website.value})});
     const d=await r.json().catch(()=>({}));
-    if(r.ok){f.reset();M.textContent='Pinned to the waiting tray. It goes up on the board once I approve it.';window.NikhSound&&NikhSound.pin()}
+    if(r.ok){
+     /* The note peels off the pad and flies onto the board, marked as waiting for approval (only you see it until then). */
+     const mine=note({name:f.elements.nm.value,message:f.elements.msg.value,created_at:new Date().toISOString()},false);mine.classList.add('pending');
+     const st=document.createElement('span');st.className='wait-stamp';st.textContent='Waiting for Nikh';mine.prepend(st);
+     const empty=L.querySelector('.board-empty');if(empty)empty.remove();
+     const after=L.querySelector('.gb.featured');after?after.after(mine):L.prepend(mine);
+     if(!matchMedia('(prefers-reduced-motion: reduce)').matches&&mine.animate){const a=f.getBoundingClientRect(),b=mine.getBoundingClientRect();
+      mine.animate([{transform:`translate(${a.left-b.left}px,${a.top-b.top}px) scale(${Math.min(1.6,a.width/b.width)}) rotate(-6deg)`,opacity:.9},{transform:'translate(0,0) scale(1.06) rotate(3deg)',offset:.85},{transform:'rotate(var(--rot))'}],{duration:850,easing:'cubic-bezier(.3,.7,.3,1)'});
+      f.animate([{transform:'translateY(-14px) rotate(-4deg)',opacity:0},{transform:'none',opacity:1}],{duration:450,delay:300,easing:'ease-out',fill:'backwards'})}
+     setTimeout(()=>{window.NikhSound&&NikhSound.pin()},700);
+     f.reset();$('#gcount-left').textContent='500 characters left';M.textContent='Pinned. It stays in the waiting tray until I approve it.';
+     mine.scrollIntoView({block:'nearest',behavior:'smooth'})}
     else M.textContent=d.error||'Something went wrong.'
    }catch(e){M.textContent='Could not reach the guestbook.'}
   }

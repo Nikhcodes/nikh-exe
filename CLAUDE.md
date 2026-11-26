@@ -3,13 +3,15 @@
 Nikh's personal website. Hand-built, no framework, no build step. Read this before changing anything.
 
 ## Stack and layout
-- **Frontend:** `index.html` (all pages, hash routes `#/music`), plus `assets/*.js`. Plain ES2020, no bundler.
+- **Frontend:** `index.html` (all pages, real paths like `/music`, `/journal/<entry>`, `/projects/<slug>`; old `#/` links are converted), plus `assets/*.js`. Plain ES2020, no bundler.
+  - Every path except `/` is rewritten (vercel.json) to `/api/public?r=page`, which serves `index.html` with that page's title and link-preview tags (`api/_lib/page.js`). It falls back to the plain shell on any error. `<base href="/">` keeps relative asset paths working on deep pages.
+  - Top-level `let`/`const` used during the first `render()` must be declared before it (or use `var`), or the first render throws.
   - `assets/content.js` holds the default content for every page. The admin's saved JSON (`site_content` table) overrides it.
   - `assets/eggs.js` is the Easter egg engine (public side). `assets/reveal.js` + `.css` is the reveal card (also used by the admin preview).
   - `assets/sound.js` is sound, **off by default**. `assets/drops.js` does photo drops. `assets/arcade.js` holds the three games.
   - `assets/admin.js` + `admin.html` is the admin panel. Page editors are generated from the `PAGES` schema in admin.js.
 - **Backend:** Vercel Node functions in `api/` (`public`, `guestbook`, `media`, `auth`, `cms`, `arcade`, plus the legacy `admin`).
-  Shared code is in `api/_lib/` (underscore = not a route). The Vercel Hobby plan allows max 12 functions, so prefer adding a `?r=` route to an existing function.
+  Shared code is in `api/_lib/` (underscore = not a route). `api/public.js` also serves pages, robots.txt, sitemap.xml and cookie-free stats (`?r=track`). The Vercel Hobby plan allows max 12 functions, so prefer adding a `?r=` route to an existing function.
 - **Database:** Neon Postgres. `schema.sql` is **append-only and idempotent** (`IF NOT EXISTS`, drop-then-add for constraints).
   Never write destructive migrations. New sections go at the bottom under a `-- ===== vN` header.
 - **Media** (images, GIFs, short MP4/WebM, sounds) is stored in Postgres (`media` + `media_blobs`) and served by `/api/media`.
