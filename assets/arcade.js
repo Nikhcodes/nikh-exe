@@ -425,7 +425,7 @@
         const art = el('div', { class: 'attract', 'aria-hidden': 'true' });
         art.innerHTML = ART[gm.id]; // static drawing, no data
         return el('article', { class: 'unit', style: `--g:${gm.color}` },
-          el('header', { class: 'marquee' }, el('h2', {}, gm.name)),
+          el('div', { class: 'marquee' }, el('h2', {}, gm.name)),
           el('div', { class: 'bezel' }, el('div', { class: 'crt' }, art,
             el('ol', { class: 'crt-board', 'aria-label': `Top scores for ${gm.name}` }, top3.length
               ? top3.map((r, i) => el('li', {}, `${i + 1} ${r.initials} ${r.score}`))

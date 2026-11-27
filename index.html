@@ -25,7 +25,7 @@ body{font-family:var(--serif);font-size:1.08rem;line-height:1.6;color:var(--crea
 a{color:var(--amber)}
 :focus-visible{outline:3px solid var(--amber);outline-offset:3px}
 .mono{font-family:var(--mono)}
-header{display:flex;flex-wrap:wrap;align-items:center;gap:8px 22px;padding:14px 22px;border-bottom:3px double var(--burg);background:var(--char);position:sticky;top:0;z-index:20}
+body>header{display:flex;flex-wrap:wrap;align-items:center;gap:8px 22px;padding:14px 22px;border-bottom:3px double var(--burg);background:var(--char);position:sticky;top:0;z-index:20}
 .logo{font-family:var(--disp);font-size:1.15rem;color:var(--amber);text-decoration:none;transform:rotate(-1.5deg);display:inline-block}
 nav{display:flex;flex-wrap:wrap;gap:4px}
 nav a{font-family:var(--mono);font-weight:700;text-decoration:none;color:var(--cream);padding:8px 12px;border:2px solid transparent;font-size:.9rem}
@@ -436,7 +436,7 @@ h2{font-size:1.6rem;margin-bottom:12px}
 .snd[aria-pressed=true]{color:var(--amber);border-color:var(--amber)}
 /* MOBILE NAV: one swipeable row instead of four wrapped lines */
 @media(max-width:640px){
- header{flex-wrap:nowrap;gap:10px;padding:10px 0 10px 16px}
+ body>header{flex-wrap:nowrap;gap:10px;padding:10px 0 10px 16px}
  header .logo{flex:0 0 auto}
  nav{flex-wrap:nowrap;overflow-x:auto;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:4px 16px 4px 2px;mask-image:linear-gradient(90deg,transparent 0,#000 18px,#000 86%,transparent);-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 18px,#000 86%,transparent)}
  nav::-webkit-scrollbar{display:none}
@@ -549,7 +549,7 @@ h2{font-size:1.6rem;margin-bottom:12px}
 .cm-card.up .cm-face{opacity:1}
 .cm-card.done{border-color:#7ee0a3;cursor:default}
 @media(max-width:720px){.cab-body{grid-template-columns:1fr}.screen{padding:10px;min-height:260px}.srv{min-height:64px;padding:10px 8px}}
-footer{padding:20px 22px calc(30px + env(safe-area-inset-bottom));font-family:var(--mono);font-size:.8rem;border-top:3px double var(--burg);color:#999;display:flex;flex-wrap:wrap;align-items:center;gap:8px 24px}
+body>footer{padding:20px 22px calc(30px + env(safe-area-inset-bottom));font-family:var(--mono);font-size:.8rem;border-top:3px double var(--burg);color:#999;display:flex;flex-wrap:wrap;align-items:center;gap:8px 24px}
 .prompt{display:flex;align-items:center;gap:6px;flex:1 1 260px;min-width:0}
 .prompt label{color:var(--amber);font-weight:700;white-space:nowrap}
 .prompt input{flex:1;min-width:0;max-width:240px;background:transparent;border:0;border-bottom:1px dashed #555;color:var(--cream);font:inherit;padding:4px 2px;caret-color:var(--amber);border-radius:0}
@@ -709,7 +709,7 @@ footer{padding:20px 22px calc(30px + env(safe-area-inset-bottom));font-family:va
 .dock-frame iframe{display:block;width:100%;border:0;background:#000}
 .dock-frame.video{aspect-ratio:16/9}.dock-frame.video iframe{height:100%}
 .dock.mini .dock-frame{position:absolute;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none}
-body.has-dock footer{padding-bottom:calc(150px + env(safe-area-inset-bottom))}
+body.has-dock>footer{padding-bottom:calc(150px + env(safe-area-inset-bottom))}
 @media(max-width:620px){.dock{right:8px;left:8px;bottom:8px;width:auto}}
 @media(pointer:coarse){.nb-filter button,.nb-nav button,.zcopy,.linkish,.dock-btn,.foot-links a,.tt-out,.sw-links a,.sheet-contact a:not(.btn),.hire-actions a{min-height:40px;display:inline-flex;align-items:center}.nb-filter button{padding:6px 14px}.foot-links{gap:20px}}
 @media(prefers-reduced-motion:reduce){.dock-disc{animation:none}}
@@ -742,7 +742,7 @@ body.has-dock footer{padding-bottom:calc(150px + env(safe-area-inset-bottom))}
 .menu-foot a{color:var(--cream);text-underline-offset:3px;min-height:40px;display:inline-flex;align-items:center}
 .menu-foot .snd{margin-left:auto;min-height:40px}
 @media(max-width:900px){
- header{flex-wrap:nowrap;gap:10px;padding:10px 16px}
+ body>header{flex-wrap:nowrap;gap:10px;padding:10px 16px}
  header nav{display:none}
  .menu-btn{display:inline-flex}.here-tag{display:block}
 }
