@@ -1534,20 +1534,20 @@ function letItSnow(on){
 }
 window.nikhSnow=()=>letItSnow(!snowStop);
 /* The trophy room (/arcade/hall): a 2-1-3 podium seen from below, one game at a time, this week or all time. */
-var CUP=(id,c1,c2,c3)=>`<svg class="cup" viewBox="0 0 120 150" aria-hidden="true"><defs>
+function CUP(id,c1,c2,c3){return `<svg class="cup" viewBox="0 0 120 150" aria-hidden="true"><defs>
  <linearGradient id="m${id}" x1="0" x2="1"><stop offset="0" stop-color="${c3}"/><stop offset=".35" stop-color="${c1}"/><stop offset=".5" stop-color="${c2}"/><stop offset=".7" stop-color="${c1}"/><stop offset="1" stop-color="${c3}"/></linearGradient>
  <linearGradient id="g${id}" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".9"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
  <clipPath id="c${id}"><path d="M30 10h60v30c0 22-13 38-30 38S30 62 30 40z"/><path d="M52 76h16v22H52z"/><path d="M38 98h44l6 14H32z"/><path d="M28 112h64v20H28z"/></clipPath></defs>
  <path d="M30 18H14c0 18 8 28 20 30M90 18h16c0 18-8 28-20 30" fill="none" stroke="url(#m${id})" stroke-width="7" stroke-linecap="round"/>
  <g clip-path="url(#c${id})"><rect width="120" height="150" fill="url(#m${id})"/><rect class="glint" x="-60" y="0" width="40" height="150" fill="url(#g${id})"/></g>
- <path d="M38 14h4v26c0 12 6 22 14 26" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="3" stroke-linecap="round"/></svg>`;
-var TROPHY={1:['#f3c84b','#fff4b8','#a8791c'],2:['#c9cfd6','#ffffff','#7d858f'],3:['#c98a4b','#ffd2a4','#7d4d22']};
+ <path d="M38 14h4v26c0 12 6 22 14 26" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="3" stroke-linecap="round"/></svg>`}
+function TROPHY(n){return {1:['#f3c84b','#fff4b8','#a8791c'],2:['#c9cfd6','#ffffff','#7d858f'],3:['#c98a4b','#ffd2a4','#7d4d22']}[n]}
 function hallRoom(){return `<section class="hall" aria-labelledby="hall-t"><div class="hall-in">
  <a class="hall-back" href="/arcade">Back to the arcade</a>
  <h1 id="hall-t">Hall of fame</h1>
  <div class="hall-ctl"><div class="hall-games" role="group" aria-label="Game" id="hall-games"></div><div class="hall-when" role="group" aria-label="Period"><button type="button" data-w="week" aria-pressed="true">This week</button><button type="button" data-w="all" aria-pressed="false">All time</button></div></div>
  <div class="room" id="room"><span class="beam b2" aria-hidden="true"></span><span class="beam b1" aria-hidden="true"></span><span class="beam b3" aria-hidden="true"></span>
-  <ol class="podium" id="podium" aria-live="polite">${[2,1,3].map(n=>`<li class="step s${n}"><div class="trophy">${CUP(n,...TROPHY[n])}<span class="spark k1" aria-hidden="true"></span><span class="spark k2" aria-hidden="true"></span></div>
+  <ol class="podium" id="podium" aria-live="polite">${[2,1,3].map(n=>`<li class="step s${n}"><div class="trophy">${CUP(n,...TROPHY(n))}<span class="spark k1" aria-hidden="true"></span><span class="spark k2" aria-hidden="true"></span></div>
    <div class="block"><span class="num" aria-hidden="true">${n}</span><span class="plate"><b>---</b><i>open</i></span></div></li>`).join('')}</ol>
   <div class="floor-shine" aria-hidden="true"></div></div>
  <p class="hall-note" id="hall-note"></p></div></section>`}
