@@ -922,6 +922,34 @@ kbd{display:inline-block;min-width:1.6em;text-align:center;font-family:var(--mon
 .hall-note{text-align:center;font-family:var(--mono);font-size:.85rem;color:#b9ad92;margin:10px 0 0}
 @media(max-width:620px){.room{height:440px;perspective:700px}.podium{bottom:14%}.trophy{width:82%}.s1 .trophy{width:92%}.plate{min-width:80%;padding:4px 6px}.plate b{letter-spacing:.1em}}
 @media(prefers-reduced-motion:reduce){.glint,.spark,.room.arrive .podium{animation:none}.trophy,.beam{transition:none}.spark{display:none}}
+/* HOME HERO ROOM */
+.hero-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,330px);gap:26px;align-items:center}
+.hero-room{margin:0;transform:rotate(1.5deg)}
+.room-btn{display:block;width:100%;padding:0;border:4px solid #05070b;background:#05070b;cursor:pointer;box-shadow:0 0 0 2px #2f323b,7px 8px 0 rgba(0,0,0,.45);line-height:0}
+.room-btn canvas{display:block;width:100%;height:auto;aspect-ratio:3/2;image-rendering:pixelated}
+.room-btn:focus-visible{outline:3px solid var(--amber);outline-offset:4px}
+.hero-room figcaption{font-family:var(--mono);font-size:.75rem;color:#9a9a9a;margin-top:10px;text-align:right}
+.hero-room figcaption #room-clock{color:var(--amber);font-weight:700}
+@media(pointer:coarse){.room-tip{display:none}}
+@media(max-width:1000px) and (min-width:821px){.hero-top{grid-template-columns:1fr}.hero-room{max-width:360px}}
+@media(max-width:820px){.hero-top{grid-template-columns:1fr;gap:16px}.hero-room{order:-1;transform:none}.hero-room figcaption{text-align:left}}
+/* PHONES: Links heroes as a swipeable deck, Music crates in one row */
+.deck-hint{display:none}
+@media(max-width:620px){
+ .heroes{display:flex;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;padding:6px 16px 18px;margin:12px -16px 0;scrollbar-width:none;overscroll-behavior-x:contain}
+ .heroes::-webkit-scrollbar{display:none}
+ .heroes>*{flex:0 0 78%;scroll-snap-align:center}
+ .deck-hint{display:flex;justify-content:center;gap:7px;margin-top:2px}
+ .deck-hint i{width:7px;height:7px;border-radius:50%;background:#3a3d46;transition:background .2s,transform .2s}
+ .deck-hint i.on{background:var(--amber);transform:scale(1.3)}
+ .dividers{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding:4px 16px 0;margin:22px -16px 0}
+ .dividers::-webkit-scrollbar{display:none}
+ .dividers button{flex:0 0 auto}
+ .pulled{gap:18px;justify-items:start}
+ .record{max-width:210px;margin-left:4px}
+ .record.slid .vinyl{transform:translateX(34%)}
+}
+@media(max-width:620px) and (prefers-reduced-motion:reduce){.deck-hint i{transition:none}}
 </style>
 </head>
 <body>
@@ -980,7 +1008,7 @@ function turntable(h,nl,cov){
 }
 /* One player for the whole site, docked in the corner, so music keeps going between pages. */
 let nowPlaying='';
-function syncDeck(){const t=$('#tt');if(t)t.classList.toggle('on',!!nowPlaying&&nowPlaying===t.dataset.link)}
+function syncDeck(){const t=$('#tt');if(t)t.classList.toggle('on',!!nowPlaying&&nowPlaying===t.dataset.link);window.nikhRoomPaint&&window.nikhRoomPaint()}
 function player(link,title){
  const e=embedOf(link);if(!e)return;
  const d=$('#dock');
@@ -1049,8 +1077,10 @@ const pages={
  <div class="box"><h3>Currently into</h3><div class="stick">${(h.into||[]).map(i=>`<span>${esc(i)}</span>`).join('')}</div></div>
  <div class="box drawer" id="drawer" ${SITE.counts.surprise?'':'hidden'}><h3>The junk drawer</h3><div class="dr-out" id="dr-out" aria-live="polite"></div><button class="btn ghost" id="dr">Surprise me</button></div>
  ${h.showCounter?`<div class="box counter" id="counter" ${SITE.hits?'':'hidden'}><h3>Visitors</h3><p class="odo" id="odo" aria-label="${SITE.hits} visits">${odo(SITE.hits)}</p><p class="mono odo-note">since the last rebuild. Hi, you.</p></div>`:''}</aside>
- <section class="hero"><span class="tape" data-egg-target="welcome-tape">${esc(h.tape)}</span><h1>${esc(h.headline)}</h1><p class="big">${esc(h.blurb)}</p>
- <a class="btn" href="/projects">See what I build</a><a class="btn ghost" href="/music">Flip through the crate</a><a class="hire-link" href="/hire">Hiring? Here's the short version.</a>
+ <section class="hero"><div class="hero-top"><div class="hero-text"><span class="tape" data-egg-target="welcome-tape">${esc(h.tape)}</span><h1>${esc(h.headline)}</h1><p class="big">${esc(h.blurb)}</p>
+ <a class="btn" href="/projects">See what I build</a><a class="btn ghost" href="/music">Flip through the crate</a><a class="hire-link" href="/hire">Hiring? Here's the short version.</a></div>
+ <figure class="hero-room"><button class="room-btn" type="button" id="room-btn" aria-pressed="true" aria-label="My room right now. Press to switch the desk lamp off."><canvas id="room-c" width="96" height="64"></canvas></button>
+ <figcaption><span id="room-clock">Live</span> in Paramaribo. <span class="room-tip">Tap the room for the lamp.</span></figcaption></figure></div>
  ${turntable(h,nl,cov)}
  ${(h.picks||[]).length?`<p class="tonight"><span>Tonight's pick:</span> <b id="pick">${esc(h.picks[Math.floor(Math.random()*h.picks.length)])}</b> <button class="linkish" type="button" id="sh">Another one</button></p>`:''}
  ${(h.strip||[]).length?`<section class="strip" aria-labelledby="strip-t"><h2 id="strip-t">${esc(h.stripTitle||'After hours')}</h2><div class="panels">${(h.strip||[]).slice(0,4).map(p=>`<figure class="panel"><figcaption>${esc(p.caption)}</figcaption><canvas data-scene="${esc(p.scene)}" width="64" height="48" role="img" aria-label="${esc(p.caption)}"></canvas></figure>`).join('')}</div></section>`:''}
@@ -1240,7 +1270,7 @@ function render(keepScroll){
  $('#foot-text').textContent=S('footer').text;applySeason();
  if(k=='home'){const h=S('home');const sh=$('#sh');if(sh)sh.onclick=()=>{const p=h.picks||[],cur=$('#pick').textContent;if(p.length<2)return;let n;do{n=p[Math.floor(Math.random()*p.length)]}while(n===cur);$('#pick').textContent=n};
   if(window.NikhStrip)document.querySelectorAll('.panel canvas').forEach(c=>NikhStrip.draw(c,c.dataset.scene));
-  syncDeck();$('#dr').onclick=openDrawer;
+  syncDeck();startRoom();$('#dr').onclick=openDrawer;
   const sw=$('.avatar.swap');if(sw)sw.onkeydown=e=>{if(e.key=='Enter'||e.key==' '){e.preventDefault();sw.classList.toggle('on')}}}
  trackView(k);
  if(k=='scrapbook')loadScrapbook();
@@ -1253,7 +1283,11 @@ function render(keepScroll){
   document.querySelectorAll('.dymo').forEach(u=>[...u.children].forEach((li,n)=>li.style.setProperty('--d',(n*.07+.35)+'s')));
  }
  if(k=='status')runChecks();
- if(k=='links'){wireBrowser();wireHolo();wireGrab()}
+ if(k=='links'){wireBrowser();wireHolo();wireGrab();
+  /* On phones the heroes are a swipeable deck; the dots show which card is in view. */
+  const H=document.querySelector('.heroes');if(H&&H.children.length>1){const d=document.createElement('div');d.className='deck-hint';d.setAttribute('aria-hidden','true');
+   d.innerHTML=[...H.children].map((_,i)=>`<i${i?'':' class="on"'}></i>`).join('');H.after(d);
+   H.addEventListener('scroll',()=>{const w=H.children[0].offsetWidth+16,n=Math.round(H.scrollLeft/w);[...d.children].forEach((x,i)=>x.classList.toggle('on',i===n))},{passive:true})}}
  if(k=='arcade'&&window.NikhArcade&&$('#arcade-root'))stopArcade=NikhArcade.mount($('#arcade-root'));
  if(k=='guestbook'){
   const L=$('#gl'),M=$('#gm'),more=$('#gmore');
@@ -1500,20 +1534,20 @@ function letItSnow(on){
 }
 window.nikhSnow=()=>letItSnow(!snowStop);
 /* The trophy room (/arcade/hall): a 2-1-3 podium seen from below, one game at a time, this week or all time. */
-const CUP=(id,c1,c2,c3)=>`<svg class="cup" viewBox="0 0 120 150" aria-hidden="true"><defs>
+function CUP(id,c1,c2,c3){return `<svg class="cup" viewBox="0 0 120 150" aria-hidden="true"><defs>
  <linearGradient id="m${id}" x1="0" x2="1"><stop offset="0" stop-color="${c3}"/><stop offset=".35" stop-color="${c1}"/><stop offset=".5" stop-color="${c2}"/><stop offset=".7" stop-color="${c1}"/><stop offset="1" stop-color="${c3}"/></linearGradient>
  <linearGradient id="g${id}" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".9"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
  <clipPath id="c${id}"><path d="M30 10h60v30c0 22-13 38-30 38S30 62 30 40z"/><path d="M52 76h16v22H52z"/><path d="M38 98h44l6 14H32z"/><path d="M28 112h64v20H28z"/></clipPath></defs>
  <path d="M30 18H14c0 18 8 28 20 30M90 18h16c0 18-8 28-20 30" fill="none" stroke="url(#m${id})" stroke-width="7" stroke-linecap="round"/>
  <g clip-path="url(#c${id})"><rect width="120" height="150" fill="url(#m${id})"/><rect class="glint" x="-60" y="0" width="40" height="150" fill="url(#g${id})"/></g>
- <path d="M38 14h4v26c0 12 6 22 14 26" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="3" stroke-linecap="round"/></svg>`;
-const TROPHY={1:['#f3c84b','#fff4b8','#a8791c'],2:['#c9cfd6','#ffffff','#7d858f'],3:['#c98a4b','#ffd2a4','#7d4d22']};
+ <path d="M38 14h4v26c0 12 6 22 14 26" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="3" stroke-linecap="round"/></svg>`}
+function TROPHY(n){return {1:['#f3c84b','#fff4b8','#a8791c'],2:['#c9cfd6','#ffffff','#7d858f'],3:['#c98a4b','#ffd2a4','#7d4d22']}[n]}
 function hallRoom(){return `<section class="hall" aria-labelledby="hall-t"><div class="hall-in">
  <a class="hall-back" href="/arcade">Back to the arcade</a>
  <h1 id="hall-t">Hall of fame</h1>
  <div class="hall-ctl"><div class="hall-games" role="group" aria-label="Game" id="hall-games"></div><div class="hall-when" role="group" aria-label="Period"><button type="button" data-w="week" aria-pressed="true">This week</button><button type="button" data-w="all" aria-pressed="false">All time</button></div></div>
  <div class="room" id="room"><span class="beam b2" aria-hidden="true"></span><span class="beam b1" aria-hidden="true"></span><span class="beam b3" aria-hidden="true"></span>
-  <ol class="podium" id="podium" aria-live="polite">${[2,1,3].map(n=>`<li class="step s${n}"><div class="trophy">${CUP(n,...TROPHY[n])}<span class="spark k1" aria-hidden="true"></span><span class="spark k2" aria-hidden="true"></span></div>
+  <ol class="podium" id="podium" aria-live="polite">${[2,1,3].map(n=>`<li class="step s${n}"><div class="trophy">${CUP(n,...TROPHY(n))}<span class="spark k1" aria-hidden="true"></span><span class="spark k2" aria-hidden="true"></span></div>
    <div class="block"><span class="num" aria-hidden="true">${n}</span><span class="plate"><b>---</b><i>open</i></span></div></li>`).join('')}</ol>
   <div class="floor-shine" aria-hidden="true"></div></div>
  <p class="hall-note" id="hall-note"></p></div></section>`}
@@ -1574,6 +1608,22 @@ try{const r=document.referrer&&new URL(document.referrer);if(r&&r.host&&r.host!=
 document.addEventListener('click',e=>{const a=e.target instanceof Element&&e.target.closest('a[href]');if(!a)return;const h=a.getAttribute('href');
  if(/^mailto:/i.test(h))return track('click','Email');
  if(!/^https?:/i.test(h))return;try{const u=new URL(h);if(u.host===location.host)return;track('click',(a.textContent.replace(/[↗\s]+/g,' ').trim().slice(0,50)||'Link')+' → '+u.hostname.replace(/^www\./,''))}catch{}},true);
+/* The Home hero room: redraws a few times a second while it's on screen, never in the background. */
+var roomStop=null;
+function startRoom(){
+ if(roomStop){roomStop();roomStop=null}
+ const c=$('#room-c'),btn=$('#room-btn');if(!c||!window.NikhStrip)return;
+ const still=matchMedia('(prefers-reduced-motion: reduce)').matches;let lamp=true,raf=0,last=0,visible=true;
+ const hour=()=>{try{const f=new Intl.DateTimeFormat('en-GB',{timeZone:'America/Paramaribo',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date());return [+f.find(x=>x.type=='hour').value,+f.find(x=>x.type=='minute').value]}catch{const d=new Date();return [d.getHours(),d.getMinutes()]}};
+ const paint=t=>{const [hh,mm]=hour();NikhStrip.room(c,{hour:hh,t,lamp,playing:!!nowPlaying,still,season:document.body.dataset.season});
+  const cl=$('#room-clock');if(cl)cl.textContent=`Live at ${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`};
+ const loop=t=>{if(!document.body.contains(c))return roomStop&&roomStop();if(visible&&!document.hidden&&t-last>110){last=t;paint(t)}raf=requestAnimationFrame(loop)};
+ const io='IntersectionObserver' in window?new IntersectionObserver(es=>{visible=es[0].isIntersecting}):null;io&&io.observe(c);
+ btn.onclick=()=>{lamp=!lamp;btn.setAttribute('aria-pressed',lamp);btn.setAttribute('aria-label',`My room right now. Press to switch the desk lamp ${lamp?'off':'on'}.`);window.NikhSound&&NikhSound.click&&NikhSound.click();paint(performance.now())};
+ paint(0);
+ if(still){const iv=setInterval(()=>paint(0),30000);roomStop=()=>clearInterval(iv);window.nikhRoomPaint=()=>paint(0);return}
+ raf=requestAnimationFrame(loop);roomStop=()=>{cancelAnimationFrame(raf);io&&io.disconnect()};window.nikhRoomPaint=null
+}
 async function loadScrapbook(){
  const box=$('#sb');
  const fmt=d=>new Date(d+'T12:00:00').toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'});

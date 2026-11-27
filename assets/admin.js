@@ -297,6 +297,7 @@
       h('p', { class: 'mono small', id: 'starter-out' }));
     page('BACK OFFICE', 'Dashboard', null,
       await quickUpdate(),
+      await pictureChecklist(),
       h('div', { class: 'stats', style: 'margin-top:18px' },
         stat(s.eggs_active, 'live Easter eggs', '#eggs'), stat(s.eggs_inactive, 'eggs switched off', '#eggs'),
         stat(s.guestbook_pending, 'notes waiting for you', '#guestbook'), stat(s.media, `images (${fmtBytes(s.media_bytes || 1)})`, '#media'),
@@ -331,6 +332,22 @@
     return h('div', { class: 'panel quick' }, h('h2', {}, 'Quick update'),
       h('p', { class: 'muted small', style: 'margin-top:0' }, 'The three things that change most. Saves into the Home page and goes live immediately.'),
       h('div', { class: 'quick-grid' }, l1, l2, l3), save);
+  }
+
+  // Picture checklist: the spots on the site that look best with a real picture and don't have one yet.
+  async function pictureChecklist() {
+    const d = await cms('r=content'), D = window.NIKH_DEFAULTS || {};
+    const C = k => Object.assign({}, D[k] || {}, d.content[k] || {});
+    const todo = [];
+    if (!C('home').avatar) todo.push(['Your photo on Home (and on the About badge)', 'pages/home']);
+    if (C('home').nowListening && !C('home').nowListeningCover) todo.push(['Cover for the song on the turntable', 'pages/home']);
+    for (const c of C('music').crates || []) for (const it of c.items || []) if (!it.cover) todo.push([`Cover for ${it.title || 'a record'} (${c.name})`, 'pages/music']);
+    for (const p of C('projects').projects || []) if (!p.image) todo.push([`Screenshot for ${p.name}`, 'pages/projects']);
+    const shown = todo.slice(0, 8);
+    return h('div', { class: 'panel quick' }, h('h2', {}, todo.length ? `Picture checklist (${todo.length} to go)` : 'Picture checklist: all done'),
+      h('p', { class: 'muted small', style: 'margin-top:0' }, todo.length ? 'The redesigned pages are built around real pictures. Each one you add makes the site look more like yours.' : 'Every spot that needs a picture has one. Nice.'),
+      todo.length ? h('ul', { class: 'checklist' }, shown.map(([t, href]) => h('li', {}, h('a', { href: '#' + href }, t)))) : null,
+      todo.length > shown.length ? h('p', { class: 'muted small' }, `…and ${todo.length - shown.length} more.`) : null);
   }
 
   // Stats: page views, outbound clicks and referring sites, counted without cookies.

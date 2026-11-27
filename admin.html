@@ -44,6 +44,10 @@ main{width:min(100% - 28px,1120px);margin:0 auto;padding:28px 0 80px}
 .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .row.between{justify-content:space-between}
 .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px 20px}
+.checklist{margin:0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:4px 18px}
+.checklist li{font-family:var(--mono);font-size:.85rem;padding:5px 0 5px 22px;position:relative;border-bottom:1px dotted #333}
+.checklist li::before{content:"";position:absolute;left:2px;top:9px;width:11px;height:11px;border:2px solid var(--amber)}
+.checklist a{color:var(--cream)}
 .quick-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px 16px;margin-bottom:14px}
 .quick-grid label{display:grid;gap:6px;font-family:var(--mono);font-size:.8rem;font-weight:700;color:var(--amber)}
 .spark{display:flex;align-items:flex-end;gap:2px;height:120px;padding:6px 0;border-bottom:1px solid #444}
