@@ -61,6 +61,7 @@ export async function metaFor(p) {
   const base = { title: `${name} | NIKH.EXE`, description: S('home').blurb || '', image: null };
   if (!first) return base;
   if (!LABELS[first]) return { title: `Not found | NIKH.EXE`, description: base.description, noindex: true };
+  if (first === 'arcade' && second === 'hall') return { title: `Hall of fame | ${name}`, description: 'The podium for every game in the NIKH.EXE arcade: this week and all time.' };
   if (first === 'projects' && second) {
     const D = (defaults.projects || {}).projects || [];
     const pr0 = (S('projects').projects || []).find(x => slugify(x.name) === second);
